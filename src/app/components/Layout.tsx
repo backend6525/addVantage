@@ -8,7 +8,7 @@ import { usePathname } from 'next/navigation'; // Import the usePathname hook
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const pathname = usePathname();
-  const showNavbar = !pathname.includes('/dashboard'); // Determine whether to show the Navbar
+  const showNavbar = !pathname.includes('/dashboard') && !pathname.includes('/onboarding'); // Determine whether to show the Navbar
     
   return (
     <>

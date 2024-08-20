@@ -4,7 +4,7 @@ import { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import '../../styles/globals.css';
 import { ThemeProvider } from '@/app/components/themProvider';
-
+import ConvexClientProvider from "./ConvexClientProvider";
 import Layout from './components/Layout';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -24,10 +24,11 @@ const RootLayout: React.FC<RootLayoutProps> = ({ children }) => {
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-   
+      <ConvexClientProvider>
          <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
-            <Layout>{children}</Layout>
+            <Layout> {children} </Layout>
         </ThemeProvider> 
+      </ConvexClientProvider>
       </body>
     </html>
   );

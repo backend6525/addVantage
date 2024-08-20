@@ -7,6 +7,8 @@ import Button from '@/app/components/ui/Button/index';
 import Input from '@/app/components/ui/Input';
 import GoogleIcon  from '@/app/components/Icons';
 
+
+
 const Login: React.FC = () => {
   return (
     <>
@@ -46,9 +48,13 @@ const Login: React.FC = () => {
                 className='w-full mt-2 text-gray-300 bg-gray-800 focus:bg-gray-900 focus:border-gray-800'
               />
             </div>
-            <Button className='w-full text-gray-800 bg-gray-100 hover:bg-gray-200 ring-offset-2 focus:ring rounded-lg'>
+            
+            <Button  className='w-full text-gray-800 bg-gray-100 hover:bg-gray-200 ring-offset-2 focus:ring rounded-lg'>
               Sign in
             </Button>
+            
+          
+           
             <button
               type='button'
               className='w-full flex items-center justify-center gap-x-3 py-2.5 border border-gray-800 rounded-lg text-sm font-medium bg-gray-800/40 hover:bg-gray-800 ring-purple-500 focus:ring duration-150'>
