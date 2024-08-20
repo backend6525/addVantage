@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import NavHeader from '../NavHeader';
 import NavLink from '../NavLink';
+import { LoginLink, RegisterLink } from '@kinde-oss/kinde-auth-nextjs/components';
 
 interface NavigationItem {
     name: string;
@@ -18,7 +19,7 @@ const Navbar: React.FC = () => {
         { name: 'Features', href: '/#features' },
         { name: 'Pricing', href: '/#pricing' },
         { name: 'Testimonials', href: '/#testimonials' },
-        { name: 'FAQs', href: '/#faqs' },
+        { name: 'Career', href: '/#career' },
     ];
 
     useEffect(() => {
@@ -55,12 +56,11 @@ const Navbar: React.FC = () => {
                             ))}
                         </ul>
                         <div className="gap-x-6 items-center justify-end mt-6 space-y-6 md:flex md:space-y-0 md:mt-0">
-                            <Link href="/login" className="block hover:text-gray-50" passHref>
+                            <LoginLink  className="block hover:text-gray-50" >
                                 Sign in
-                            </Link>
-
-                            <NavLink
-                                href="/signup"
+                            </LoginLink >
+                            <RegisterLink 
+                                
                                 className="flex items-center justify-center gap-x-1 text-sm text-white font-medium custom-btn-bg border border-gray-500 active:bg-gray-900 md:inline-flex"
                             >
                                 Sign up
@@ -71,7 +71,8 @@ const Navbar: React.FC = () => {
                                         clipRule="evenodd"
                                     />
                                 </svg>
-                            </NavLink>
+                            </RegisterLink>
+                          
                         </div>
                     </div>
                 </div>

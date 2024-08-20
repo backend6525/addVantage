@@ -1,13 +1,14 @@
 {
   "compilerOptions": {
-    "target":"es6",
+    "types": ["vitest/globals","@testing-library/jest-dom"],
+    "target":"ES2022",
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
     "noEmit": true,
     "esModuleInterop": true,
-    "module": "esnext",
+    "module": "ESNext",
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
@@ -22,6 +23,6 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "convex/teams.mts", "convex/adds.mts", "convex/user.mts"],
   "exclude": ["node_modules"]
 }

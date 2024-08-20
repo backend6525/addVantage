@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import Brand from '../../ui/Brand';
+import { LogoutLink } from '@kinde-oss/kinde-auth-nextjs';
+import { useKindeBrowserClient } from '@kinde-oss/kinde-auth-nextjs';
 
-// Define a type for the search input properties
+
 type SearchInputProps = {
   placeholder: string;
   // Add any other properties or event handlers you need for the search input
@@ -11,33 +12,13 @@ type SearchInputProps = {
 
 // Navigation data
 const navItems = [
-  { href: '/', label: 'Dashboard' },
+  { href: '/dashboard', label: 'Dashboard' },
   { href: '/discovery', label: 'Discovery' },
   { href: '/customers', label: 'Customers' },
   { href: '/messages', label: 'Messages' },
   { href: '/help', label: 'Help' },
 ];
 
-// Dropdown options data
-// const dropdownOptions = [
-//   { href: '/profile', label: 'Profile' },
-//   { href: '/settings', label: 'Settings' },
-//   { href: '/logout', label: 'Logout' },
-// ];
-
-const dropdownOptions = [
-  { href: '/profile', label: 'Arnold Asiimwe', email: 'asiimwearnold25@gmail.com' },
-  { href: '/settings', label: 'Settings' },
-  { href: '/purchase-history', label: 'Purchase history' },
-  { href: '/get-help', label: 'Get help' },
-  { href: '/suggest-improvement', label: 'Suggest improvement' },
-  { href: '/get-apps', label: 'Get the Canva Apps' },
-  { href: '/refer-friends', label: 'Refer friends' },
-  { href: '/create-team', label: 'Create a team' },
-  { href: '/report-content', label: 'Report content' },
-  { href: '/privacy-policy', label: 'Privacy policy' },
-  { href: '/logout', label: 'Sign out' },
-];
 
 // Define a type for the Navbar props
 type NavbarProps = {
@@ -46,14 +27,32 @@ type NavbarProps = {
 };
 
 const Navbar = ({ search, setIsMenuOpen }: NavbarProps) => {
-  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const {user} = useKindeBrowserClient()
 
+  const dropdownOptions = [
+    { href: '/profile', label: user?.given_name, email: user?.email},
+    { href: '/settings', label: 'Settings' },
+    { href: '/purchase-history', label: 'Purchase history' },
+    { href: '/get-help', label: 'Get help' },
+    { href: '/suggest-improvement', label: 'Suggest improvement' },
+    { href: '/get-apps', label: 'Get the Canva Apps' },
+    { href: '/refer-friends', label: 'Refer friends' },
+    { href: '/create-team', label: 'Create a team' },
+    { href: '/report-content', label: 'Report content' },
+    { href: '/privacy-policy', label: 'Privacy policy' },
+    { href: '/logout', label: 'Sign out' },
+  ];
+
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const toggleDropdown = () => {
     setDropdownOpen(!dropdownOpen);
   };
 
+ 
   return (
-    <nav className="flex items-center justify-between bg-gray-800 p-4 sm:p-6 lg:p-8">
+    <nav className="flex items-center justify-between bg-gray-800 p-4 sm:p-6 lg:p-8 w-full" 
+     style={{ position: 'fixed', top: 0, left: 0, height: '' }}
+    >
       <div className="text-white text-xl">
            <Brand/> 
         </div>
@@ -84,43 +83,45 @@ const Navbar = ({ search, setIsMenuOpen }: NavbarProps) => {
             onClick={toggleDropdown}
           >
             <div className="rounded-full overflow-hidden">
-              {/* <Image
-                src="https://via.placeholder.com/30"
-                alt="User"
-                width={30}
-                height={30}
-              /> */}
+
               <img 
-                src="https://via.placeholder.com/30" 
+                src={user?.picture} 
                 alt="User" 
                 className="w-8 h-8 rounded-full"
               /> 
             </div>
           </button>
-          {dropdownOpen && (
-            <div className="absolute right-0 mt-2 w-64 bg-white rounded-md shadow-lg z-10">
-              {dropdownOptions.map((option, index) => (
-                <Link key={index} href={option.href} className="block px-4 py-2 text-gray-800 hover:bg-gray-200">
-                  {option.label === 'Arnold Asiimwe' ? (
-                    <div className="flex items-center">
-                      <img
-                        src="https://via.placeholder.com/30"
-                        alt="User"
-                        className="w-8 h-8 rounded-full mr-2"
-                      />
-                      <div>
-                        <div>{option.label}</div>
-                        <div className="text-sm text-gray-500">{option.email}</div>
-                      </div>
-                    </div>
-                  ) : (
-                    option.label
-                  )}
-                </Link>
-              ))}
-            </div>
-          )}
          
+
+{dropdownOpen && (
+  <div className="absolute right-0 mt-2 w-64 bg-white rounded-md shadow-lg z-10">
+    {dropdownOptions.map((option, index) => (
+      <div key={index} className="px-4 py-2">
+        {option.label === '' ? (
+          <div className="flex items-center">
+            <div>
+              <div>{option.label}</div>
+              <div className="text-sm text-gray-500">{option.email}</div>
+            </div>
+          </div>
+        ) : option.label === 'Sign out' ? (
+          <LogoutLink>
+            <button
+            // onClick={handleLogout} // Add your logout function here
+            className="text-white  bg-black  w-full flex items-center py-2" >
+            Sign out
+          </button>
+          </LogoutLink>
+          
+        ) : (
+          <Link href={option.href} className="text-gray-800 hover:bg-gray-200">
+            {option.label}
+          </Link>
+        )}
+      </div>
+    ))}
+  </div>
+)}
           
         </div>
       </div>
