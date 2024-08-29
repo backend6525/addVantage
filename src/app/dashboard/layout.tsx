@@ -20,23 +20,19 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
 	};
 
 	return (
-		<div className="dark:bg-black dark:text-bodydark min-h-screen grid grid-rows-[auto_1fr_auto] grid-cols-[auto_1fr]">
-			<div
-				className="row-span-1 col-span-2"
-				style={{ position: "sticky", top: 0 }}>
+		<div className="dark:bg-black dark:text-bodydark min-h-screen flex flex-col overflow-hidden">
+			<div className="sticky top-0 z-10">
 				<Header />
 			</div>
-			<div className="row-span-2 col-span-1">
+
+			<div className="flex flex-1 overflow-hidden">
 				<SideMenu
 					isMenuOpen={isMenuOpen}
 					userEmail="info.fiberlinknet@gmail.com"
 				/>
+				<main className="flex-1 overflow-auto p-4">{children}</main>
 			</div>
-
-			<main className="row-span-2 col-span-1">{children}</main>
-
-			{/* Your footer component */}
-			{/* <Footer className="row-span-1 col-span-2" /> */}
+			{/* <Footer /> */}
 		</div>
 	);
 };
