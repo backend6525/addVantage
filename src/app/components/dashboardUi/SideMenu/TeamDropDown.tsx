@@ -85,12 +85,12 @@ const TeamDropDown: React.FC<{ userEmail: string }> = ({ userEmail }) => {
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
 				<div className="ml-3 flex">
-					<h2 className="pr-5">Team Name</h2>
+					<h2 className="pr-5">Select Team</h2>
 					<CircularNumber number={2} online={true} />
 				</div>
 			</DropdownMenuTrigger>
 			<DropdownMenuContent className="w-56">
-				<DropdownMenuLabel>Select Team</DropdownMenuLabel>
+				{/* <DropdownMenuLabel>Create Team </DropdownMenuLabel> */}
 				{teamList?.map((team) => (
 					<DropdownMenuCheckboxItem
 						key={team._id}
@@ -102,7 +102,6 @@ const TeamDropDown: React.FC<{ userEmail: string }> = ({ userEmail }) => {
 					</DropdownMenuCheckboxItem>
 				))}
 			</DropdownMenuContent>
-			{user && <div>{user.email}</div>}
 		</DropdownMenu>
 	);
 };

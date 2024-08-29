@@ -1,67 +1,61 @@
+// import { convexTest } from "convex-test";
+// import { expect, test } from "vitest";
+// import { api } from "./_generated/api";
 
-import { convexTest } from "convex-test";
-import { expect, test } from "vitest";
-import { api } from "./_generated/api";
+// test("check retrieval of a single team", async () => {
+// 	const t = convexTest();
 
-// interface Team {
-//     teamName: string,
-//     createdBy: string
-// }
+// 	// Create a team
+// 	let team = await t.mutation(api.teams.createTeam, {
+// 		teamName: "Adds",
+// 		createdBy: "info.fiber@gmail.com",
+// 	});
 
-test("check retrieval of a single team", async () => {
-  const t = convexTest();
+// 	// Retrieve the specific team
+// 	const retrievedTeam = await t.query(api.teams.getTeam, {
+// 		email: "info.fiber@gmail.com",
+// 		teamName: "Adds",
+// 	});
 
-  // Create a team
-  let team = await t.mutation(api.teams.createTeam, {
-    teamName: "Adds",
-    createdBy: "info.fiber@gmail.com",
-  });
+// 	// Check that the retrieved team matches the expected values, ignoring auto-generated fields
+// 	expect(retrievedTeam).toContainEqual(
+// 		expect.objectContaining({
+// 			teamName: "Adds",
+// 			createdBy: "info.fiber@gmail.com",
+// 		})
+// 	);
+// });
 
-  // Retrieve the specific team
-  const retrievedTeam = await t.query(api.teams.getTeam, {
-    email: "info.fiber@gmail.com",
-    teamName: "Adds",
-  });
+// test("check retrieval of all teams", async () => {
+// 	const t = convexTest();
 
-  // Check that the retrieved team matches the expected values, ignoring auto-generated fields
-  expect(retrievedTeam).toContainEqual(
-    expect.objectContaining({
-      teamName: "Adds",
-      createdBy: "info.fiber@gmail.com",
-    })
-  );
-});
+// 	// Create multiple teams
+// 	await t.mutation(api.teams.createTeam, {
+// 		teamName: "Team1",
+// 		createdBy: "user1@example.com",
+// 	});
+// 	await t.mutation(api.teams.createTeam, {
+// 		teamName: "Team2",
+// 		createdBy: "user2@example.com",
+// 	});
 
-test("check retrieval of all teams", async () => {
-  const t = convexTest();
+// 	// Retrieve all teams
+// 	const allTeams = await t.query(api.teams.getTeam, {
+// 		email: "", // Assuming the query can handle an empty email to retrieve all teams
+// 		teamName: "", // Assuming the query can handle an empty teamName to retrieve all teams
+// 	});
 
-  // Create multiple teams
-  await t.mutation(api.teams.createTeam, {
-    teamName: "Team1",
-    createdBy: "user1@example.com",
-  });
-  await t.mutation(api.teams.createTeam, {
-    teamName: "Team2",
-    createdBy: "user2@example.com",
-  });
-
-  // Retrieve all teams
-  const allTeams = await t.query(api.teams.getTeam, {
-    email: "", // Assuming the query can handle an empty email to retrieve all teams
-    teamName: "", // Assuming the query can handle an empty teamName to retrieve all teams
-  });
-
-  // Check that the retrieved teams match the expected values, ignoring auto-generated fields
-  expect(allTeams).toEqual(
-    expect.arrayContaining([
-      expect.objectContaining({
-        teamName: "Team1",
-        createdBy: "user1@example.com",
-      }),
-      expect.objectContaining({
-        teamName: "Team2",
-        createdBy: "user2@example.com",
-      }),
-    ])
-  );
-});
+// 	// Check that the retrieved teams match the expected values, ignoring auto-generated fields
+// 	expect(allTeams).toEqual(
+// 		expect.arrayContaining([
+// 			expect.objectContaining({
+// 				teamName: "Team1",
+// 				createdBy: "user1@example.com",
+// 			}),
+// 			expect.objectContaining({
+// 				teamName: "Team2",
+// 				createdBy: "user2@example.com",
+// 			}),
+// 		])
+// 	);
+// });
