@@ -1,13 +1,13 @@
-import Image from "next/image"
+import Image from "next/image";
 
 const Brand = ({ ...props }) => (
-    <Image
-        src="/addVantage.png"
-        alt="addVantage logo"
-        {...props}
-        width={110}
-        height={50}
-        priority
-    />
-)
-export default Brand
+	<Image
+		src="/addVantage.png"
+		alt="addVantage logo"
+		{...props}
+		width={110}
+		height={20}
+		priority
+	/>
+);
+export default Brand;

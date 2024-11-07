@@ -10,7 +10,7 @@ const comparisonData = {
 
 const ComparisonCard = () => {
 	return (
-		<div className="flex items-center bg-blue-50 p-4 rounded-md shadow-md">
+		<div className="flex items-center bg-blue-50 p-6 rounded-md shadow-md">
 			<div className="flex items-center space-x-4">
 				<img
 					src={comparisonData.imageSrc}

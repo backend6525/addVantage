@@ -1,0 +1,153 @@
+.headercard .glass-card {
+	background: rgba(255, 255, 255, 0.1); /* Transparent background */
+	backdrop-filter: blur(10px); /* Glass effect */
+	border-radius: 20px;
+	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6); /* Deep glossy shadow */
+	border: 1px solid rgba(255, 255, 255, 0.2); /* Fine border */
+	transition: all 0.3s ease-in-out;
+	padding: 24px;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: space-between;
+	height: auto;
+}
+
+/* Hover effect on cards */
+.headercard .glass-card:hover {
+	transform: scale(1.05); /* Slight scale on hover */
+	background: rgba(255, 255, 255, 0.15); /* Brighter on hover */
+	box-shadow: 0 6px 30px rgba(0, 0, 0, 0.7); /* Deeper shadow on hover */
+}
+
+/* Frosted glass input */
+.headercard .glass-input {
+	background: rgba(255, 255, 255, 0.2); /* Transparent input field */
+	border: 1px solid rgba(255, 255, 255, 0.3);
+	color: white;
+	backdrop-filter: blur(8px); /* Subtle blur */
+	border-radius: 12px;
+	padding: 12px;
+	transition: all 0.3s ease;
+}
+
+.headercard .glass-input::placeholder {
+	color: rgba(255, 255, 255, 0.5);
+}
+
+/* Icon wrapper with glossy effect */
+.headercard .icon-wrapper {
+	background: rgba(255, 255, 255, 0.15); /* Light transparency for icon bg */
+	backdrop-filter: blur(8px); /* Glassy effect */
+	padding: 5px 10px; /* Reduced padding to better fit the icons */
+	border-radius: 50px; /* Adjusted border-radius to better match icon's shape */
+	transition: all 0.3s ease;
+	box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5); /* Deep shadow */
+	width: 70px; /* Adjust width slightly to fit the icon width and padding */
+	height: 70px; /* Adjust height to fit the icon height and padding */
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	flex: 0 0 auto; /* Ensure the wrapper doesn't stretch */
+	opacity: 1;
+}
+
+/* Hover effect for icons */
+.headercard .icon-wrapper:hover {
+	background: rgba(255, 255, 255, 0.3); /* Brighten on hover */
+	transform: scale(1.1); /* Scale on hover */
+}
+
+/* Social icons container */
+.headercard .icon-container {
+	display: flex;
+	overflow: hidden;
+	justify-content: center;
+	margin: 0 auto;
+	/* Hide the rest of the icons */
+	width: calc(94px * 4); /* Width of 4 icons */
+	position: relative;
+}
+
+/* Placeholder for charts and visual elements */
+.headercard .chart-placeholder {
+	background-color: rgba(255, 255, 255, 0.1);
+	border-radius: 8px;
+	backdrop-filter: blur(6px);
+	height: 100px; /* Placeholder size */
+}
+
+/* Navigation button styles */
+.headercard .nav-button {
+	position: absolute;
+	top: 50%;
+	transform: translateY(-50%);
+	background-color: rgba(0, 0, 0, 0.5);
+	color: white;
+	border: none;
+	border-radius: 50%;
+	padding: 10px;
+	cursor: pointer;
+	z-index: 1; /* Ensure buttons are above the content */
+	transition: background-color 0.3s ease;
+}
+
+.headercard .nav-button:hover {
+	background-color: rgba(0, 0, 0, 0.7); /* Darken on hover */
+}
+
+/* Left button */
+.headercard .left-button {
+	left: 0;
+}
+
+/* Right button */
+.headercard .right-button {
+	right: 0;
+}
+
+/* Grid layout for the headercard */
+.headercard .grid {
+	display: grid;
+	grid-template-columns: 1fr; /* Single column layout for mobile */
+}
+
+@media (min-width: 768px) {
+	.headercard .grid {
+		grid-template-columns: repeat(
+			2,
+			1fr
+		); /* Two column layout for medium screens */
+	}
+}
+
+@media (min-width: 1024px) {
+	.headercard .grid {
+		grid-template-columns: repeat(
+			3,
+			1fr
+		); /* Three column layout for large screens */
+	}
+}
+
+/* Global body styling */
+body {
+	background-color: #0d0d0d; /* Dark background */
+	color: white;
+	font-family: "Arial", sans-serif;
+}
+.scroll-smooth {
+	scroll-behavior: smooth;
+}
+
+.headercard .nav-button.left-button {
+	left: -20px; /* Move button slightly to the left of the container */
+}
+
+.headercard .nav-button.right-button {
+	right: -20px; /* Move button slightly to the right of the container */
+}
+
+.headercard .nav-button:hover {
+	background-color: rgba(0, 0, 0, 0.7); /* Darken on hover */
+}

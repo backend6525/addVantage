@@ -28,18 +28,18 @@ interface User {
 	location?: string;
 }
 
-const CircularNumber: React.FC<CircularNumberProps> = ({ number, online }) => {
-	return (
-		<div className="relative w-9 h-9">
-			<div className="w-full h-full rounded-full bg-blue-500 flex items-center justify-center">
-				<span className="text-white text-lg font-bold">{number}</span>
-			</div>
-			{online && (
-				<div className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-green-500 border-2 border-white transform translate-x-1/4 translate-y-/4" />
-			)}
-		</div>
-	);
-};
+// const CircularNumber: React.FC<CircularNumberProps> = ({ number, online }) => {
+// 	return (
+// 		<div className="relative w-9 h-9">
+// 			<div className="w-full h-full rounded-full bg-blue-500 flex items-center justify-center">
+// 				<span className="text-white text-lg font-bold">{number}</span>
+// 			</div>
+// 			{online && (
+// 				<div className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-green-500 border-2 border-white transform translate-x-1/4 translate-y-/4" />
+// 			)}
+// 		</div>
+// 	);
+// };
 
 const TeamDropDown: React.FC<{ userEmail: string }> = ({ userEmail }) => {
 	const [teamList, setTeamList] = useState<TEAM[] | undefined>(undefined);
@@ -84,9 +84,9 @@ const TeamDropDown: React.FC<{ userEmail: string }> = ({ userEmail }) => {
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
-				<div className="ml-3 flex">
-					<h2 className="pr-5">Select Team</h2>
-					<CircularNumber number={2} online={true} />
+				<div className=" flex">
+					<h2 className="pr-2">Select Team</h2>
+					{/* <CircularNumber number={2} online={true} /> */}
 				</div>
 			</DropdownMenuTrigger>
 			<DropdownMenuContent className="w-56">
