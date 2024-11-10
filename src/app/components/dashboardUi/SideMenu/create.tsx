@@ -49,12 +49,221 @@ function Create({ onCreateAd, isMenuOpen }: any) {
 		return formData.adName && formData.teamId && formData.createdBy;
 	};
 
-	const uploadFileToS3 = async (file: File) => {
+	// const uploadFileToS3 = async (file: File) => {
+	// 	const fileName = encodeURIComponent(file.name); // Ensure safe URL usage
+	// 	const fileType = file.type;
+
+	// 	try {
+	// 		// Step 1: Get signed URL from the backend API
+	// 		const res = await fetch('/api/uploadToS3', {
+	// 			method: 'POST',
+	// 			headers: {
+	// 				'Content-Type': 'application/json',
+	// 			},
+	// 			body: JSON.stringify({
+	// 				fileName,
+	// 				fileType,
+	// 			}),
+	// 		});
+
+	// 		const data = await res.json();
+	// 		console.log('Signed URL response:', data);
+
+	// 		if (!data.uploadUrl) {
+	// 			throw new Error('Failed to get signed URL');
+	// 		}
+
+	// 		const uploadUrl = decodeURIComponent(data.uploadUrl);
+
+	// 		// Step 2: Upload file to S3 using the signed URL
+	// 		console.log('Uploading to S3 using URL:', uploadUrl);
+	// 		const upload = await fetch(uploadUrl, {
+	// 			method: 'PUT',
+	// 			headers: {
+	// 				'Content-Type': fileType, // Keep only Content-Type header
+	// 			},
+	// 			body: file, // Upload the actual file content
+	// 		});
+
+	// 		if (!upload.ok) {
+	// 			throw new Error('File upload failed.');
+	// 		}
+
+	// 		console.log('File successfully uploaded');
+	// 		return uploadUrl.split('?')[0]; // Return the public URL without query params
+	// 	} catch (error) {
+	// 		console.error('Error uploading file to S3:', error);
+	// 		throw error;
+	// 	}
+	// };
+
+	// const uploadFileToS3 = async (file) => {
+	// 	const fileName = encodeURIComponent(file.name); // Ensure safe URL usage
+	// 	const fileType = file.type;
+
+	// 	// Convert the file to a base64-encoded string
+	// 	const base64Content = await new Promise((resolve, reject) => {
+	// 		const reader = new FileReader();
+	// 		reader.onloadend = () => resolve(reader.result.split(',')[1]); // Extract base64 content
+	// 		reader.onerror = reject;
+	// 		reader.readAsDataURL(file); // Read file as base64
+	// 	});
+
+	// 	try {
+	// 		const res = await fetch('/api/uploadToS3', {
+	// 			method: 'POST',
+	// 			headers: {
+	// 				'Content-Type': 'application/json',
+	// 			},
+	// 			body: JSON.stringify({
+	// 				fileName,
+	// 				fileType,
+	// 				fileContent: base64Content,
+	// 			}),
+	// 		});
+
+	// 		const data = await res.json();
+	// 		console.log('Response from backend:', data);
+
+	// 		if (!res.ok) {
+	// 			throw new Error(data.error || 'File upload failed.');
+	// 		}
+
+	// 		return data.cloudFrontUrl; // Return CloudFront URL for the uploaded file
+	// 	} catch (error) {
+	// 		console.error('Error uploading file to S3:', error);
+	// 		throw error;
+	// 	}
+	// };
+
+	// const uploadFileToS3 = async (file: File): Promise<string> => {
+	// 	// Specify 'file' as File type
+	// 	const fileName = encodeURIComponent(file.name);
+	// 	const fileType = file.type;
+
+	// 	// Convert the file to a base64-encoded string
+	// 	const base64Content = await new Promise<string>((resolve, reject) => {
+	// 		const reader = new FileReader();
+
+	// 		reader.onloadend = () => {
+	// 			// Assert that 'reader.result' is a string since we're using 'readAsDataURL'
+	// 			const result = reader.result as string | null;
+	// 			if (result) {
+	// 				resolve(result.split(',')[1]); // Extract base64 content after the comma
+	// 			} else {
+	// 				reject('File reading failed');
+	// 			}
+	// 		};
+
+	// 		reader.onerror = reject;
+	// 		reader.readAsDataURL(file); // Read file as base64
+	// 	});
+
+	// 	try {
+	// 		const res = await fetch('/api/uploadToS3', {
+	// 			method: 'POST',
+	// 			headers: {
+	// 				'Content-Type': 'application/json',
+	// 			},
+	// 			body: JSON.stringify({
+	// 				fileName,
+	// 				fileType,
+	// 				fileContent: base64Content,
+	// 			}),
+	// 		});
+
+	// 		const data = await res.json();
+	// 		console.log('Response from backend:', data);
+
+	// 		if (!res.ok) {
+	// 			throw new Error(data.error || 'File upload failed.');
+	// 		}
+
+	// 		return data.cloudFrontUrl;
+	// 	} catch (error) {
+	// 		console.error('Error uploading file to S3:', error);
+	// 		throw error;
+	// 	}
+	// };
+
+	// const uploadFileToS3 = async (file: File): Promise<string> => {
+	// 	const fileName = encodeURIComponent(file.name); // Safe URL format
+	// 	const fileType = file.type;
+
+	// 	// Convert the file to a base64-encoded string
+	// 	const base64Content = await new Promise<string>((resolve, reject) => {
+	// 		const reader = new FileReader();
+	// 		reader.onloadend = () => {
+	// 			const result = reader.result as string | null;
+	// 			if (result) {
+	// 				resolve(result.split(',')[1]); // Extract base64 content
+	// 			} else {
+	// 				reject('File reading failed');
+	// 			}
+	// 		};
+	// 		reader.onerror = reject;
+	// 		reader.readAsDataURL(file); // Read file as base64
+	// 	});
+
+	// 	console.log('Sending to backend:', {
+	// 		fileName,
+	// 		fileType,
+	// 		fileContent: base64Content,
+	// 	}); // Log to check values before sending
+
+	// 	try {
+	// 		const res = await fetch('/api/uploadToS3', {
+	// 			method: 'POST',
+	// 			headers: {
+	// 				'Content-Type': 'application/json',
+	// 			},
+	// 			body: JSON.stringify({
+	// 				fileName,
+	// 				fileType,
+	// 				fileContent: base64Content,
+	// 			}),
+	// 		});
+
+	// 		const data = await res.json();
+	// 		console.log('Response from backend:', data);
+
+	// 		if (!res.ok) {
+	// 			throw new Error(data.error || 'File upload failed.');
+	// 		}
+
+	// 		return data.cloudFrontUrl;
+	// 	} catch (error) {
+	// 		console.error('Error uploading file to S3:', error);
+	// 		throw error;
+	// 	}
+	// };
+
+	const uploadFileToS3 = async (file: File): Promise<string> => {
 		const fileName = encodeURIComponent(file.name);
 		const fileType = file.type;
 
+		// Convert the file to a base64-encoded string
+		const base64Content = await new Promise<string>((resolve, reject) => {
+			const reader = new FileReader();
+			reader.onloadend = () => {
+				const result = reader.result as string | null;
+				if (result) {
+					resolve(result.split(',')[1]); // Extract base64 content after the comma
+				} else {
+					reject('File reading failed');
+				}
+			};
+			reader.onerror = reject;
+			reader.readAsDataURL(file);
+		});
+
+		console.log('Sending to backend:', {
+			fileName,
+			fileType,
+			fileContent: base64Content,
+		});
+
 		try {
-			// Step 1: Get signed URL from the backend API
 			const res = await fetch('/api/uploadToS3', {
 				method: 'POST',
 				headers: {
@@ -63,40 +272,24 @@ function Create({ onCreateAd, isMenuOpen }: any) {
 				body: JSON.stringify({
 					fileName,
 					fileType,
+					fileContent: base64Content,
 				}),
 			});
 
 			const data = await res.json();
-			console.log('Signed URL response:', data); // Check if uploadUrl is valid
+			console.log('Response from backend:', data);
 
-			if (!data.uploadUrl) {
-				throw new Error('Failed to get signed URL');
+			if (!res.ok) {
+				throw new Error(data.error || 'File upload failed.');
 			}
 
-			// Step 2: Upload file to S3 using the signed URL
-			console.log('Uploading to S3 using URL:', data.uploadUrl);
-			const upload = await fetch(data.uploadUrl, {
-				method: 'PUT',
-				headers: {
-					'Content-Type': fileType,
-					'Content-Length': file.size.toString(), // Add this line
-				},
-				body: file, // Upload the actual file content
-			});
-
-			if (!upload.ok) {
-				throw new Error('File upload failed.');
-			}
-
-			console.log('File successfully uploaded');
-			return data.uploadUrl.split('?')[0]; // Return the public URL without query params
+			return data.cloudFrontUrl;
 		} catch (error) {
 			console.error('Error uploading file to S3:', error);
 			throw error;
 		}
 	};
 
-	// Handle ad creation
 	const handleCreateAd = async () => {
 		try {
 			// Proceed with file upload if adResource is provided
