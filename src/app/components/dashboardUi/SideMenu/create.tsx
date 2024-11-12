@@ -514,6 +514,7 @@ type CreateAdPayload = {
 	costPerView: string;
 	numberOfDaysRunning: string;
 	adResourceUrl: string | null;
+	adResource: string | null;
 };
 
 // Define the response type
@@ -531,6 +532,7 @@ function Create({ onCreateAd = () => {}, isMenuOpen }: any) {
 		type: '',
 		costPerView: '',
 		numberOfDaysRunning: '',
+		adResourceUrl: '',
 		adResource: null as File | null, // File object for upload
 	});
 	const [showSuccessDialog, setShowSuccessDialog] = useState(false);
@@ -538,7 +540,7 @@ function Create({ onCreateAd = () => {}, isMenuOpen }: any) {
 	const convex = useConvex();
 
 	// Explicitly defining the payload type
-	const createAd = useMutation(api.ads.createAd) as (
+	const createAd = useMutation(api.ads.createAds) as (
 		payload: CreateAdPayload
 	) => Promise<CreateAdResponse>;
 
@@ -613,6 +615,7 @@ function Create({ onCreateAd = () => {}, isMenuOpen }: any) {
 				costPerView: formData.costPerView,
 				numberOfDaysRunning: formData.numberOfDaysRunning,
 				adResourceUrl: fileUrl || '',
+				adResource: '',
 			};
 
 			await createAd(payload);

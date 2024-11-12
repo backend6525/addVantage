@@ -1,7 +1,7 @@
 import { v } from 'convex/values';
 import { mutation, query } from './_generated/server';
 
-export const createAd = mutation({
+export const createAds = mutation({
 	args: {
 		adName: v.string(),
 		teamId: v.string(),
