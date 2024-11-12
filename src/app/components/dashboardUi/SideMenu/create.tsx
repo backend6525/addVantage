@@ -516,6 +516,13 @@ type CreateAdPayload = {
 	adResourceUrl: string | null;
 };
 
+// Define the response type
+type CreateAdResponse = {
+	success: boolean;
+	message: string;
+	// Add other properties as needed
+};
+
 function Create({ onCreateAd = () => {}, isMenuOpen }: any) {
 	const [formData, setFormData] = useState({
 		adName: '',
@@ -533,7 +540,7 @@ function Create({ onCreateAd = () => {}, isMenuOpen }: any) {
 	// Explicitly defining the payload type
 	const createAd = useMutation(api.ads.createAd) as (
 		payload: CreateAdPayload
-	) => Promise<any>;
+	) => Promise<CreateAdResponse>;
 
 	// Handle form input changes
 	const handleChange = (
