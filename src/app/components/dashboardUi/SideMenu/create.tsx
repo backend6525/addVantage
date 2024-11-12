@@ -17,7 +17,7 @@
 // import 'react-toastify/dist/ReactToastify.css';
 // import { FiFilePlus } from 'react-icons/fi';
 
-// function Create({ onCreateAd, isMenuOpen }: any) {
+// function Create({ onCreateAd = () => {}, isMenuOpen }: any) {
 // 	const [formData, setFormData] = useState({
 // 		adName: '',
 // 		teamId: '',
@@ -49,197 +49,69 @@
 // 		return formData.adName && formData.teamId && formData.createdBy;
 // 	};
 
-// const uploadFileToS3 = async (file: File): Promise<string> => {
-// 	const fileName = encodeURIComponent(file.name);
-// 	const fileType = file.type;
+// 	const uploadFileToS3 = async (file: File): Promise<string> => {
+// 		// Use encodeURIComponent to safely URL-encode the file name once
+// 		const fileName = encodeURIComponent(file.name); // Encode only once
+// 		const fileType = file.type;
 
-// 	// Convert the file to a base64-encoded string
-// 	const base64Content = await new Promise<string>((resolve, reject) => {
-// 		const reader = new FileReader();
-// 		reader.onloadend = () => {
-// 			const result = reader.result as string | null;
-// 			if (result) {
-// 				resolve(result.split(',')[1]); // Extract base64 content after the comma
-// 			} else {
-// 				reject('File reading failed');
-// 			}
-// 		};
-// 		reader.onerror = reject;
-// 		reader.readAsDataURL(file);
-// 	});
-
-// 	console.log('Sending to backend:', {
-// 		fileName,
-// 		fileType,
-// 		fileContent: base64Content,
-// 	});
-
-// 	try {
-// 		const res = await fetch('/api/uploadToS3', {
-// 			method: 'POST',
-// 			headers: {
-// 				'Content-Type': 'application/json',
-// 			},
-// 			body: JSON.stringify({
-// 				fileName,
-// 				fileType,
-// 				fileContent: base64Content,
-// 			}),
+// 		// Convert the file to a base64-encoded string
+// 		const base64Content = await new Promise<string>((resolve, reject) => {
+// 			const reader = new FileReader();
+// 			reader.onloadend = () => {
+// 				const result = reader.result as string | null;
+// 				if (result) {
+// 					resolve(result.split(',')[1]); // Extract base64 content after the comma
+// 				} else {
+// 					reject('File reading failed');
+// 				}
+// 			};
+// 			reader.onerror = reject;
+// 			reader.readAsDataURL(file);
 // 		});
 
-// 		const data = await res.json();
-// 		console.log('Response from backend:', data);
-
-// 		if (!res.ok) {
-// 			throw new Error(data.error || 'File upload failed.');
-// 		}
-
-// 		return data.cloudFrontUrl;
-// 	} catch (error) {
-// 		console.error('Error uploading file to S3:', error);
-// 		throw error;
-// 	}
-// };
-
-// const handleCreateAd = async () => {
-// 	try {
-// 		// Proceed with file upload if adResource is provided
-// 		let fileUrl = null;
-// 		if (formData.adResource) {
-// 			fileUrl = await uploadFileToS3(formData.adResource); // Get file URL from S3
-// 		}
-
-// 		// Prepare the payload for ad creation
-// 		const payload = {
-// 			...formData,
-// 			adResource: fileUrl || '', // Use file URL if available, otherwise empty string
-// 		};
-
-// 		// Call the mutation to create the ad
-// 		await createAd(payload);
-// 		toast.success('Ad created successfully!');
-// 		setShowSuccessDialog(true); // Show success dialog
-// 	} catch (error) {
-// 		console.error('Error creating ad:', error);
-// 		toast.error('Ad creation failed. Please try again.');
-// 	}
-// };
-
-// const uploadFileToS3 = async (file: File): Promise<string> => {
-// 	// Use encodeURIComponent to safely URL-encode the file name once
-// 	const fileName = encodeURIComponent(file.name); // Encode only once
-// 	const fileType = file.type;
-
-// 	// Convert the file to a base64-encoded string
-// 	const base64Content = await new Promise<string>((resolve, reject) => {
-// 		const reader = new FileReader();
-// 		reader.onloadend = () => {
-// 			const result = reader.result as string | null;
-// 			if (result) {
-// 				resolve(result.split(',')[1]); // Extract base64 content after the comma
-// 			} else {
-// 				reject('File reading failed');
-// 			}
-// 		};
-// 		reader.onerror = reject;
-// 		reader.readAsDataURL(file);
-// 	});
-
-// 	console.log('Sending to backend:', {
-// 		fileName,
-// 		fileType,
-// 		fileContent: base64Content,
-// 	});
-
-// 	try {
-// 		const res = await fetch('/api/uploadToS3', {
-// 			method: 'POST',
-// 			headers: {
-// 				'Content-Type': 'application/json',
-// 			},
-// 			body: JSON.stringify({
-// 				fileName, // Already encoded
-// 				fileType,
-// 				fileContent: base64Content,
-// 			}),
+// 		console.log('Sending to backend:', {
+// 			fileName,
+// 			fileType,
+// 			fileContent: base64Content,
 // 		});
 
-// 		const data = await res.json();
-// 		console.log('Response from backend:', data);
+// 		try {
+// 			const res = await fetch('/api/uploadToS3', {
+// 				method: 'POST',
+// 				headers: {
+// 					'Content-Type': 'application/json',
+// 				},
+// 				body: JSON.stringify({
+// 					fileName, // Already encoded
+// 					fileType,
+// 					fileContent: base64Content,
+// 				}),
+// 			});
 
-// 		if (!res.ok) {
-// 			throw new Error(data.error || 'File upload failed.');
+// 			const data = await res.json();
+// 			console.log('Response from backend:', data);
+
+// 			if (!res.ok) {
+// 				throw new Error(data.error || 'File upload failed.');
+// 			}
+
+// 			// Ensure this URL is stored as-is in the database, without re-encoding
+// 			return data.cloudFrontUrl;
+// 		} catch (error) {
+// 			console.error('Error uploading file to S3:', error);
+// 			throw error;
 // 		}
-
-// 		// Ensure this URL is stored as-is in the database, without re-encoding
-// 		return data.cloudFrontUrl;
-// 	} catch (error) {
-// 		console.error('Error uploading file to S3:', error);
-// 		throw error;
-// 	}
-// };
-
-// const handleCreateAd = async () => {
-// 	try {
-// 		let fileUrl = null;
-// 		if (formData.adResource) {
-// 			// Get the CloudFront URL with single encoding
-// 			fileUrl = await uploadFileToS3(formData.adResource);
-// 		}
-
-// 		// Prepare the payload for ad creation
-// 		const payload = {
-// 			...formData,
-// 			adResourceUrl: fileUrl || '', // Use correct property name
-// 		};
-
-// 		// Call the mutation to create the ad with correctly encoded URL
-// 		await createAd(payload);
-// 		toast.success('Ad created successfully!');
-// 		setShowSuccessDialog(true);
-// 	} catch (error) {
-// 		console.error('Error creating ad:', error);
-// 		toast.error('Ad creation failed. Please try again.');
-// 	}
-// };
-
-// const handleCreateAd = async () => {
-// 	try {
-// 		// Proceed with file upload if adResource is provided
-// 		let fileUrl = null;
-// 		if (formData.adResource) {
-// 			fileUrl = await uploadFileToS3(formData.adResource); // Get file URL from S3
-// 		}
-
-// 		// Prepare the payload for ad creation, removing `adResource` entirely
-// 		const payload = {
-// 			adName: formData.adName,
-// 			teamId: formData.teamId,
-// 			createdBy: formData.createdBy,
-// 			type: formData.type,
-// 			costPerView: formData.costPerView,
-// 			numberOfDaysRunning: formData.numberOfDaysRunning,
-// 			adResourceUrl: fileUrl || '', // Use file URL if available
-// 		};
-
-// 		// Call the mutation to create the ad
-// 		await createAd(payload);
-// 		toast.success('Ad created successfully!');
-// 		setShowSuccessDialog(true);
-// 	} catch (error) {
-// 		console.error('Error creating ad:', error);
-// 		toast.error('Ad creation failed. Please try again.');
-// 	}
-// };
+// 	};
 
 // 	const handleCreateAd = async () => {
 // 		try {
+// 			// Proceed with file upload if adResource is provided
 // 			let fileUrl = null;
 // 			if (formData.adResource) {
 // 				fileUrl = await uploadFileToS3(formData.adResource); // Get file URL from S3
 // 			}
 
-// 			// Prepare the payload for ad creation, ensuring adResourceUrl is correctly set
+// 			// Prepare the payload for ad creation, removing adResource entirely
 // 			const payload = {
 // 				adName: formData.adName,
 // 				teamId: formData.teamId,
@@ -249,10 +121,12 @@
 // 				numberOfDaysRunning: formData.numberOfDaysRunning,
 // 				adResourceUrl: fileUrl || '', // Use file URL if available
 // 			};
-
+// 			console.log('Lets see', payload.adResourceUrl);
+// 			// Call the mutation to create the ad
 // 			await createAd(payload);
 // 			toast.success('Ad created successfully!');
 // 			setShowSuccessDialog(true);
+// 			onCreateAd(); // Call the callback to notify the parent component
 // 		} catch (error) {
 // 			console.error('Error creating ad:', error);
 // 			toast.error('Ad creation failed. Please try again.');
@@ -390,6 +264,16 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { FiFilePlus } from 'react-icons/fi';
 
+type CreateAdPayload = {
+	adName: string;
+	teamId: string;
+	createdBy: string;
+	type: string;
+	costPerView: string;
+	numberOfDaysRunning: string;
+	adResourceUrl: string | null;
+};
+
 function Create({ onCreateAd = () => {}, isMenuOpen }: any) {
 	const [formData, setFormData] = useState({
 		adName: '',
@@ -398,12 +282,16 @@ function Create({ onCreateAd = () => {}, isMenuOpen }: any) {
 		type: '',
 		costPerView: '',
 		numberOfDaysRunning: '',
-		adResource: null, // File object for upload
+		adResource: null as File | null, // File object for upload
 	});
 	const [showSuccessDialog, setShowSuccessDialog] = useState(false);
 
 	const convex = useConvex();
-	const createAd = useMutation(api.ads.createAd);
+
+	// Explicitly defining the payload type
+	const createAd = useMutation(api.ads.createAd) as (
+		payload: CreateAdPayload
+	) => Promise<any>;
 
 	// Handle form input changes
 	const handleChange = (
@@ -423,17 +311,15 @@ function Create({ onCreateAd = () => {}, isMenuOpen }: any) {
 	};
 
 	const uploadFileToS3 = async (file: File): Promise<string> => {
-		// Use encodeURIComponent to safely URL-encode the file name once
-		const fileName = encodeURIComponent(file.name); // Encode only once
+		const fileName = encodeURIComponent(file.name);
 		const fileType = file.type;
 
-		// Convert the file to a base64-encoded string
 		const base64Content = await new Promise<string>((resolve, reject) => {
 			const reader = new FileReader();
 			reader.onloadend = () => {
 				const result = reader.result as string | null;
 				if (result) {
-					resolve(result.split(',')[1]); // Extract base64 content after the comma
+					resolve(result.split(',')[1]);
 				} else {
 					reject('File reading failed');
 				}
@@ -442,33 +328,20 @@ function Create({ onCreateAd = () => {}, isMenuOpen }: any) {
 			reader.readAsDataURL(file);
 		});
 
-		console.log('Sending to backend:', {
-			fileName,
-			fileType,
-			fileContent: base64Content,
-		});
-
 		try {
 			const res = await fetch('/api/uploadToS3', {
 				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-				},
+				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
-					fileName, // Already encoded
+					fileName,
 					fileType,
 					fileContent: base64Content,
 				}),
 			});
 
 			const data = await res.json();
-			console.log('Response from backend:', data);
+			if (!res.ok) throw new Error(data.error || 'File upload failed.');
 
-			if (!res.ok) {
-				throw new Error(data.error || 'File upload failed.');
-			}
-
-			// Ensure this URL is stored as-is in the database, without re-encoding
 			return data.cloudFrontUrl;
 		} catch (error) {
 			console.error('Error uploading file to S3:', error);
@@ -478,28 +351,25 @@ function Create({ onCreateAd = () => {}, isMenuOpen }: any) {
 
 	const handleCreateAd = async () => {
 		try {
-			// Proceed with file upload if adResource is provided
 			let fileUrl = null;
 			if (formData.adResource) {
-				fileUrl = await uploadFileToS3(formData.adResource); // Get file URL from S3
+				fileUrl = await uploadFileToS3(formData.adResource);
 			}
 
-			// Prepare the payload for ad creation, removing adResource entirely
-			const payload = {
+			const payload: CreateAdPayload = {
 				adName: formData.adName,
 				teamId: formData.teamId,
 				createdBy: formData.createdBy,
 				type: formData.type,
 				costPerView: formData.costPerView,
 				numberOfDaysRunning: formData.numberOfDaysRunning,
-				adResourceUrl: fileUrl || '', // Use file URL if available
+				adResourceUrl: fileUrl || '',
 			};
-			console.log('Lets see', payload.adResourceUrl);
-			// Call the mutation to create the ad
+
 			await createAd(payload);
 			toast.success('Ad created successfully!');
 			setShowSuccessDialog(true);
-			onCreateAd(); // Call the callback to notify the parent component
+			onCreateAd();
 		} catch (error) {
 			console.error('Error creating ad:', error);
 			toast.error('Ad creation failed. Please try again.');
@@ -589,7 +459,6 @@ function Create({ onCreateAd = () => {}, isMenuOpen }: any) {
 				</DialogContent>
 			</Dialog>
 
-			{/* Success Dialog */}
 			<Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
 				<DialogContent className='p-8 bg-green-600 text-white rounded-lg shadow-lg max-w-2xl fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50'>
 					<DialogHeader>

@@ -14,7 +14,7 @@
 		"isolatedModules": true,
 		"jsx": "preserve",
 		"incremental": true,
-		"maxNodeModuleJsDepth": 10,
+		"maxNodeModuleJsDepth": 20,
 		"plugins": [
 			{
 				"name": "next"
