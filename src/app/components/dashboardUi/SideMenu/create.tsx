@@ -771,6 +771,12 @@ type CreateAdPayload = {
 	adResource: string | null;
 };
 
+type CreateAdResponse = {
+	success: boolean;
+	message: string;
+	// Additional properties as needed
+};
+
 function Create({ onCreateAd = () => {}, isMenuOpen }: any) {
 	const [formData, setFormData] = useState({
 		adName: '',
@@ -786,9 +792,11 @@ function Create({ onCreateAd = () => {}, isMenuOpen }: any) {
 
 	const convex = useConvex();
 
-	// Removed type argument from `useMutation` to allow for automatic type inference
-	const createAd = useMutation(api.ads.createAds);
-
+	// Passing `api.ads.createAds` with type casting to ensure correct signature
+	// const createAd = useMutation(
+	// 	api.ads.createAds as (payload: CreateAdPayload) => Promise<CreateAdResponse>
+	// );
+	const createAd = useMutation(api.ads.createAds) as any;
 	const handleChange = (
 		e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
 	) => {
