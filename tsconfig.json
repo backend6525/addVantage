@@ -32,7 +32,8 @@
 		"convex/teams.mts",
 		"convex/ads.mts",
 		"convex/user.mts",
-		"src/app/api/createAd/route.js"
+		"src/app/api/createAd/route.js",
+		"src/app/components/dashboardUi/SideMenu/TeamDropDown.jsx"
 	],
 	"exclude": ["node_modules"]
 }
