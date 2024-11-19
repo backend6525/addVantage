@@ -352,21 +352,95 @@
 // };
 
 // File: src/app/api/ads/[...]/route.ts
+// import { NextRequest, NextResponse } from 'next/server';
+// import { ConvexHttpClient } from 'convex/browser';
+// import { api } from '../../../../convex/_generated/api';
+
+// const convexClient = new ConvexHttpClient(
+// 	process.env.NEXT_PUBLIC_CONVEX_URL || ''
+// );
+
+// export const POST = async (req: NextRequest) => {
+// 	try {
+// 		const payload = await req.json();
+
+// 		console.log('Received payload:', payload);
+
+// 		// Destructure required fields for validation
+// 		const {
+// 			adName,
+// 			teamId,
+// 			createdBy,
+// 			type,
+// 			costPerView,
+// 			numberOfDaysRunning,
+// 			adResourceUrl,
+// 		} = payload;
+
+// 		// Validate required fields
+// 		if (
+// 			!adName ||
+// 			!teamId ||
+// 			!createdBy ||
+// 			!type ||
+// 			!costPerView ||
+// 			!numberOfDaysRunning ||
+// 			!adResourceUrl
+// 		) {
+// 			console.error('Missing required fields in payload:', payload);
+// 			return NextResponse.json(
+// 				{ error: 'Missing required fields' },
+// 				{ status: 400 }
+// 			);
+// 		}
+
+// 		// Call Convex mutation
+// 		const response = await convexClient.mutation(api.ads.createAds, payload);
+// 		console.log('Response from Convex mutation:', response);
+
+// 		return NextResponse.json(response);
+// 	} catch (error) {
+// 		const errorMessage =
+// 			error instanceof Error ? error.message : 'Unknown error';
+// 		console.error('Error creating ad in Convex:', errorMessage);
+// 		return NextResponse.json(
+// 			{ error: `Error creating ad in Convex: ${errorMessage}` },
+// 			{ status: 500 }
+// 		);
+// 	}
+// };
+
+// File: src/app/api/ads/[...]/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { ConvexHttpClient } from 'convex/browser';
 import { api } from '../../../../convex/_generated/api';
+
+// Define AdPayload interface for type safety
+interface AdPayload {
+	adName: string;
+	teamId: string;
+	createdBy: string;
+	type: string;
+	costPerView: number;
+	numberOfDaysRunning: number;
+	adResourceUrl: string;
+}
 
 const convexClient = new ConvexHttpClient(
 	process.env.NEXT_PUBLIC_CONVEX_URL || ''
 );
 
+// Helper function for the Convex mutation
+const createAd = async (payload: AdPayload) => {
+	return convexClient.mutation(api.ads.createAds, payload);
+};
+
 export const POST = async (req: NextRequest) => {
 	try {
-		const payload = await req.json();
+		const payload: AdPayload = await req.json();
 
 		console.log('Received payload:', payload);
 
-		// Destructure required fields for validation
 		const {
 			adName,
 			teamId,
@@ -395,7 +469,7 @@ export const POST = async (req: NextRequest) => {
 		}
 
 		// Call Convex mutation
-		const response = await convexClient.mutation(api.ads.createAds, payload);
+		const response = await createAd(payload);
 		console.log('Response from Convex mutation:', response);
 
 		return NextResponse.json(response);
