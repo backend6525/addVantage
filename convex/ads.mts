@@ -32,6 +32,7 @@ export const createAds = mutation({
 export const list = query({
 	args: {
 		email: v.optional(v.string()),
+		// enabled: v.optional(v.boolean()),
 	},
 	handler: async (ctx, args) => {
 		if (!args.email) {
