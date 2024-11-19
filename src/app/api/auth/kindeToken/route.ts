@@ -183,85 +183,85 @@
 // 	}
 // }
 
-import { NextResponse } from "next/server";
-import jwt from "jsonwebtoken";
-import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
-//KINDE_CLIENT_SECRET
-// Ensure the Supabase secret key is defined
-const SUPABASE_SECRET_KEY = process.env.KINDE_CLIENT_SECRET as string;
-if (!SUPABASE_SECRET_KEY) {
-	throw new Error("Supabase secret key is missing.");
-}
+// import { NextResponse } from "next/server";
+// import jwt from "jsonwebtoken";
+// import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
+// //KINDE_CLIENT_SECRET
+// // Ensure the Supabase secret key is defined
+// const SUPABASE_SECRET_KEY = process.env.KINDE_CLIENT_SECRET as string;
+// if (!SUPABASE_SECRET_KEY) {
+// 	throw new Error("Supabase secret key is missing.");
+// }
 
-// Type definition for decoded Kinde token claims
-interface KindeTokenClaims {
-	sub: string;
-	aud: string[];
-	iss: string;
-	exp: number;
-}
+// // Type definition for decoded Kinde token claims
+// interface KindeTokenClaims {
+// 	sub: string;
+// 	aud: string[];
+// 	iss: string;
+// 	exp: number;
+// }
 
-export async function GET() {
-	try {
-		// Fetch the Kinde session and token
-		const session = await getKindeServerSession();
-		const kindeAuthToken: any = await session?.getAccessTokenRaw();
+// export async function GET() {
+// 	try {
+// 		// Fetch the Kinde session and token
+// 		const session = await getKindeServerSession();
+// 		const kindeAuthToken: any = await session?.getAccessTokenRaw();
 
-		if (!kindeAuthToken) {
-			return NextResponse.json(
-				{ error: "Failed to retrieve Kinde auth token" },
-				{ status: 401 } // Unauthorized error code
-			);
-		}
+// 		if (!kindeAuthToken) {
+// 			return NextResponse.json(
+// 				{ error: "Failed to retrieve Kinde auth token" },
+// 				{ status: 401 } // Unauthorized error code
+// 			);
+// 		}
 
-		// Decode the Kinde Auth token
-		const kindeDecoded = jwt.decode(kindeAuthToken) as KindeTokenClaims | null;
-		console.log("The Decorded Token", kindeDecoded);
+// 		// Decode the Kinde Auth token
+// 		const kindeDecoded = jwt.decode(kindeAuthToken) as KindeTokenClaims | null;
+// 		console.log("The Decorded Token", kindeDecoded);
 
-		if (!kindeDecoded || typeof kindeDecoded !== "object") {
-			return NextResponse.json(
-				{ error: "Failed to decode Kinde auth token" },
-				{ status: 400 } // Bad request error code
-			);
-		}
+// 		if (!kindeDecoded || typeof kindeDecoded !== "object") {
+// 			return NextResponse.json(
+// 				{ error: "Failed to decode Kinde auth token" },
+// 				{ status: 400 } // Bad request error code
+// 			);
+// 		}
 
-		// Set the expiration time to be based on Kinde token expiration if possible, otherwise default to 20 minutes
+// 		// Set the expiration time to be based on Kinde token expiration if possible, otherwise default to 20 minutes
 
-		const expiration = kindeDecoded.exp
-			? kindeDecoded.exp
-			: Math.floor(Date.now() / 1000) + 60 * 20; // Default 20 min expiration
+// 		const expiration = kindeDecoded.exp
+// 			? kindeDecoded.exp
+// 			: Math.floor(Date.now() / 1000) + 60 * 20; // Default 20 min expiration
 
-		// Re-sign the token with required claims for Supabase
-		const supabaseJwt = jwt.sign(
-			{
-				sub: kindeDecoded.sub, // Subject from Kinde token
-				aud: "authenticated", // Supabase expects 'authenticated'
-				role: "authenticated", // Role
-				iss: kindeDecoded.iss, // Issuer from Kinde token
-				exp: expiration, // Expiration time
-			},
-			SUPABASE_SECRET_KEY, // Use Supabase secret key to sign
-			{ algorithm: "HS256" } // Symmetric signing algorithm (consider RS256 for production)
-		);
+// 		// Re-sign the token with required claims for Supabase
+// 		const supabaseJwt = jwt.sign(
+// 			{
+// 				sub: kindeDecoded.sub, // Subject from Kinde token
+// 				aud: "authenticated", // Supabase expects 'authenticated'
+// 				role: "authenticated", // Role
+// 				iss: kindeDecoded.iss, // Issuer from Kinde token
+// 				exp: expiration, // Expiration time
+// 			},
+// 			SUPABASE_SECRET_KEY, // Use Supabase secret key to sign
+// 			{ algorithm: "HS256" } // Symmetric signing algorithm (consider RS256 for production)
+// 		);
 
-		console.log("Supabase JWT created successfully.", jwt.decode(supabaseJwt));
+// 		console.log("Supabase JWT created successfully.", jwt.decode(supabaseJwt));
 
-		// Return the re-signed Supabase JWT in the response
-		return NextResponse.json({ token: supabaseJwt });
-	} catch (error) {
-		// Use type narrowing to handle the 'unknown' error type
-		if (error instanceof Error) {
-			console.error("Error handling the Kinde token:", error.message);
-			return NextResponse.json(
-				{ error: "Internal Server Error", details: error.message },
-				{ status: 500 }
-			);
-		} else {
-			console.error("Unexpected error:", error);
-			return NextResponse.json(
-				{ error: "Internal Server Error" },
-				{ status: 500 }
-			);
-		}
-	}
-}
+// 		// Return the re-signed Supabase JWT in the response
+// 		return NextResponse.json({ token: supabaseJwt });
+// 	} catch (error) {
+// 		// Use type narrowing to handle the 'unknown' error type
+// 		if (error instanceof Error) {
+// 			console.error("Error handling the Kinde token:", error.message);
+// 			return NextResponse.json(
+// 				{ error: "Internal Server Error", details: error.message },
+// 				{ status: 500 }
+// 			);
+// 		} else {
+// 			console.error("Unexpected error:", error);
+// 			return NextResponse.json(
+// 				{ error: "Internal Server Error" },
+// 				{ status: 500 }
+// 			);
+// 		}
+// 	}
+// }
