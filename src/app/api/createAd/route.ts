@@ -121,9 +121,167 @@
 // 	}
 // };
 
+// import { NextRequest, NextResponse } from 'next/server';
+// import { ConvexHttpClient } from 'convex/browser';
+// import { api } from '../../../../convex/_generated/api';
+
+// const convexClient = new ConvexHttpClient(
+// 	process.env.NEXT_PUBLIC_CONVEX_URL || ''
+// );
+
+// type CreateAdsPayload = {
+// 	adName: string;
+// 	teamId: string;
+// 	createdBy: string;
+// 	type: string;
+// 	costPerView: number;
+// 	numberOfDaysRunning: number;
+// 	adResourceUrl: string;
+// };
+
+// type CreateAdsResponse = {
+// 	success: boolean;
+// 	message: string;
+// };
+
+// async function createAd(payload: CreateAdsPayload): Promise<CreateAdsResponse> {
+// 	return convexClient.mutation(
+// 		api.ads.createAds,
+// 		payload
+// 	) as unknown as CreateAdsResponse;
+// }
+
+// export const POST = async (req: NextRequest) => {
+// 	try {
+// 		const body = await req.json();
+
+// 		console.log('Received payload:', body);
+
+// 		const {
+// 			adName,
+// 			teamId,
+// 			createdBy,
+// 			type,
+// 			costPerView,
+// 			numberOfDaysRunning,
+// 			adResourceUrl,
+// 		} = body;
+
+// 		if (
+// 			!adName ||
+// 			!teamId ||
+// 			!createdBy ||
+// 			!type ||
+// 			!costPerView ||
+// 			!numberOfDaysRunning ||
+// 			!adResourceUrl
+// 		) {
+// 			return NextResponse.json(
+// 				{ error: 'Missing required fields' },
+// 				{ status: 400 }
+// 			);
+// 		}
+
+// 		const payload: CreateAdsPayload = body;
+
+// 		const response = await createAd(payload);
+
+// 		console.log('Response from Convex mutation:', response);
+
+// 		return NextResponse.json(response);
+// 	} catch (error) {
+// 		const errMessage = error instanceof Error ? error.message : 'Unknown error';
+// 		console.error('Error creating ad in Convex:', errMessage);
+// 		return NextResponse.json(
+// 			{ error: `Error creating ad in Convex: ${errMessage}` },
+// 			{ status: 500 }
+// 		);
+// 	}
+// };
+
+// import { NextRequest, NextResponse } from 'next/server';
+// import { ConvexHttpClient } from 'convex/browser';
+
+// const convexClient = new ConvexHttpClient(
+// 	process.env.NEXT_PUBLIC_CONVEX_URL || ''
+// );
+
+// type CreateAdsPayload = {
+// 	adName: string;
+// 	teamId: string;
+// 	createdBy: string;
+// 	type: string;
+// 	costPerView: number;
+// 	numberOfDaysRunning: number;
+// 	adResourceUrl: string;
+// };
+
+// type CreateAdsResponse = {
+// 	success: boolean;
+// 	message: string;
+// };
+
+// async function createAd(payload: CreateAdsPayload): Promise<CreateAdsResponse> {
+// 	// Use string identifier instead of `api.ads.createAds`
+// 	const response = (await convexClient.mutation(
+// 		'ads:createAds', // Backend mutation identifier
+// 		payload
+// 	)) as unknown as CreateAdsResponse;
+
+// 	return response;
+// }
+
+// export const POST = async (req: NextRequest) => {
+// 	try {
+// 		const body = await req.json();
+
+// 		console.log('Received payload:', body);
+
+// 		const {
+// 			adName,
+// 			teamId,
+// 			createdBy,
+// 			type,
+// 			costPerView,
+// 			numberOfDaysRunning,
+// 			adResourceUrl,
+// 		} = body;
+
+// 		if (
+// 			!adName ||
+// 			!teamId ||
+// 			!createdBy ||
+// 			!type ||
+// 			!costPerView ||
+// 			!numberOfDaysRunning ||
+// 			!adResourceUrl
+// 		) {
+// 			return NextResponse.json(
+// 				{ error: 'Missing required fields' },
+// 				{ status: 400 }
+// 			);
+// 		}
+
+// 		const payload: CreateAdsPayload = body;
+
+// 		const response = await createAd(payload);
+
+// 		console.log('Response from Convex mutation:', response);
+
+// 		return NextResponse.json(response);
+// 	} catch (error) {
+// 		const errMessage = error instanceof Error ? error.message : 'Unknown error';
+// 		console.error('Error creating ad in Convex:', errMessage);
+// 		return NextResponse.json(
+// 			{ error: `Error creating ad in Convex: ${errMessage}` },
+// 			{ status: 500 }
+// 		);
+// 	}
+// };
+
 import { NextRequest, NextResponse } from 'next/server';
 import { ConvexHttpClient } from 'convex/browser';
-import { api } from '../../../../convex/_generated/api';
+import { api } from '../../../../convex/_generated/api'; // Import Convex API types
 
 const convexClient = new ConvexHttpClient(
 	process.env.NEXT_PUBLIC_CONVEX_URL || ''
@@ -139,16 +297,10 @@ type CreateAdsPayload = {
 	adResourceUrl: string;
 };
 
-type CreateAdsResponse = {
-	success: boolean;
-	message: string;
-};
-
-async function createAd(payload: CreateAdsPayload): Promise<CreateAdsResponse> {
-	return convexClient.mutation(
-		api.ads.createAds,
-		payload
-	) as unknown as CreateAdsResponse;
+async function createAd(payload: CreateAdsPayload) {
+	// Pass the API mutation directly without manual casting
+	const response = await convexClient.mutation(api.ads.createAds, payload);
+	return response; // Response is already strongly typed by Convex
 }
 
 export const POST = async (req: NextRequest) => {
