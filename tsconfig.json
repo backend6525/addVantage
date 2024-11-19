@@ -31,7 +31,8 @@
 		".next/types/**/*.ts",
 		"convex/teams.mts",
 		"convex/ads.mts",
-		"convex/user.mts"
+		"convex/user.mts",
+		"src/app/api/createAd/route.js"
 	],
 	"exclude": ["node_modules"]
 }

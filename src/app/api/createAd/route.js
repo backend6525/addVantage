@@ -410,37 +410,23 @@
 // 	}
 // };
 
-// File: src/app/api/ads/[...]/route.ts
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { ConvexHttpClient } from 'convex/browser';
 import { api } from '../../../../convex/_generated/api';
 
-// Define AdPayload interface for type safety
-interface AdPayload {
-	adName: string;
-	teamId: string;
-	createdBy: string;
-	type: string;
-	costPerView: number;
-	numberOfDaysRunning: number;
-	adResourceUrl: string;
-}
-
+// Create Convex client
 const convexClient = new ConvexHttpClient(
 	process.env.NEXT_PUBLIC_CONVEX_URL || ''
 );
 
-// Helper function for the Convex mutation
-const createAd = async (payload: AdPayload) => {
-	return convexClient.mutation(api.ads.createAds, payload);
-};
-
-export const POST = async (req: NextRequest) => {
+export const POST = async (req) => {
 	try {
-		const payload: AdPayload = await req.json();
+		// Parse request body
+		const body = await req.json();
 
-		console.log('Received payload:', payload);
+		console.log('Received payload:', body);
 
+		// Destructure required fields from the body
 		const {
 			adName,
 			teamId,
@@ -449,9 +435,9 @@ export const POST = async (req: NextRequest) => {
 			costPerView,
 			numberOfDaysRunning,
 			adResourceUrl,
-		} = payload;
+		} = body;
 
-		// Validate required fields
+		// Check for missing required fields
 		if (
 			!adName ||
 			!teamId ||
@@ -461,24 +447,24 @@ export const POST = async (req: NextRequest) => {
 			!numberOfDaysRunning ||
 			!adResourceUrl
 		) {
-			console.error('Missing required fields in payload:', payload);
 			return NextResponse.json(
 				{ error: 'Missing required fields' },
 				{ status: 400 }
 			);
 		}
 
-		// Call Convex mutation
-		const response = await createAd(payload);
+		// Send the payload to Convex API
+		const response = await convexClient.mutation(api.ads.createAds, body);
 		console.log('Response from Convex mutation:', response);
 
+		// Return success response
 		return NextResponse.json(response);
 	} catch (error) {
-		const errorMessage =
-			error instanceof Error ? error.message : 'Unknown error';
-		console.error('Error creating ad in Convex:', errorMessage);
+		// Handle errors and return appropriate response
+		const errMessage = error instanceof Error ? error.message : 'Unknown error';
+		console.error('Error creating ad in Convex:', errMessage);
 		return NextResponse.json(
-			{ error: `Error creating ad in Convex: ${errorMessage}` },
+			{ error: `Error creating ad in Convex: ${errMessage}` },
 			{ status: 500 }
 		);
 	}
