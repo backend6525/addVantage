@@ -21,7 +21,7 @@ const Hero = () => (
 								backgroundImage:
 									'linear-gradient(179.1deg, #FFFFFF 0.77%, rgba(255, 255, 255, 0) 182.09%)',
 							}}>
-							addVantage connecting you to brands
+							adzpay connecting you to brands
 						</h1>
 						<p className='max-w-xl mx-auto text-gray-300'>
 							Discover Relevant Ads: Explore a curated marketplace of

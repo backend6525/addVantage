@@ -1,9 +1,7 @@
-import React from 'react'
+import React from 'react';
 
 function DashboardFooter() {
-  return (
-    <div>DashboardFooter</div>
-  )
+	return <div>DashboardFooter</div>;
 }
 
-export default DashboardFooter
+export default DashboardFooter;
