@@ -1,43 +1,71 @@
-import React from "react";
+import React from 'react';
+import { FileImage, FileVideo, FileAudio } from 'lucide-react';
 
 const comparisonData = {
-	imageSrc: "https://via.placeholder.com/50",
-	title: "Get Detailed Comparison Insights",
-	description:
-		"Its now possible, you can advertise on a daily charge of 1000ugx",
-	buttonText: "Create Add",
+	imageSrc: 'https://via.placeholder.com/60',
+	title: 'Get Detailed Comparison Insights',
+	description: "It's now possible to advertise on a daily charge of 1000 UGX.",
+	buttonText: 'Create Ad',
 };
 
 const ComparisonCard = () => {
 	return (
-		<div className="flex items-center bg-blue-50 p-6 rounded-md shadow-md">
-			<div className="flex items-center space-x-4">
+		<div className='bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 '>
+			<div className='flex items-center p-2 space-x-6'>
+				{/* Icon */}
 				<img
 					src={comparisonData.imageSrc}
-					alt="Comparison Icon"
-					className="w-12 h-12"
+					alt='Comparison Icon'
+					className='w-16 h-16 rounded-full border-2 border-gray-200 dark:border-gray-600 object-cover'
 				/>
-				<div>
-					<h2 className="text-lg font-bold">{comparisonData.title}</h2>
-					<p className="text-sm text-gray-600">{comparisonData.description}</p>
+
+				{/* Content */}
+				<div className='flex-grow'>
+					<h2 className='text-xl font-bold text-gray-800 dark:text-gray-100 mb-1'>
+						{comparisonData.title}
+					</h2>
+					<p className='text-sm text-gray-600 dark:text-gray-400'>
+						{comparisonData.description}
+					</p>
 				</div>
-			</div>
-			<div className="ml-auto">
-				<div className="flex items-center px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800">
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						className="h-5 w-5 mr-2"
-						fill="none"
-						viewBox="0 0 24 24"
-						stroke="currentColor">
-						<path
-							strokeLinecap="round"
-							strokeLinejoin="round"
-							strokeWidth={2}
-							d="M12 4v16m8-8H4"
-						/>
-					</svg>
-					{comparisonData.buttonText}
+
+				{/* Media Type Buttons */}
+				<div className='flex items-center space-x-4'>
+					<div className='flex items-center space-x-2'>
+						<button
+							className='p-2 rounded-md bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors'
+							aria-label='Image File Ad'>
+							<FileImage size={20} />
+						</button>
+						<button
+							className='p-2 rounded-md bg-green-50 text-green-600 hover:bg-green-100 transition-colors'
+							aria-label='Video File Ad'>
+							<FileVideo size={20} />
+						</button>
+						<button
+							className='p-2 rounded-md bg-purple-50 text-purple-600 hover:bg-purple-100 transition-colors'
+							aria-label='Audio File Ad'>
+							<FileAudio size={20} />
+						</button>
+					</div>
+
+					{/* Create Ad Button */}
+					<button className='ml-6 flex items-center px-4 py-2 bg-black text-white text-sm font-semibold rounded-md shadow-md hover:bg-gray-800 transition-colors group'>
+						<svg
+							xmlns='http://www.w3.org/2000/svg'
+							className='h-5 w-5 mr-2 group-hover:rotate-90 transition-transform'
+							fill='none'
+							viewBox='0 0 24 24'
+							stroke='currentColor'>
+							<path
+								strokeLinecap='round'
+								strokeLinejoin='round'
+								strokeWidth={2}
+								d='M12 4v16m8-8H4'
+							/>
+						</svg>
+						{comparisonData.buttonText}
+					</button>
 				</div>
 			</div>
 		</div>

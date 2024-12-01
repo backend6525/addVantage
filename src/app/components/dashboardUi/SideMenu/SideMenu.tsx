@@ -88,9 +88,9 @@ const SideMenu: React.FC<SidebarProps> = ({
 		const dashboardContent = document.getElementById('dashboard-content');
 		if (dashboardContent) {
 			if (isMenuOpen) {
-				dashboardContent.style.marginLeft = '16rem'; // Full width sidebar
+				dashboardContent.style.marginLeft = '0rem'; // Full width sidebar
 			} else {
-				dashboardContent.style.marginLeft = '5rem'; // Collapsed sidebar
+				dashboardContent.style.marginLeft = '0rem'; // Collapsed sidebar
 			}
 		}
 	}, [isMenuOpen]);
@@ -99,19 +99,19 @@ const SideMenu: React.FC<SidebarProps> = ({
 		<aside
 			className={`${
 				isMenuOpen ? 'w-[16rem]' : 'w-[5.2rem]'
-			} bg-gray-900 text-white p-6 shadow-lg transition-all duration-300 fixed top-[6.58rem] border border-gray-700 left-0 h-full flex flex-col backdrop-blur-md bg-opacity-50 overflow-hidden`}>
+			} bg-gray-900 text-white p-6 shadow-lg transition-all duration-300 fixed top-[0.58rem] border border-gray-700 left-0 h-full flex flex-col backdrop-blur-md bg-opacity-50 overflow-hidden`}>
 			{/* Sidebar Header */}
-			<div className='flex-shrink-0'>
+			<div className='flex-shrink-0 '>
 				<button
 					onClick={toggleMenu}
-					className='text-gray-300 hover:text-white transition-colors pl-2'>
+					className='text-gray-300 hover:text-white transition-colors pl-2 mt-20'>
 					{isMenuOpen ? <FiArrowLeft size={24} /> : <FiArrowRight size={24} />}
 				</button>
 			</div>
 
 			{/* Sidebar Menu */}
 			<div
-				className='flex-grow overflow-y-auto mt-2 glass-scroll'
+				className='flex-grow overflow-y-auto mt-6 glass-scroll'
 				style={{ maxHeight: 'calc(100% - 32rem)' }}>
 				<ul className='space-y-2'>
 					{navItems.map((item) =>
