@@ -591,7 +591,7 @@ export default function Dashboard({ user }: DashboardProps) {
 	return (
 		<div
 			id='dashboard-content'
-			className='w-full pt-16 space-y-6 transition-all duration-300 dark:bg-black dark:text-white min-h-screen pl-8 pr-2'>
+			className='w-full pt-16 space-y-6 transition-all duration-300 	 dark:border-gray-800  dark:text-white min-h-screen pl-8 pr-2'>
 			<HeaderCard />
 			<CreateAdd />
 			<ProductGrid products={products} />
