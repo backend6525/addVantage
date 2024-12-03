@@ -1,106 +1,243 @@
-"use client"; // Enable client-side rendering
+// 'use client';
 
-import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+// import React, { useEffect, useState } from 'react';
+// import { notFound } from 'next/navigation';
 
-interface Review {
-	user: string;
-	rating: number;
-	comment: string;
-}
+// interface Product {
+// 	id: string;
+// 	type: string;
+// 	adResourceUrl?: string;
+// 	title: string;
+// 	description: string;
+// 	createdBy?: string;
+// 	costPerView?: string;
+// 	numberOfDaysRunning?: string;
+// }
+
+// interface Props {
+// 	params: { id: string };
+// }
+
+// const ProductPage = ({ params }: Props) => {
+// 	const { id } = params;
+// 	const [product, setProduct] = useState<Product | null>(null);
+// 	const [loading, setLoading] = useState<boolean>(true);
+// 	const [error, setError] = useState<string | null>(null);
+
+// 	useEffect(() => {
+// 		const fetchProduct = async () => {
+// 			try {
+// 				setLoading(true);
+// 				setError(null);
+
+// 				const response = await fetch(`/api/products/${id}`);
+// 				if (!response.ok) {
+// 					throw new Error('Product not found');
+// 				}
+
+// 				const data = await response.json();
+// 				setProduct(data);
+// 			} catch (err) {
+// 				console.error(err);
+// 				setError('Failed to load product details. Please try again.');
+// 			} finally {
+// 				setLoading(false);
+// 			}
+// 		};
+
+// 		fetchProduct();
+// 	}, [id]);
+
+// 	if (loading) {
+// 		return (
+// 			<div className='p-8 bg-white dark:bg-gray-900 min-h-screen flex items-center justify-center'>
+// 				<p className='text-gray-700 dark:text-gray-300'>
+// 					Loading product details...
+// 				</p>
+// 			</div>
+// 		);
+// 	}
+
+// 	if (error) {
+// 		return (
+// 			<div className='p-8 bg-white dark:bg-gray-900 min-h-screen flex items-center justify-center'>
+// 				<p className='text-red-500'>{error}</p>
+// 			</div>
+// 		);
+// 	}
+
+// 	if (!product) {
+// 		notFound();
+// 		return null;
+// 	}
+
+// 	return (
+// 		<div className='p-8 bg-white dark:bg-gray-900 min-h-screen'>
+// 			{/* Product Title */}
+// 			<h1 className='text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4'>
+// 				{product.title}
+// 			</h1>
+
+// 			{/* Media Display */}
+// 			<div className='mb-4'>
+// 				{product.type === 'video' && product.adResourceUrl && (
+// 					<video
+// 						src={product.adResourceUrl}
+// 						className='rounded-lg w-full h-64 object-cover'
+// 						controls
+// 					/>
+// 				)}
+// 				{['Poster', 'banner'].includes(product.type || '') &&
+// 					product.adResourceUrl && (
+// 						<img
+// 							src={product.adResourceUrl}
+// 							className='rounded-lg w-full h-64 object-cover'
+// 							alt={product.title}
+// 						/>
+// 					)}
+// 				{product.type === 'audio' && product.adResourceUrl && (
+// 					<audio src={product.adResourceUrl} className='w-full' controls />
+// 				)}
+// 			</div>
+
+// 			{/* Product Description */}
+// 			<p className='text-gray-700 dark:text-gray-300 mb-4'>
+// 				{product.description}
+// 			</p>
+
+// 			{/* Additional Product Details */}
+// 			{product.costPerView && (
+// 				<p className='text-gray-600 dark:text-gray-400'>
+// 					<strong>Cost Per View:</strong> {product.costPerView}
+// 				</p>
+// 			)}
+// 			{product.numberOfDaysRunning && (
+// 				<p className='text-gray-600 dark:text-gray-400'>
+// 					<strong>Days Running:</strong> {product.numberOfDaysRunning}
+// 				</p>
+// 			)}
+
+// 			{/* Product Creator */}
+// 			<div className='flex items-center mt-4'>
+// 				<span className='text-gray-500 dark:text-gray-400 text-sm'>
+// 					Created by:
+// 				</span>
+// 				<span className='ml-2 font-medium text-gray-800 dark:text-gray-200'>
+// 					{product.createdBy || 'Unknown'}
+// 				</span>
+// 			</div>
+// 		</div>
+// 	);
+// };
+
+// export default ProductPage;
+
+'use client';
+
+import React, { useEffect, useState } from 'react';
+import { notFound } from 'next/navigation';
 
 interface Product {
-	name: string;
-	developer: string;
+	id: string;
+	type: string;
+	adResourceUrl?: string;
+	title: string;
 	description: string;
-	updatedOn: string;
-	ratings: number;
-	reviews: Review[];
-	similarApps: string[];
+	createdBy?: string;
+	costPerView?: string;
+	numberOfDaysRunning?: string;
 }
 
-const ProductDetail = () => {
-	const params = useParams();
-	const id = Array.isArray(params.id) ? params.id.join("") : params.id;
-	console.log("Product ID:", id);
+interface Props {
+	params: { id: string };
+}
 
+const ProductPage = ({ params }: Props) => {
+	const { id } = params;
 	const [product, setProduct] = useState<Product | null>(null);
+	const [loading, setLoading] = useState<boolean>(true);
+	const [error, setError] = useState<string | null>(null);
 
 	useEffect(() => {
-		if (id) {
-			fetchProductDetails(id);
-		}
+		const fetchProduct = async () => {
+			try {
+				setLoading(true);
+				setError(null);
+
+				const response = await fetch(`/api/product?id=${id}`); // Adjusted to match the API
+				if (!response.ok) {
+					throw new Error('Product not found');
+				}
+
+				const data = await response.json();
+				setProduct(data);
+			} catch (err) {
+				console.error(err);
+				setError('Failed to load product details. Please try again.');
+			} finally {
+				setLoading(false);
+			}
+		};
+
+		fetchProduct();
 	}, [id]);
 
-	const fetchProductDetails = async (productId: string) => {
-		try {
-			const response = await fetch(`/api/products/${productId}`);
-			const data = await response.json();
-			console.log("Fetched Product Data:", data);
-			setProduct(data);
-		} catch (error) {
-			console.error("Error fetching product details:", error);
-		}
-	};
+	if (loading) {
+		return (
+			<div className='p-8 bg-white dark:bg-gray-900 min-h-screen flex items-center justify-center'>
+				<p className='text-gray-700 dark:text-gray-300'>
+					Loading product details...
+				</p>
+			</div>
+		);
+	}
+
+	if (error) {
+		return (
+			<div className='p-8 bg-white dark:bg-gray-900 min-h-screen flex items-center justify-center'>
+				<p className='text-red-500'>{error}</p>
+			</div>
+		);
+	}
 
 	if (!product) {
-		return <div>Loading...</div>;
+		notFound();
+		return null;
 	}
 
 	return (
-		<div className="bg-gray-100 min-h-screen p-8">
-			<div className="container mx-auto bg-white p-6 rounded-lg shadow-lg">
-				<div className="flex items-center mb-6">
-					<div className="w-24 h-24 bg-gray-300 rounded-full mr-4"></div>
-					<div>
-						<h1 className="text-3xl font-bold">{product.name}</h1>
-						<p className="text-gray-600">{product.developer}</p>
-					</div>
-				</div>
+		<div className='p-8 bg-white dark:bg-gray-900 min-h-screen'>
+			<h1 className='text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4'>
+				{product.title}
+			</h1>
 
-				<div className="mb-6">
-					<h2 className="text-2xl font-bold mb-2">About this app</h2>
-					<p>{product.description}</p>
-					<p className="text-gray-600 mt-2">Updated on: {product.updatedOn}</p>
-				</div>
-
-				<div className="mb-6">
-					<h2 className="text-2xl font-bold mb-2">Ratings and Reviews</h2>
-					<div className="flex items-center mb-4">
-						<div className="text-yellow-500 mr-2">
-							{"★".repeat(Math.floor(product.ratings))}
-							{"☆".repeat(5 - Math.floor(product.ratings))}
-						</div>
-						<p>{product.ratings} out of 5</p>
-					</div>
-					{product.reviews.map((review, index) => (
-						<div key={index} className="mb-4">
-							<p className="font-bold">{review.user}</p>
-							<div className="text-yellow-500">
-								{"★".repeat(review.rating)}
-								{"☆".repeat(5 - review.rating)}
-							</div>
-							<p>{review.comment}</p>
-						</div>
-					))}
-				</div>
-
-				<div className="mb-6">
-					<h2 className="text-2xl font-bold mb-2">App Support</h2>
-					<p>If you need help, please contact our support team.</p>
-				</div>
-
-				<div>
-					<h2 className="text-2xl font-bold mb-2">Similar Apps</h2>
-					<ul>
-						{product.similarApps.map((app, index) => (
-							<li key={index}>{app}</li>
-						))}
-					</ul>
-				</div>
+			{/* Media Display */}
+			<div className='mb-4'>
+				{product.type === 'video' && product.adResourceUrl && (
+					<video
+						src={product.adResourceUrl}
+						className='rounded-lg w-full h-64 object-cover'
+						controls
+					/>
+				)}
+				{['Poster', 'banner'].includes(product.type || '') &&
+					product.adResourceUrl && (
+						<img
+							src={product.adResourceUrl}
+							className='rounded-lg w-full h-64 object-cover'
+							alt={product.title}
+						/>
+					)}
+				{product.type === 'audio' && product.adResourceUrl && (
+					<audio src={product.adResourceUrl} className='w-full' controls />
+				)}
 			</div>
+
+			<p className='text-gray-700 dark:text-gray-300 mb-4'>
+				{product.description}
+			</p>
 		</div>
 	);
 };
 
-export default ProductDetail;
+export default ProductPage;

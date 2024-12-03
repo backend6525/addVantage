@@ -18,22 +18,18 @@
 
 import { redirect } from 'next/navigation';
 import { getKindeServerSession } from '@kinde-oss/kinde-auth-nextjs/server';
-import Dashboard from './Dashboard'; // Client-side component
+import Dashboard from './Dashboard';
 
 export default async function DashboardPage() {
-	try {
-		const session = await getKindeServerSession();
-		const user = await session.getUser();
+	const session = await getKindeServerSession();
 
-		// Robust authentication check
-		if (!user || !user.id) {
-			redirect('/login');
-		}
+	// Fetch user information from the session
+	const user = await session.getUser();
 
-		// Pass the user to the client-side component
-		return <Dashboard user={user} />;
-	} catch (error) {
-		console.error('Authentication session error:', error);
+	if (!user) {
 		redirect('/login');
 	}
+
+	// Pass the required props to the Dashboard component
+	return <Dashboard isMenuOpen={false} user={user} />;
 }

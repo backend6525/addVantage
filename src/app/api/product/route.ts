@@ -1,29 +1,41 @@
-import { NextApiRequest, NextApiResponse } from 'next';
+import { NextRequest, NextResponse } from 'next/server';
+import { fetchQuery } from 'convex/nextjs';
+import { api } from '../../../../convex/_generated/api';
 
-// const products = [
-// 	{
-// 		id: 'jd75x6qqkggwxndrs5rjc69wxn703p8w',
-// 		videoSrc: '/videos/product1.mp4',
-// 		title: 'Product 1',
-// 		description: 'Description 1',
-// 		about: 'About Product 1',
-// 		ratings: 4.5,
-// 		reviews: [{ user: 'John Doe', rating: 5, comment: 'Great product!' }],
-// 		similarApps: [
-// 			'TikTok Lite - Save Data',
-// 			'Xender - Share Music Transfer',
-// 			'WhatsApp Business',
-// 		],
-// 	},
-// 	// Add more products as needed
-// ];
+export async function GET(request: NextRequest) {
+	try {
+		const { searchParams } = new URL(request.url);
+		const email = searchParams.get('email');
+		const productId = searchParams.get('id'); // Check if ID is present for single product fetch
 
-// export default function handler(req: NextApiRequest, res: NextApiResponse) {
-// 	const { id } = req.query;
-// 	const product = products.find((product) => product.id === id);
-// 	if (product) {
-// 		res.status(200).json(product);
-// 	} else {
-// 		res.status(404).json({ message: 'Product not found' });
-// 	}
-// }
+		if (productId) {
+			// Fetch single product by ID
+			const product = await fetchQuery(api.ads.getById, { id: productId });
+			if (!product) {
+				return NextResponse.json(
+					{ message: 'Product not found' },
+					{ status: 404 }
+				);
+			}
+			return NextResponse.json(product, { status: 200 });
+		}
+
+		if (email) {
+			// Fetch all products for the email
+			const products = await fetchQuery(api.ads.list, { email });
+			return NextResponse.json(products, { status: 200 });
+		}
+
+		// If neither email nor ID is provided, return bad request
+		return NextResponse.json(
+			{ message: 'Email or Product ID query parameter is required' },
+			{ status: 400 }
+		);
+	} catch (error) {
+		console.error('Error fetching products:', error);
+		return NextResponse.json(
+			{ message: 'Failed to fetch products' },
+			{ status: 500 }
+		);
+	}
+}
