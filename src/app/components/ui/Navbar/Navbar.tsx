@@ -1,84 +1,106 @@
-'use client'
-// export default Navbar
-import React, { useEffect, useRef, useState } from 'react';
+'use client';
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import Link from 'next/link';
-import NavHeader from '../NavHeader';
-import NavLink from '../NavLink';
-import { LoginLink, RegisterLink } from '@kinde-oss/kinde-auth-nextjs/components';
+import Brand from '@/app/components/ui/Brand';
+import { Menu, X, User, LogIn } from 'lucide-react';
+import {
+	LoginLink,
+	RegisterLink,
+} from '@kinde-oss/kinde-auth-nextjs/components';
 
-interface NavigationItem {
-    name: string;
-    href: string;
+const navigation = [
+	{ name: 'Features', href: '/#features' },
+	{ name: 'Pricing', href: '/#pricing' },
+	{ name: 'Testimonials', href: '/#testimonials' },
+	{ name: 'Careers', href: '/careers' },
+];
+
+function Navbar() {
+	const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+	return (
+		<motion.header
+			className='fixed w-full top-0 z-50 bg-gray-900/60 backdrop-blur-md border-b border-gray-700'
+			initial={{ opacity: 0 }}
+			animate={{ opacity: 1 }}
+			transition={{ duration: 0.3 }}>
+			<div className='container mx-auto px-4 py-4 flex justify-between items-center'>
+				{/* Logo */}
+				<Link
+					href='/'
+					className='h-8 w-8 text-2xl font-bold text-white flex items-center space-x-2'>
+					<Brand />
+
+					<span>AdZPay</span>
+				</Link>
+
+				{/* Desktop Navigation */}
+				<nav className='hidden md:flex items-center space-x-6'>
+					{navigation.map((item) => (
+						<motion.div
+							key={item.name}
+							whileHover={{ scale: 1.05 }}
+							whileTap={{ scale: 0.95 }}>
+							<Link
+								href={item.href}
+								className='text-gray-300 hover:text-white transition-colors'>
+								{item.name}
+							</Link>
+						</motion.div>
+					))}
+				</nav>
+
+				{/* Auth Buttons */}
+				<div className='hidden md:flex items-center space-x-4'>
+					<LoginLink className='flex items-center space-x-2 text-gray-300 hover:text-white'>
+						<LogIn size={18} />
+						<span>Sign In</span>
+					</LoginLink>
+					<RegisterLink className='bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700 transition-colors flex items-center space-x-2'>
+						<User size={18} />
+						<span>Sign Up</span>
+					</RegisterLink>
+				</div>
+
+				{/* Mobile Menu Toggle */}
+				<button
+					className='md:hidden text-white'
+					onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+					{mobileMenuOpen ? <X /> : <Menu />}
+				</button>
+			</div>
+
+			{/* Mobile Menu */}
+			{mobileMenuOpen && (
+				<motion.div
+					className='md:hidden absolute top-full left-0 w-full bg-gray-900 shadow-2xl'
+					initial={{ opacity: 0, y: -20 }}
+					animate={{ opacity: 1, y: 0 }}
+					transition={{ duration: 0.3 }}>
+					<div className='container mx-auto px-4 py-6 space-y-4'>
+						{navigation.map((item) => (
+							<Link
+								key={item.name}
+								href={item.href}
+								className='block py-2 text-gray-300 hover:text-white'
+								onClick={() => setMobileMenuOpen(false)}>
+								{item.name}
+							</Link>
+						))}
+						<div className='border-t border-gray-700 pt-4 space-y-4'>
+							<LoginLink className='block py-2 text-gray-300 hover:text-white'>
+								Sign In
+							</LoginLink>
+							<RegisterLink className='block bg-blue-600 text-white py-2 rounded-xl text-center hover:bg-blue-700'>
+								Sign Up
+							</RegisterLink>
+						</div>
+					</div>
+				</motion.div>
+			)}
+		</motion.header>
+	);
 }
-
-const Navbar: React.FC = () => {
-    const [state, setState] = useState(false);
-    const menuBtnEl = useRef<HTMLButtonElement>(null);
-
-    const navigation: NavigationItem[] = [
-        { name: 'Features', href: '/#features' },
-        { name: 'Pricing', href: '/#pricing' },
-        { name: 'Testimonials', href: '/#testimonials' },
-        { name: 'Career', href: '/#career' },
-    ];
-
-    useEffect(() => {
-        document.onclick = (e) => {
-            const target = e.target as Node;
-            if (!menuBtnEl.current?.contains(target)) setState(false);
-        };
-    }, []);
-
-    return (
-        <header className="relative">
-            <div className="custom-screen md:hidden">
-                <NavHeader menuBtnEl={menuBtnEl} state={state} onClick={() => setState(!state)} />
-            </div>
-            <nav
-                className={`pb-5 md:text-sm md:static md:block ${
-                    state ? 'bg-gray-900 absolute z-20 top-0 inset-x-0 rounded-b-2xl shadow-xl md:bg-gray-900' : 'hidden'
-                }`}
-            >
-                <div className="custom-screen items-center md:flex">
-                    <NavHeader state={state} onClick={() => setState(!state)} />
-                    <div
-                        className={`flex-1 items-center mt-8 text-gray-300 md:font-medium md:mt-0 md:flex ${
-                            state ? 'block' : 'hidden'
-                        }`}
-                    >
-                        <ul className="flex-1 justify-center items-center space-y-6 md:flex md:space-x-6 md:space-y-0">
-                            {navigation.map((item, idx) => (
-                                <li key={idx} className="hover:text-gray-50">
-                                    <Link href={item.href} className="block" passHref>
-                                        {item.name}
-                                    </Link>
-                                </li>
-                            ))}
-                        </ul>
-                        <div className="gap-x-6 items-center justify-end mt-6 space-y-6 md:flex md:space-y-0 md:mt-0">
-                            <LoginLink  className="block hover:text-gray-50" >
-                                Sign in
-                            </LoginLink >
-                            <RegisterLink 
-                                
-                                className="flex items-center justify-center gap-x-1 text-sm text-white font-medium custom-btn-bg border border-gray-500 active:bg-gray-900 md:inline-flex"
-                            >
-                                Sign up
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
-                                    <path
-                                        fillRule="evenodd"
-                                        d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z"
-                                        clipRule="evenodd"
-                                    />
-                                </svg>
-                            </RegisterLink>
-                          
-                        </div>
-                    </div>
-                </div>
-            </nav>
-        </header>
-    );
-};
 
 export default Navbar;

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
+import { motion } from 'framer-motion';
 import {
 	Dialog,
 	DialogClose,
@@ -7,13 +8,10 @@ import {
 	DialogFooter,
 	DialogHeader,
 	DialogTitle,
-	DialogTrigger,
 } from '@/app/components/ui/DialogPopup/dialog';
-import Button from '../../ui/Button';
-import Input from '../../ui/Input';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { FiFilePlus } from 'react-icons/fi';
+import { FiFilePlus, FiAlertCircle } from 'react-icons/fi';
 
 type CreateAdPayload = {
 	adName: string;
@@ -36,29 +34,145 @@ function Create({ onCreateAd = () => {}, isMenuOpen }: any) {
 		adResourceUrl: '',
 		adResource: null as File | null,
 	});
+
+	const [errors, setErrors] = useState({
+		adName: '',
+		teamId: '',
+		createdBy: '',
+		costPerView: '',
+		numberOfDaysRunning: '',
+		adResource: '',
+	});
+
 	const [showDialog, setShowDialog] = useState(false);
 	const [showSuccessDialog, setShowSuccessDialog] = useState(false);
 
-	// Handle form input changes
-	const handleChange = (
-		e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-	) => {
-		const { name, value } = e.target;
-		const files = (e.target as HTMLInputElement).files;
-		setFormData((prevData) => ({
-			...prevData,
-			[name]: files ? files[0] : value, // Store file if uploaded
-		}));
-		console.log('Updated form data:', formData);
-	};
+	const validateAdName = useCallback((name: string) => {
+		if (!name) return 'Ad name is required';
+		if (name.length < 3) return 'Ad name must be at least 3 characters';
+		if (name.length > 50) return 'Ad name cannot exceed 50 characters';
+		return '';
+	}, []);
 
-	// Form validation
-	const isFormValid = () => {
-		return formData.adName && formData.teamId && formData.createdBy;
-	};
+	const validateTeamId = useCallback((teamId: string) => {
+		if (!teamId) return 'Team ID is required';
+		const teamIdRegex = /^[A-Za-z0-9]{6,10}$/;
+		if (!teamIdRegex.test(teamId)) return 'Invalid Team ID format';
+		return '';
+	}, []);
 
-	// Upload file to S3
-	const uploadFileToS3 = async (file: File): Promise<string> => {
+	const validateEmail = useCallback((email: string) => {
+		if (!email) return 'Email is required';
+		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+		if (!emailRegex.test(email)) return 'Invalid email format';
+		return '';
+	}, []);
+
+	const validateCostPerView = useCallback((cost: string) => {
+		if (cost === '') return '';
+		const costNum = parseFloat(cost);
+		if (isNaN(costNum) || costNum < 0) return 'Invalid cost';
+		return '';
+	}, []);
+
+	const validateDays = useCallback((days: string) => {
+		if (days === '') return '';
+		const daysNum = parseInt(days, 10);
+		if (isNaN(daysNum) || daysNum <= 0 || daysNum > 30)
+			return 'Days must be between 1 and 30';
+		return '';
+	}, []);
+
+	const validateAdResource = useCallback((type: string, file: File | null) => {
+		if (type !== 'Text' && !file)
+			return 'Resource file is required for this type';
+		return '';
+	}, []);
+
+	const validateField = useCallback(
+		(name: string, value: string | File | null) => {
+			switch (name) {
+				case 'adName':
+					return validateAdName(value as string);
+				case 'teamId':
+					return validateTeamId(value as string);
+				case 'createdBy':
+					return validateEmail(value as string);
+				case 'costPerView':
+					return validateCostPerView(value as string);
+				case 'numberOfDaysRunning':
+					return validateDays(value as string);
+				case 'adResource':
+					return validateAdResource(formData.type, value as File | null);
+				case 'type':
+					return validateAdResource(value as string, formData.adResource);
+				default:
+					return '';
+			}
+		},
+		[
+			formData.type,
+			formData.adResource,
+			validateAdName,
+			validateTeamId,
+			validateEmail,
+			validateCostPerView,
+			validateDays,
+			validateAdResource,
+		]
+	);
+
+	const handleChange = useCallback(
+		(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+			const { name, value } = e.target;
+			const files = (e.target as HTMLInputElement).files;
+
+			const newFormData = {
+				...formData,
+				[name]: files ? files[0] : value,
+			};
+			setFormData(newFormData);
+
+			const error = validateField(name, files ? files[0] : value);
+
+			setErrors((prev) => ({
+				...prev,
+				[name]: error,
+			}));
+		},
+		[formData, validateField]
+	);
+
+	const isFormValid = useMemo(() => {
+		const newErrors = {
+			adName: validateAdName(formData.adName),
+			teamId: validateTeamId(formData.teamId),
+			createdBy: validateEmail(formData.createdBy),
+			costPerView: validateCostPerView(formData.costPerView),
+			numberOfDaysRunning: validateDays(formData.numberOfDaysRunning),
+			adResource: validateAdResource(formData.type, formData.adResource),
+		};
+
+		setErrors(newErrors);
+
+		return Object.values(newErrors).every((error) => error === '');
+	}, [
+		formData.adName,
+		formData.teamId,
+		formData.createdBy,
+		formData.type,
+		formData.costPerView,
+		formData.numberOfDaysRunning,
+		formData.adResource,
+		validateAdName,
+		validateTeamId,
+		validateEmail,
+		validateCostPerView,
+		validateDays,
+		validateAdResource,
+	]);
+
+	const uploadFileToS3 = useCallback(async (file: File): Promise<string> => {
 		const fileName = encodeURIComponent(file.name);
 		const fileType = file.type;
 
@@ -74,12 +188,6 @@ function Create({ onCreateAd = () => {}, isMenuOpen }: any) {
 			};
 			reader.onerror = reject;
 			reader.readAsDataURL(file);
-		});
-
-		console.log('Prepared payload for S3:', {
-			fileName,
-			fileType,
-			fileContent: base64Content,
 		});
 
 		try {
@@ -99,17 +207,16 @@ function Create({ onCreateAd = () => {}, isMenuOpen }: any) {
 			}
 
 			const data = await res.json();
-			console.log('File uploaded to S3. Received data:', data);
 			return data.cloudFrontUrl;
 		} catch (error) {
 			console.error('Error uploading file to S3:', error);
 			throw error;
 		}
-	};
+	}, []);
 
-	const handleCreateAd = async () => {
+	const handleCreateAd = useCallback(async () => {
 		try {
-			if (!isFormValid()) {
+			if (!isFormValid) {
 				toast.error('Please fill in the required fields.');
 				return;
 			}
@@ -129,8 +236,6 @@ function Create({ onCreateAd = () => {}, isMenuOpen }: any) {
 				adResourceUrl: fileUrl || '',
 			};
 
-			console.log('Final payload to be sent:', payload);
-
 			const res = await fetch('/api/createAd', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
@@ -141,8 +246,8 @@ function Create({ onCreateAd = () => {}, isMenuOpen }: any) {
 
 			if (res.ok) {
 				toast.success('Ad created successfully!');
-				setShowDialog(false); // Close the form dialog
-				setShowSuccessDialog(true); // Open the success dialog
+				setShowDialog(false);
+				setShowSuccessDialog(true);
 				onCreateAd();
 			} else {
 				toast.error(result.error || 'Ad creation failed. Please try again.');
@@ -151,116 +256,206 @@ function Create({ onCreateAd = () => {}, isMenuOpen }: any) {
 			console.error('Error creating ad:', error);
 			toast.error('Ad creation failed. Please try again.');
 		}
-	};
+	}, [isFormValid, formData, uploadFileToS3, onCreateAd]);
 
 	return (
-		<>
-			{/* Dialog trigger and dialog content */}
-			<div
-				onClick={() => setShowDialog(true)}
-				className='text-white pl-2 py-2 rounded w-full flex items-center cursor-pointer'>
-				<FiFilePlus size={25} />
-				{isMenuOpen && <span className='ml-3 text-white'>Create Ad</span>}
-			</div>
-
-			<Dialog open={showDialog} onOpenChange={setShowDialog}>
-				<DialogContent className='p-8 bg-black text-white rounded-lg shadow-lg max-w-2xl fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50'>
-					<DialogHeader>
-						<DialogTitle className='text-xl font-bold'>Create Ad</DialogTitle>
-						<DialogDescription>
-							Fill in the details below to create your ad.
-						</DialogDescription>
-					</DialogHeader>
-
-					<div className='space-y-6'>
-						<Input
-							name='adName'
-							placeholder='Ad Name'
-							onChange={handleChange}
-							className='w-full p-2 border rounded bg-black text-white'
-						/>
-						<Input
-							name='teamId'
-							placeholder='Team ID'
-							onChange={handleChange}
-							className='w-full p-2 border rounded bg-black text-white'
-						/>
-						<Input
-							name='createdBy'
-							placeholder='Created By'
-							onChange={handleChange}
-							className='w-full p-2 border rounded bg-black text-white'
-						/>
-						<select
-							name='type'
-							onChange={handleChange}
-							className='w-full p-2 border rounded bg-black text-white'>
-							<option value=''>Select Type (optional)</option>
-							<option value='Poster'>Poster</option>
-							<option value='Audio File'>Audio File</option>
-							<option value='Video'>Video</option>
-							<option value='Text'>Text</option>
-						</select>
-						{formData.type && formData.type !== 'Text' && (
-							<Input
-								type='file'
-								name='adResource'
-								onChange={handleChange}
-								className='w-full p-2 border rounded bg-black text-white'
-							/>
-						)}
-						<Input
-							name='costPerView'
-							placeholder='Cost Per View (optional)'
-							onChange={handleChange}
-							className='w-full p-2 border rounded bg-black text-white'
-						/>
-						<Input
-							name='numberOfDaysRunning'
-							placeholder='Number of Days Running (optional)'
-							onChange={handleChange}
-							className='w-full p-2 border rounded bg-black text-white'
+		<div className=' '>
+			<div className='container mx-auto px-4 py-2'>
+				<motion.div
+					initial={{ opacity: 0, y: 20 }}
+					animate={{ opacity: 1, y: 0 }}
+					className={`
+						flex items-center p-0.7 rounded-lg hover:bg-gray-800/50 transition-all duration-300 cursor-pointer group
+						${!isMenuOpen ? 'justify-center w-full' : ''}
+					`}
+					onClick={() => setShowDialog(true)}>
+					<div className='bg-blue-500/20 p-2.5 rounded-lg group-hover:bg-blue-500/30 transition-colors duration-300'>
+						<FiFilePlus
+							size={24}
+							className='text-blue-400 group-hover:text-blue-300'
 						/>
 					</div>
+					{isMenuOpen && (
+						<span className='ml-3 text-gray-300 font-medium group-hover:text-blue-300 transition-colors duration-300'>
+							Create Ad
+						</span>
+					)}
+				</motion.div>
 
-					<DialogFooter className='mt-6 sm:justify-end'>
-						<DialogClose asChild>
-							<Button
-								type='button'
-								disabled={!isFormValid()}
-								onClick={handleCreateAd}
-								className='bg-violet-600 text-white px-4 py-2 rounded'>
-								Create Ad
-							</Button>
-						</DialogClose>
-					</DialogFooter>
-				</DialogContent>
-			</Dialog>
+				<Dialog open={showDialog} onOpenChange={setShowDialog}>
+					<DialogContent className='bg-gradient-to-br from-gray-800 to-gray-900 text-white rounded-2xl max-w-2xl p-8 border border-gray-700 shadow-2xl'>
+						<motion.div
+							initial={{ opacity: 0, y: 20 }}
+							animate={{ opacity: 1, y: 0 }}
+							transition={{ duration: 0.5 }}>
+							<DialogHeader>
+								<DialogTitle className='text-2xl font-bold text-blue-400'>
+									Create Ad
+								</DialogTitle>
+								<DialogDescription className='text-gray-400'>
+									Fill in the details carefully to create your ad.
+								</DialogDescription>
+							</DialogHeader>
 
-			{/* Success dialog */}
-			<Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
-				<DialogContent className='p-8 bg-green-600 text-white rounded-lg shadow-lg max-w-2xl fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50'>
-					<DialogHeader>
-						<DialogTitle className='text-xl font-bold'>Success!</DialogTitle>
-						<DialogDescription>
-							Your ad has been created successfully.
-						</DialogDescription>
-					</DialogHeader>
-					<DialogFooter className='mt-6 sm:justify-end'>
-						<DialogClose asChild>
-							<Button
-								type='button'
-								className='bg-white text-green-600 px-4 py-2 rounded'
-								onClick={() => setShowSuccessDialog(false)}>
-								Close
-							</Button>
-						</DialogClose>
-					</DialogFooter>
-				</DialogContent>
-			</Dialog>
+							<div className='space-y-6 mt-6'>
+								<div>
+									<label className='text-gray-400 text-sm mb-2 block'>
+										Ad Name
+									</label>
+									<input
+										name='adName'
+										placeholder='Enter ad name'
+										onChange={handleChange}
+										className='w-full bg-gray-700/50 text-white rounded-lg p-3 border border-gray-600 focus:ring-2 focus:ring-blue-500'
+									/>
+									{errors.adName && (
+										<p className='text-red-400 text-sm mt-1'>{errors.adName}</p>
+									)}
+								</div>
 
-			<ToastContainer />
-		</>
+								<div>
+									<label className='text-gray-400 text-sm mb-2 block'>
+										Team ID
+									</label>
+									<input
+										name='teamId'
+										placeholder='Enter team ID'
+										onChange={handleChange}
+										className='w-full bg-gray-700/50 text-white rounded-lg p-3 border border-gray-600 focus:ring-2 focus:ring-blue-500'
+									/>
+									{errors.teamId && (
+										<p className='text-red-400 text-sm mt-1'>{errors.teamId}</p>
+									)}
+								</div>
+
+								<div>
+									<label className='text-gray-400 text-sm mb-2 block'>
+										Creator Email
+									</label>
+									<input
+										name='createdBy'
+										placeholder='johndoe@gmail.com'
+										onChange={handleChange}
+										className='w-full bg-gray-700/50 text-white rounded-lg p-3 border border-gray-600 focus:ring-2 focus:ring-blue-500'
+									/>
+									{errors.createdBy && (
+										<p className='text-red-400 text-sm mt-1'>
+											{errors.createdBy}
+										</p>
+									)}
+								</div>
+
+								<div>
+									<label className='text-gray-400 text-sm mb-2 block'>
+										Ad Type
+									</label>
+									<select
+										name='type'
+										onChange={handleChange}
+										className='w-full bg-gray-700/50 text-white rounded-lg p-3 border border-gray-600 focus:ring-2 focus:ring-blue-500'>
+										<option value=''>Select Type</option>
+										<option value='Poster'>Poster</option>
+										<option value='Audio File'>Audio File</option>
+										<option value='Video'>Video</option>
+										<option value='Text'>Text</option>
+									</select>
+								</div>
+
+								{formData.type && formData.type !== 'Text' && (
+									<div>
+										<label className='text-gray-400 text-sm mb-2 block'>
+											Ad Resource
+										</label>
+										<input
+											type='file'
+											name='adResource'
+											onChange={handleChange}
+											className='w-full bg-gray-700/50 text-white rounded-lg p-3 border border-gray-600 focus:ring-2 focus:ring-blue-500'
+										/>
+									</div>
+								)}
+
+								<div className='grid md:grid-cols-2 gap-4'>
+									<div>
+										<label className='text-gray-400 text-sm mb-2 block'>
+											Cost Per View
+										</label>
+										<input
+											name='costPerView'
+											placeholder='Optional'
+											onChange={handleChange}
+											className='w-full bg-gray-700/50 text-white rounded-lg p-3 border border-gray-600 focus:ring-2 focus:ring-blue-500'
+										/>
+									</div>
+									<div>
+										<label className='text-gray-400 text-sm mb-2 block'>
+											Days Running
+										</label>
+										<input
+											name='numberOfDaysRunning'
+											placeholder='Optional'
+											onChange={handleChange}
+											className='w-full bg-gray-700/50 text-white rounded-lg p-3 border border-gray-600 focus:ring-2 focus:ring-blue-500'
+										/>
+									</div>
+								</div>
+							</div>
+
+							<DialogFooter className='mt-8 flex justify-end space-x-4'>
+								<button
+									onClick={() => setShowDialog(false)}
+									className='bg-gray-700 text-white px-4 py-2 rounded-lg hover:bg-gray-600'>
+									Cancel
+								</button>
+								<button
+									disabled={!isFormValid}
+									onClick={handleCreateAd}
+									className='bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed'>
+									Create Ad
+								</button>
+							</DialogFooter>
+						</motion.div>
+					</DialogContent>
+				</Dialog>
+				{/* 
+				<Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
+					<DialogContent className='bg-gradient-to-br from-green-600 to-green-800 text-white rounded-2xl max-w-md p-8'>
+						<motion.div
+							initial={{ opacity: 0, scale: 0.9 }}
+							animate={{ opacity: 1, scale: 1 }}
+							transition={{ duration: 0.3 }}>
+							<div className='text-center'>
+								<FiAlertCircle size={64} className='mx-auto mb */}
+
+				<Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
+					<DialogContent className='bg-gradient-to-br from-green-600 to-green-800 text-white rounded-2xl max-w-md p-8'>
+						<motion.div
+							initial={{ opacity: 0, scale: 0.9 }}
+							animate={{ opacity: 1, scale: 1 }}
+							transition={{ duration: 0.3 }}>
+							<div className='text-center'>
+								<FiAlertCircle size={64} className='mx-auto mb-4 text-white' />
+								<DialogTitle className='text-2xl font-bold mb-2'>
+									Ad Created Successfully!
+								</DialogTitle>
+								<DialogDescription className='text-white/80'>
+									Your ad has been created and is ready to go.
+								</DialogDescription>
+								<div className='mt-6'>
+									<button
+										onClick={() => setShowSuccessDialog(false)}
+										className='bg-white text-green-700 px-6 py-2 rounded-lg hover:bg-gray-100'>
+										Close
+									</button>
+								</div>
+							</div>
+						</motion.div>
+					</DialogContent>
+				</Dialog>
+
+				<ToastContainer />
+			</div>
+		</div>
 	);
 }
 

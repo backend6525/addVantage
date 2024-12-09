@@ -99,12 +99,12 @@ const SideMenu: React.FC<SidebarProps> = ({
 		<aside
 			className={`${
 				isMenuOpen ? 'w-[16rem]' : 'w-[5.2rem]'
-			} bg-gray-900 text-white p-6 shadow-lg transition-all duration-300 fixed top-[0.58rem] border border-gray-700 left-0 h-full flex flex-col backdrop-blur-md bg-opacity-50 overflow-hidden`}>
+			} bg-gray-900 text-white px-6  pb-6 shadow-lg transition-all duration-300 fixed top-16 border border-gray-700 left-0 h-[calc(100%-4rem)] flex flex-col backdrop-blur-md bg-opacity-50 overflow-hidden z-40`}>
 			{/* Sidebar Header */}
-			<div className='flex-shrink-0 '>
+			<div className='flex-shrink-0'>
 				<button
 					onClick={toggleMenu}
-					className='text-gray-300 hover:text-white transition-colors pl-2 mt-20'>
+					className='text-gray-300 hover:text-white transition-colors pl-2 mt-4'>
 					{isMenuOpen ? <FiArrowLeft size={24} /> : <FiArrowRight size={24} />}
 				</button>
 			</div>
@@ -119,8 +119,11 @@ const SideMenu: React.FC<SidebarProps> = ({
 							<li key={item.label} className='group'>
 								<button
 									onClick={() => setIsTeamsOpen(!isTeamsOpen)}
-									className='flex items-center p-3 w-full text-left rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white backdrop-blur-lg bg-gray-800/40 transition-colors'>
-									<span className='mr-3'>{item.icon}</span>
+									className={`flex items-center p-3 w-full text-left rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white backdrop-blur-lg bg-gray-800/40 transition-colors
+										${!isMenuOpen ? 'justify-center' : ''}`}>
+									<span className={`${!isMenuOpen ? '' : 'mr-3'}`}>
+										{item.icon}
+									</span>
 									{isMenuOpen && item.label}
 								</button>
 								{isTeamsOpen && isMenuOpen && (
@@ -144,8 +147,11 @@ const SideMenu: React.FC<SidebarProps> = ({
 							<li key={item.label} className='group'>
 								<Link
 									href={item.href!}
-									className='flex items-center p-3 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white backdrop-blur-lg bg-gray-800/40 transition-colors'>
-									<span className='mr-3'>{item.icon}</span>
+									className={`flex items-center p-3 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white backdrop-blur-lg bg-gray-800/40 transition-colors
+										${!isMenuOpen ? 'justify-center' : ''}`}>
+									<span className={`${!isMenuOpen ? '' : 'mr-3'}`}>
+										{item.icon}
+									</span>
 									{isMenuOpen && item.label}
 								</Link>
 							</li>
@@ -155,7 +161,7 @@ const SideMenu: React.FC<SidebarProps> = ({
 			</div>
 
 			{/* Footer Area */}
-			<div className='mt-auto-mt-8'>
+			<div className='mt-auto-mt-8 pl-0.5'>
 				<Create onCreateAdd={onCreateAdd} isMenuOpen={isMenuOpen} />
 				<div className='mt-4'>
 					<div className='h-4 w-full bg-gray-700 rounded'>
