@@ -10,7 +10,7 @@ function getConvexClient() {
 	return new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL);
 }
 
-export async function GET(request: Request) {
+export async function GET() {
 	try {
 		const headersList = headers();
 		const userEmail = headersList.get('x-user-email');
@@ -64,7 +64,7 @@ export async function GET(request: Request) {
 	}
 }
 
-export async function PATCH(request: Request) {
+export async function PATCH() {
 	try {
 		const headersList = headers();
 		const userEmail = headersList.get('x-user-email');
