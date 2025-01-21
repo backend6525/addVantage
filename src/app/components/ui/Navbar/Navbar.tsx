@@ -9,6 +9,8 @@ import {
 	RegisterLink,
 } from '@kinde-oss/kinde-auth-nextjs/components';
 
+//import { UserButton } from '@kinde-oss/kinde-auth-nextjs/components';
+
 const navigation = [
 	{ name: 'Features', href: '/#features' },
 	{ name: 'Pricing', href: '/#pricing' },

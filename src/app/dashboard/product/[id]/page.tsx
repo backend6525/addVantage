@@ -48,6 +48,7 @@ interface Product {
 	costPerView?: string;
 	numberOfDaysRunning?: string;
 	publisher?: Publisher;
+	isPublished?: boolean;
 }
 
 interface ProductDetails extends Product {
@@ -63,6 +64,7 @@ interface ProductDetails extends Product {
 		platform: string;
 	};
 	tags?: string[];
+	isPublished?: boolean;
 }
 
 interface MetricCardProps {
@@ -103,6 +105,7 @@ const ProductDetailsPage = ({ params }: { params: { id: string } }) => {
 	const [error, setError] = useState<string | null>(null);
 	const [isLiked, setIsLiked] = useState(false);
 	const [isSubmitting, setIsSubmitting] = useState(false);
+	const [isPublished, setIsPublished] = useState(false);
 	const [isCurrentUserPublisher, setIsCurrentUserPublisher] = useState(false);
 	const router = useRouter();
 
@@ -117,32 +120,6 @@ const ProductDetailsPage = ({ params }: { params: { id: string } }) => {
 		return () => window.removeEventListener('error', handleError);
 	}, []);
 
-	// useEffect(() => {
-	// 	const fetchProductDetails = async () => {
-	// 		try {
-	// 			setLoading(true);
-	// 			const response = await fetch(`/api/product?id=${id}`);
-	// 			if (!response.ok) {
-	// 				throw new Error('Failed to fetch product details');
-	// 			}
-	// 			const data: ProductDetails = await response.json();
-	// 			setProduct(data);
-
-	// 			// Check if current user is the publisher (mock implementation)
-	// 			const currentUserId = localStorage.getItem('userId');
-	// 			setIsCurrentUserPublisher(currentUserId === data.createdBy);
-	// 		} catch (err) {
-	// 			console.error('Error:', err);
-	// 			setError('Could not load product details. Please try again later.');
-	// 		} finally {
-	// 			setLoading(false);
-	// 		}
-	// 	};
-
-	// 	fetchProductDetails();
-	// }, [id]);
-
-	// Enhanced data fetching
 	useEffect(() => {
 		const fetchProductDetails = async () => {
 			try {
@@ -153,6 +130,7 @@ const ProductDetailsPage = ({ params }: { params: { id: string } }) => {
 				}
 				const data: ProductDetails = await response.json();
 				setProduct(data);
+				setIsPublished(data.isPublished || false);
 
 				const currentUserId = localStorage.getItem('userId');
 				setIsCurrentUserPublisher(currentUserId === data.createdBy);
@@ -168,10 +146,33 @@ const ProductDetailsPage = ({ params }: { params: { id: string } }) => {
 		fetchProductDetails();
 	}, [id]);
 
-	// const handleSendMessage = () => {
-	// 	// Implement message routing or modal
-	// 	router.push(`/messages/new?to=${product?.publisher?.id}`);
-	// };
+	const handleTogglePublish = async () => {
+		try {
+			setIsSubmitting(true);
+			const response = await fetch(`/api/product/${id}/toggle-publish`, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({ isPublished: !isPublished }),
+			});
+
+			if (!response.ok) {
+				throw new Error('Failed to toggle publish status');
+			}
+
+			const updatedProduct = await response.json();
+			setIsPublished(updatedProduct.isPublished);
+			setProduct((prev) =>
+				prev ? { ...prev, isPublished: updatedProduct.isPublished } : null
+			);
+		} catch (error) {
+			console.error('Error toggling publish status:', error);
+			setError('Failed to update publish status');
+		} finally {
+			setIsSubmitting(false);
+		}
+	};
 
 	// Enhanced message handling
 	const handleSendMessage = async () => {
@@ -185,18 +186,6 @@ const ProductDetailsPage = ({ params }: { params: { id: string } }) => {
 			setIsSubmitting(false);
 		}
 	};
-
-	// const MetricCard = ({ icon: Icon, label, value, color }: any) => (
-	// 	<motion.div
-	// 		whileHover={{ scale: 1.05 }}
-	// 		className='p-4 rounded-xl bg-white/5 backdrop-blur-sm border border-white/10'>
-	// 		<div className='text-white/60 text-sm mb-1 flex items-center gap-2'>
-	// 			<Icon className={`w-4 h-4 ${color}`} />
-	// 			{label}
-	// 		</div>
-	// 		<div className='text-xl font-semibold'>{value}</div>
-	// 	</motion.div>
-	// );
 
 	// Memoized components
 	const MetricCard = React.memo(
@@ -219,53 +208,6 @@ const ProductDetailsPage = ({ params }: { params: { id: string } }) => {
 	if (error || !product) return <ErrorState error={error} />;
 
 	return (
-		// <div className='bg-gradient-to-br from-gray-900 to-black min-h-screen text-white'>
-		// 	{/* Header Bar */}
-		// 	<motion.div
-		// 		initial={{ y: -20, opacity: 0 }}
-		// 		animate={{ y: 0, opacity: 1 }}
-		// 		className='sticky top-16 z-30 bg-black/50 backdrop-blur-lg border-b border-white/10'>
-		// 		<div className='max-w-7xl mx-auto px-4 py-4 flex justify-between items-center'>
-		// 			<motion.button
-		// 				whileHover={{ scale: 1.05 }}
-		// 				whileTap={{ scale: 0.95 }}
-		// 				onClick={() => router.back()}
-		// 				className='flex items-center gap-2 text-white/70 hover:text-white transition-colors'>
-		// 				<ChevronLeft className='w-5 h-5' />
-		// 				<span>Back</span>
-		// 			</motion.button>
-
-		// 			<div className='flex items-center gap-4'>
-		// 				<OnlineStatus
-		// 					isOnline={product.isOnline || false}
-		// 					isOwner={isCurrentUserPublisher}
-		// 					resourceId={product.id}
-		// 					resourceType='product'
-		// 					onStatusChange={(status) => {
-		// 						setProduct((prev) =>
-		// 							prev ? { ...prev, isOnline: status } : null
-		// 						);
-		// 					}}
-		// 				/>
-		// 				<motion.button
-		// 					whileHover={{ scale: 1.05 }}
-		// 					whileTap={{ scale: 0.95 }}
-		// 					onClick={() => setIsLiked(!isLiked)}
-		// 					className={`p-2 rounded-full ${
-		// 						isLiked ? 'bg-red-500/20 text-red-500' : 'bg-white/10'
-		// 					}`}>
-		// 					<Heart className={`w-5 h-5 ${isLiked ? 'fill-current' : ''}`} />
-		// 				</motion.button>
-		// 				<motion.button
-		// 					whileHover={{ scale: 1.05 }}
-		// 					whileTap={{ scale: 0.95 }}
-		// 					className='p-2 rounded-full bg-white/10'>
-		// 					<Share2 className='w-5 h-5' />
-		// 				</motion.button>
-		// 			</div>
-		// 		</div>
-		// 	</motion.div>
-
 		<div className='bg-gradient-to-br from-gray-900 to-black min-h-screen text-white'>
 			{/* Header Bar */}
 			<motion.div
@@ -284,6 +226,22 @@ const ProductDetailsPage = ({ params }: { params: { id: string } }) => {
 					</motion.button>
 
 					<div className='flex items-center gap-4'>
+						{isCurrentUserPublisher && (
+							<motion.button
+								aria-label={isPublished ? 'Unpublish' : 'Publish'}
+								whileHover={{ scale: 1.05 }}
+								whileTap={{ scale: 0.95 }}
+								onClick={handleTogglePublish}
+								disabled={isSubmitting}
+								className={`px-4 py-2 rounded-full transition-colors ${
+									isPublished
+										? 'bg-green-500/20 text-green-400 hover:bg-green-500/30'
+										: 'bg-gray-500/20 text-gray-400 hover:bg-gray-500/30'
+								} ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}>
+								{isPublished ? 'Published' : 'Unpublished'}
+							</motion.button>
+						)}
+
 						<OnlineStatus
 							isOnline={product?.isOnline || false}
 							isOwner={isCurrentUserPublisher}
@@ -326,13 +284,6 @@ const ProductDetailsPage = ({ params }: { params: { id: string } }) => {
 						className='space-y-6'>
 						<div className='rounded-2xl overflow-hidden shadow-2xl relative bg-gradient-to-br from-gray-800 to-gray-900 aspect-video group'>
 							{product.adResourceUrl ? (
-								// <Image
-								// 	src={product.adResourceUrl}
-								// 	alt={product.title}
-								// 	fill
-								// 	className='object-cover transition-transform group-hover:scale-105'
-								// />
-
 								<Image
 									src={product.adResourceUrl}
 									alt={product.title}
@@ -404,47 +355,6 @@ const ProductDetailsPage = ({ params }: { params: { id: string } }) => {
 
 						{/* Publisher Card */}
 						{product.publisher && (
-							// <motion.div
-							// 	whileHover={{ scale: 1.02 }}
-							// 	className='p-6 rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 space-y-4'>
-							// 	<div className='flex items-center justify-between'>
-							// 		<div className='flex items-center gap-4'>
-							// 			{product.publisher.logoUrl ? (
-							// 				<Image
-							// 					src={product.publisher.logoUrl}
-							// 					alt={product.publisher.name}
-							// 					width={48}
-							// 					height={48}
-							// 					className='rounded-full'
-							// 				/>
-							// 			) : (
-							// 				<div className='w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center'>
-							// 					<Globe className='w-6 h-6 text-white' />
-							// 				</div>
-							// 			)}
-							// 			<div>
-							// 				<h3 className='font-semibold text-lg'>
-							// 					{product.publisher.name}
-							// 				</h3>
-							// 				{product.publisher.location && (
-							// 					<p className='text-sm text-white/60 flex items-center gap-1'>
-							// 						<MapPin className='w-4 h-4' />
-							// 						{product.publisher.location}
-							// 					</p>
-							// 				)}
-							// 			</div>
-							// 		</div>
-							// 		{!isCurrentUserPublisher && (
-							// 			<motion.button
-							// 				whileHover={{ scale: 1.05 }}
-							// 				whileTap={{ scale: 0.95 }}
-							// 				onClick={handleSendMessage}
-							// 				className='bg-blue-500/20 text-blue-400 p-3 rounded-full hover:bg-blue-500/30 transition-colors'>
-							// 				<MessageCircle className='w-5 h-5' />
-							// 			</motion.button>
-							// 		)}
-							// 	</div>
-							// </motion.div>
 							<motion.div
 								whileHover={{ scale: 1.02 }}
 								className='p-6 rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 space-y-4'>

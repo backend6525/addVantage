@@ -32,7 +32,7 @@
 		"convex/teams.mts",
 		"convex/ads.mts",
 		"convex/user.mts",
-		"src/app/api/createAd/route.js",
+		"src/app/api/createAd/route.tsx",
 		"src/app/components/dashboardUi/SideMenu/TeamDropDown.jsx",
 		"src/app/api/product/route.ts"
 	],

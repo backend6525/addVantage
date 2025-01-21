@@ -6,6 +6,14 @@ import { useKindeBrowserClient } from '@kinde-oss/kinde-auth-nextjs';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, ChevronDown, Menu } from 'lucide-react';
 import Brand from '../../ui/Brand';
+import { NotificationCenter } from '../../ui/NotificationCenter/NotificationCenter';
+
+interface NavbarProps {
+	search: {
+		placeholder: string;
+	};
+	setIsMenuOpen: React.Dispatch<React.SetStateAction<boolean>>;
+}
 
 const navItems = [
 	{ href: '/dashboard/tasks', label: 'Tasks' },
@@ -24,10 +32,12 @@ const dropdownOptions = [
 	{ href: '/logout', label: 'Sign Out' },
 ];
 
-const Navbar = () => {
+const Navbar: React.FC<NavbarProps> = ({ search, setIsMenuOpen }) => {
 	const { user } = useKindeBrowserClient();
 	const [dropdownOpen, setDropdownOpen] = useState(false);
 	const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+	console.log('Navbar user state:', user);
 
 	return (
 		<nav className='fixed top-0 left-0 right-0 z-50 bg-gradient-to-b from-gray-900 to-gray-800/95 backdrop-blur-lg border-b border-white/10'>
@@ -53,10 +63,15 @@ const Navbar = () => {
 				{/* Notifications and Profile */}
 				<div className='flex items-center space-x-4'>
 					{/* Notifications */}
-					<button className='relative p-2 text-gray-400 hover:text-white transition-colors duration-200'>
+
+					{/* <button className='relative p-2 text-gray-400 hover:text-white transition-colors duration-200'>
 						<Bell className='h-5 w-5' />
-						<span className='absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full'></span>
 					</button>
+ */}
+
+					<span className='relative pr-12 text-gray-400 hover:text-white transition-colors duration-200'>
+						<NotificationCenter />
+					</span>
 
 					{/* Profile Dropdown */}
 					<div className='relative hidden md:block'>

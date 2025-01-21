@@ -9,9 +9,10 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from '@/app/components/ui/DialogPopup/dialog';
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 import { FiFilePlus, FiAlertCircle } from 'react-icons/fi';
+import { useRouter } from 'next/navigation';
+import { useKindeAuth } from '@kinde-oss/kinde-auth-nextjs';
+import { useToast } from '@/app/components/ui/toast/use-toast';
 
 type CreateAdPayload = {
 	adName: string;
@@ -21,9 +22,11 @@ type CreateAdPayload = {
 	costPerView: string;
 	numberOfDaysRunning: string;
 	adResourceUrl: string | null;
+	description: string;
 };
 
 function Create({ onCreateAd = () => {}, isMenuOpen }: any) {
+	const { toast } = useToast();
 	const [formData, setFormData] = useState({
 		adName: '',
 		teamId: '',
@@ -33,6 +36,7 @@ function Create({ onCreateAd = () => {}, isMenuOpen }: any) {
 		numberOfDaysRunning: '',
 		adResourceUrl: '',
 		adResource: null as File | null,
+		description: '',
 	});
 
 	const [errors, setErrors] = useState({
@@ -42,6 +46,7 @@ function Create({ onCreateAd = () => {}, isMenuOpen }: any) {
 		costPerView: '',
 		numberOfDaysRunning: '',
 		adResource: '',
+		description: '',
 	});
 
 	const [showDialog, setShowDialog] = useState(false);
@@ -89,6 +94,15 @@ function Create({ onCreateAd = () => {}, isMenuOpen }: any) {
 		return '';
 	}, []);
 
+	const validateAdDescription = useCallback((description: string) => {
+		if (!description) return 'Description is required';
+		if (description.length < 10)
+			return 'Description must be at least 10 characters';
+		if (description.length > 500)
+			return 'Description cannot exceed 500 characters';
+		return '';
+	}, []);
+
 	const validateField = useCallback(
 		(name: string, value: string | File | null) => {
 			switch (name) {
@@ -106,6 +120,8 @@ function Create({ onCreateAd = () => {}, isMenuOpen }: any) {
 					return validateAdResource(formData.type, value as File | null);
 				case 'type':
 					return validateAdResource(value as string, formData.adResource);
+				case 'description':
+					return validateAdDescription(value as string);
 				default:
 					return '';
 			}
@@ -119,11 +135,37 @@ function Create({ onCreateAd = () => {}, isMenuOpen }: any) {
 			validateCostPerView,
 			validateDays,
 			validateAdResource,
+			validateAdDescription,
 		]
 	);
 
+	// const handleChange = useCallback(
+	// 	(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+	// 		const { name, value } = e.target;
+	// 		const files = (e.target as HTMLInputElement).files;
+
+	// 		const newFormData = {
+	// 			...formData,
+	// 			[name]: files ? files[0] : value,
+	// 		};
+	// 		setFormData(newFormData);
+
+	// 		const error = validateField(name, files ? files[0] : value);
+
+	// 		setErrors((prev) => ({
+	// 			...prev,
+	// 			[name]: error,
+	// 		}));
+	// 	},
+	// 	[formData, validateField]
+	// );
+
 	const handleChange = useCallback(
-		(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+		(
+			e: React.ChangeEvent<
+				HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+			>
+		) => {
 			const { name, value } = e.target;
 			const files = (e.target as HTMLInputElement).files;
 
@@ -142,7 +184,6 @@ function Create({ onCreateAd = () => {}, isMenuOpen }: any) {
 		},
 		[formData, validateField]
 	);
-
 	const isFormValid = useMemo(() => {
 		const newErrors = {
 			adName: validateAdName(formData.adName),
@@ -151,6 +192,7 @@ function Create({ onCreateAd = () => {}, isMenuOpen }: any) {
 			costPerView: validateCostPerView(formData.costPerView),
 			numberOfDaysRunning: validateDays(formData.numberOfDaysRunning),
 			adResource: validateAdResource(formData.type, formData.adResource),
+			description: validateAdDescription(formData.description),
 		};
 
 		setErrors(newErrors);
@@ -164,12 +206,14 @@ function Create({ onCreateAd = () => {}, isMenuOpen }: any) {
 		formData.costPerView,
 		formData.numberOfDaysRunning,
 		formData.adResource,
+		formData.description,
 		validateAdName,
 		validateTeamId,
 		validateEmail,
 		validateCostPerView,
 		validateDays,
 		validateAdResource,
+		validateAdDescription,
 	]);
 
 	const uploadFileToS3 = useCallback(async (file: File): Promise<string> => {
@@ -217,7 +261,11 @@ function Create({ onCreateAd = () => {}, isMenuOpen }: any) {
 	const handleCreateAd = useCallback(async () => {
 		try {
 			if (!isFormValid) {
-				toast.error('Please fill in the required fields.');
+				toast({
+					variant: 'destructive',
+					title: 'Error',
+					description: 'Please fill in the required fields.',
+				});
 				return;
 			}
 
@@ -234,6 +282,7 @@ function Create({ onCreateAd = () => {}, isMenuOpen }: any) {
 				costPerView: formData.costPerView,
 				numberOfDaysRunning: formData.numberOfDaysRunning,
 				adResourceUrl: fileUrl || '',
+				description: formData.description,
 			};
 
 			const res = await fetch('/api/createAd', {
@@ -245,16 +294,28 @@ function Create({ onCreateAd = () => {}, isMenuOpen }: any) {
 			const result = await res.json();
 
 			if (res.ok) {
-				toast.success('Ad created successfully!');
+				toast({
+					variant: 'default',
+					title: 'Ad created successfully!',
+					description: 'Your ad has been created and is ready to go.',
+				});
 				setShowDialog(false);
 				setShowSuccessDialog(true);
 				onCreateAd();
 			} else {
-				toast.error(result.error || 'Ad creation failed. Please try again.');
+				toast({
+					variant: 'destructive',
+					title: 'Error',
+					description: result.error || 'Ad creation failed. Please try again.',
+				});
 			}
 		} catch (error) {
 			console.error('Error creating ad:', error);
-			toast.error('Ad creation failed. Please try again.');
+			toast({
+				variant: 'destructive',
+				title: 'Error',
+				description: 'Ad creation failed. Please try again.',
+			});
 		}
 	}, [isFormValid, formData, uploadFileToS3, onCreateAd]);
 
@@ -310,6 +371,23 @@ function Create({ onCreateAd = () => {}, isMenuOpen }: any) {
 									/>
 									{errors.adName && (
 										<p className='text-red-400 text-sm mt-1'>{errors.adName}</p>
+									)}
+								</div>
+								<div>
+									<label className='text-gray-400 text-sm mb-2 block'>
+										Description
+									</label>
+									<textarea
+										name='description'
+										placeholder='Enter ad description'
+										onChange={handleChange}
+										className='w-full bg-gray-700/50 text-white rounded-lg p-3 border border-gray-600 focus:ring-2 focus:ring-blue-500'
+										rows={4}
+									/>
+									{errors.description && (
+										<p className='text-red-400 text-sm mt-1'>
+											{errors.description}
+										</p>
 									)}
 								</div>
 
@@ -452,8 +530,6 @@ function Create({ onCreateAd = () => {}, isMenuOpen }: any) {
 						</motion.div>
 					</DialogContent>
 				</Dialog>
-
-				<ToastContainer />
 			</div>
 		</div>
 	);

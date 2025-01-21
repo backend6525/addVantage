@@ -1,115 +1,224 @@
-'use client'
+'use client';
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+	ArrowRight,
+	ArrowLeft,
+	Building2,
+	UserCircle,
+	Briefcase,
+	CheckCircle,
+	ChevronRight,
+	Rocket,
+} from 'lucide-react';
 import OptionCard from '../components/ui/Cards/OptionCard';
 import ProfileForm from '../components/ui/Cards/ProfileForm';
-import { motion } from 'framer-motion'; // Import Framer Motion
 
 interface Step {
-  title: string;
-  description: string;
-  details: string;
-  content: React.ReactNode;
+	title: string;
+	description: string;
+	details: string;
+	icon: React.ElementType;
+	content: React.ReactNode;
 }
 
 const steps: Step[] = [
-  {
-    title: "Business",
-    description: "Step 1. Business type",
-    details: "Our architecture is ready for any type of business, just let us know who we are talking to.",
-    content: (
-      <>
-        <OptionCard
-          title="Software as a service"
-          description="Software as a service (SaaS) is a software licensing and delivery model in which software is licensed on a subscription basis and is centrally hosted."
-          value="saas"
-        />
-        <OptionCard
-          title="Infrastructure as a Service"
-          description="Infrastructure as a service (IaaS) is a form of cloud computing that provides virtualized computing resources over the internet."
-          value="iaas"
-        />
-        <OptionCard
-          title="Platform as a service"
-          description="Platform as a service (PaaS) is a deployment environment in the cloud, with resources that enable you to deliver cloud-based apps or even enterprise apps."
-          value="paas"
-        />
-      </>
-    ),
-  },
-  {
-    title: "Profile",
-    description: "Step 2. Profile details",
-    details: "Please provide your profile information.",
-    content: (
-      <ProfileForm />
-    ),
-  },
-  {
-    title: "Business",
-    description: "Step 3. Business",
-    details: "Provide detailed business information.",
-    content: <div>Business details form will go here.</div>,
-  },
-  {
-    title: "Confirmation",
-    description: "Step 4. Confirmation",
-    details: "Review and confirm your information.",
-    content: <div>Confirmation details will go here.</div>,
-  }
+	{
+		title: 'Business Type',
+		description: 'Choose Your Path',
+		details:
+			'Select the business model that best describes your organization. This helps us tailor the experience to your needs.',
+		icon: Building2,
+		content: (
+			<div className='grid md:grid-cols-2 lg:grid-cols-3 gap-6'>
+				<OptionCard
+					title='Software as a Service'
+					description='Cloud-based software solutions delivered on a subscription basis. Perfect for recurring revenue models.'
+					value='saas'
+					className='bg-gradient-to-br from-purple-500/10 to-blue-500/10 hover:from-purple-500/20 hover:to-blue-500/20'
+				/>
+				<OptionCard
+					title='Infrastructure as a Service'
+					description='Scalable cloud infrastructure resources. Ideal for businesses requiring flexible computing power.'
+					value='iaas'
+					className='bg-gradient-to-br from-blue-500/10 to-cyan-500/10 hover:from-blue-500/20 hover:to-cyan-500/20'
+				/>
+				<OptionCard
+					title='Platform as a Service'
+					description='Complete development and deployment environment in the cloud. Best for application developers.'
+					value='paas'
+					className='bg-gradient-to-br from-cyan-500/10 to-teal-500/10 hover:from-cyan-500/20 hover:to-teal-500/20'
+				/>
+			</div>
+		),
+	},
+	{
+		title: 'Profile',
+		description: 'Tell Us About Yourself',
+		details:
+			'Help us personalize your experience by sharing some basic information about you and your role.',
+		icon: UserCircle,
+		content: <ProfileForm />,
+	},
+	{
+		title: 'Business Details',
+		description: 'Your Business Identity',
+		details:
+			'Provide information about your business to help us better understand your needs and goals.',
+		icon: Briefcase,
+		content: (
+			<div className='space-y-6 animate-in'>
+				<div className='grid md:grid-cols-2 gap-6'>
+					{/* Business Details Form - To be implemented */}
+					<div className='p-6 rounded-xl bg-gray-800/50 border border-gray-700'>
+						<h3 className='text-lg font-semibold mb-4'>Coming Soon</h3>
+						<p className='text-gray-400'>
+							Business details form will be available shortly.
+						</p>
+					</div>
+				</div>
+			</div>
+		),
+	},
+	{
+		title: 'Confirmation',
+		description: 'Ready to Launch',
+		details:
+			'Review your information and confirm everything is correct before we finalize your setup.',
+		icon: CheckCircle,
+		content: (
+			<div className='space-y-6'>
+				<div className='p-6 rounded-xl bg-gradient-to-br from-purple-500/10 to-blue-500/10 border border-gray-700'>
+					<h3 className='text-lg font-semibold mb-4'>Almost There!</h3>
+					<p className='text-gray-400'>
+						Review and confirm your details to complete the setup.
+					</p>
+				</div>
+			</div>
+		),
+	},
 ];
 
 const OnboardingProcess: React.FC = () => {
-  const [currentStep, setCurrentStep] = useState(1);
+	const [currentStep, setCurrentStep] = useState(1);
 
-  const nextStep = () => setCurrentStep(currentStep + 1);
-  const prevStep = () => setCurrentStep(currentStep - 1);
+	const nextStep = () =>
+		setCurrentStep((prev) => Math.min(prev + 1, steps.length));
+	const prevStep = () => setCurrentStep((prev) => Math.max(prev - 1, 1));
 
-  return (
-    <div className="container mx-auto p-6 dark:bg-gray-900 dark:text-white ">
-         <h2 className="text-3xl font-bold mb-6 text-center">Welcome to Addvantage</h2>
-      <div className="max-w-7xl mx-auto bg-gray-800 p-6 rounded-lg shadow-lg dark:bg-gray-800">
-       
+	return (
+		<div className='min-h-screen bg-gradient-to-b from-gray-900 via-gray-900/95 to-gray-900'>
+			<div className='container mx-auto px-4 py-12'>
+				{/* Welcome Banner */}
+				<div className='text-center mb-12'>
+					<div className='flex items-center justify-center gap-3 mb-4'>
+						<Rocket className='w-8 h-8 text-purple-400 animate-pulse' />
+						<h1 className='text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-purple-400'>
+							Welcome to AdZPay
+						</h1>
+					</div>
+					<p className='text-gray-400 max-w-2xl mx-auto'>
+						Lets get your account set up and ready to go. This will only take a
+						few minutes.
+					</p>
+				</div>
 
-        <div className="flex flex-wrap justify-between mb-6 sm:mb-8 md:mb-10 lg:mb-12 ">
-          {steps.map((step, index) => (
-            <div key={index} className={`flex-1 text-center ${currentStep === index + 1 ? 'text-green-500' : 'text-gray-400'}`}>
-              <div className={`flex items-center justify-center w-10 h-10 ${currentStep === index + 1 ? 'bg-green-500 text-white' : 'bg-gray-400 text-gray-900'} rounded-full mx-auto`}>
-                {index + 1}
-              </div>
-              <div className="mt-2">{step.title}</div>
-            </div>
-          ))}
-        </div>
-        
-        <motion.div 
-        initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-           exit={{ opacity: 0, y: -20 }}className="mb-6 sm:pl-4 md:pl-8 lg:pl-80 ">
-          
-          <h3 className="text-2xl font-bold mb-4 max-w-2xl ">{steps[currentStep - 1].description}</h3>
-          <p className="text-gray-300">{steps[currentStep - 1].details}</p>
-        </motion.div>
+				{/* Progress Steps */}
+				<div className='max-w-5xl mx-auto mb-12'>
+					<div className='flex justify-between relative'>
+						{steps.map((step, index) => {
+							const StepIcon = step.icon;
+							return (
+								<div
+									key={index}
+									className='flex flex-col items-center relative z-10'>
+									<div
+										className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 ${
+											currentStep > index + 1
+												? 'bg-purple-500 text-white'
+												: currentStep === index + 1
+													? 'bg-purple-400 text-white ring-4 ring-purple-400/20'
+													: 'bg-gray-800 text-gray-400'
+										}`}>
+										<StepIcon className='w-6 h-6' />
+									</div>
+									<div className='mt-3 text-sm font-medium text-gray-400'>
+										{step.title}
+									</div>
+								</div>
+							);
+						})}
+						{/* Progress Line */}
+						<div className='absolute top-6 left-0 right-0 h-[2px] bg-gray-800 -z-10'>
+							<div
+								className='h-full bg-purple-500 transition-all duration-300'
+								style={{
+									width: `${((currentStep - 1) / (steps.length - 1)) * 100}%`,
+								}}
+							/>
+						</div>
+					</div>
+				</div>
 
-        <div className="mb-6 sm:pl-4 md:pl-8 lg:pl-80 max-w-4xl">
-          {steps[currentStep - 1].content}
-        </div>
+				{/* Content Area */}
+				<div className='max-w-5xl mx-auto'>
+					<AnimatePresence mode='wait'>
+						<motion.div
+							key={currentStep}
+							initial={{ opacity: 0, y: 20 }}
+							animate={{ opacity: 1, y: 0 }}
+							exit={{ opacity: 0, y: -20 }}
+							transition={{ duration: 0.3 }}
+							className='bg-gradient-to-br from-gray-800/50 via-gray-800/30 to-transparent backdrop-blur-sm rounded-2xl border border-gray-700/50 p-8'>
+							<div className='mb-8'>
+								<h2 className='text-2xl font-bold text-white mb-3'>
+									{steps[currentStep - 1].description}
+								</h2>
+								<p className='text-gray-400'>
+									{steps[currentStep - 1].details}
+								</p>
+							</div>
 
-        <div className="flex justify-between">
-          {currentStep > 1 && (
-            <button onClick={prevStep} className="px-4 py-2 bg-gray-500 text-white rounded mr-2">
-              Back
-            </button>
-          )}
-          {currentStep < steps.length && (
-            <button onClick={nextStep} className="px-4 py-2 bg-green-500 text-white rounded">
-              Next Step
-            </button>
-          )}
-        </div>
-          </div>
-      </div>
-    
-  );
+							<div className='mb-8'>{steps[currentStep - 1].content}</div>
+
+							<div className='flex justify-between items-center'>
+								<button
+									onClick={prevStep}
+									className={`flex items-center gap-2 px-6 py-3 rounded-xl text-white transition-all duration-300 ${
+										currentStep > 1
+											? 'bg-gray-700 hover:bg-gray-600'
+											: 'opacity-0 pointer-events-none'
+									}`}>
+									<ArrowLeft className='w-5 h-5' />
+									Back
+								</button>
+
+								<button
+									onClick={nextStep}
+									className={`flex items-center gap-2 px-6 py-3 rounded-xl bg-purple-600 text-white hover:bg-purple-500 transition-all duration-300 ${
+										currentStep === steps.length ? 'hidden' : ''
+									}`}>
+									{currentStep === steps.length ? 'Complete' : 'Continue'}
+									<ChevronRight className='w-5 h-5' />
+								</button>
+
+								{currentStep === steps.length && (
+									<button
+										onClick={() => {
+											// Handle completion
+										}}
+										className='flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-500 hover:to-blue-500 transition-all duration-300'>
+										Get Started
+										<Rocket className='w-5 h-5' />
+									</button>
+								)}
+							</div>
+						</motion.div>
+					</AnimatePresence>
+				</div>
+			</div>
+		</div>
+	);
 };
 
- export default OnboardingProcess;
+export default OnboardingProcess;
