@@ -243,8 +243,54 @@ export const togglePublish = mutation({
 });
 
 // Add a new query to check ad expiration
+// export const checkAdExpiration = query({
+// 	handler: async (ctx) => {
+// 		const ads = await ctx.db
+// 			.query('ads')
+// 			.filter((q) => q.eq(q.field('isPublished'), true))
+// 			.collect();
+
+// 		return ads.map((ad) => {
+// 			const startDate = ad.startDate ? new Date(ad.startDate) : null;
+// 			const duration = ad.duration || 30; // Default to 30 days if not set
+
+// 			if (!startDate) {
+// 				return {
+// 					...ad,
+// 					id: ad._id,
+// 					daysRemaining: duration,
+// 					isExpiring: false,
+// 				};
+// 			}
+
+// 			const now = new Date();
+// 			const diffTime = Math.abs(now.getTime() - startDate.getTime());
+// 			const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+// 			const daysRemaining = duration - diffDays;
+
+// 			return {
+// 				...ad,
+// 				id: ad._id,
+// 				daysRemaining: Math.max(0, daysRemaining),
+// 				isExpiring: daysRemaining <= 5 && daysRemaining > 0,
+// 			};
+// 		});
+// 	},
+// });
+
+// Define the expected return type
+type CheckAdExpirationResponse = {
+	id: string;
+	isPublished: boolean;
+	daysRemaining?: number;
+	isExpiring: boolean;
+	startDate?: string;
+	duration?: number;
+}[];
+
 export const checkAdExpiration = query({
-	handler: async (ctx) => {
+	// Explicitly define the return type
+	handler: async (ctx): Promise<CheckAdExpirationResponse> => {
 		const ads = await ctx.db
 			.query('ads')
 			.filter((q) => q.eq(q.field('isPublished'), true))
@@ -252,14 +298,16 @@ export const checkAdExpiration = query({
 
 		return ads.map((ad) => {
 			const startDate = ad.startDate ? new Date(ad.startDate) : null;
-			const duration = ad.duration || 30; // Default to 30 days if not set
+			const duration = ad.duration || 30;
 
 			if (!startDate) {
 				return {
-					...ad,
 					id: ad._id,
+					isPublished: ad.isPublished ?? false,
 					daysRemaining: duration,
 					isExpiring: false,
+					startDate: ad.startDate,
+					duration,
 				};
 			}
 
@@ -269,15 +317,16 @@ export const checkAdExpiration = query({
 			const daysRemaining = duration - diffDays;
 
 			return {
-				...ad,
 				id: ad._id,
+				isPublished: ad.isPublished ?? false,
 				daysRemaining: Math.max(0, daysRemaining),
 				isExpiring: daysRemaining <= 5 && daysRemaining > 0,
+				startDate: ad.startDate,
+				duration,
 			};
 		});
 	},
 });
-
 // Update listPublishedAds to include countdown information
 export const listPublishedAds = query({
 	args: {

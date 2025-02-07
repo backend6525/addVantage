@@ -31,16 +31,18 @@
 		".next/types/**/*.ts",
 		"convex/teams.mts",
 		"convex/ads.mts",
-		"convex/user.mts",
+		"convex/user.mts"
+	],
+	"exclude": [
+		"node_modules",
 		"src/app/api/createAd/route.tsx",
 		"src/app/components/dashboardUi/SideMenu/TeamDropDown.jsx",
 		"src/app/api/product/route.ts",
 		"src/app/api/notifications/route.ts",
 		"src/app/api/extendAd/route.ts",
-		"src/app/api/checkAdExpiration/route.js",
-		"src/app/api/checkAdExpiration/route.js",
+		"src/app/api/checkAdExpiration/route.ts",
+		"src/app/api/checkAdExpiration/route.ts",
 		"src/app/api/adRequest/route.tsx",
 		"src/app/api/adRequest/route.tsx"
-	],
-	"exclude": ["node_modules"]
+	]
 }
