@@ -13,9 +13,13 @@ export const createAds = mutation({
 		adResource: v.optional(v.string()),
 		adResourceUrl: v.optional(v.string()), // URL to the ad resource
 		description: v.optional(v.string()),
+		duration: v.optional(v.float64()),
+		isActive: v.optional(v.boolean()),
+		isPublished: v.optional(v.boolean()),
+		lastModifiedBy: v.optional(v.string()),
+		endDate: v.optional(v.string()),
 	},
 	handler: async (ctx, args) => {
-		// Add timestamp for better tracking
 		const now = new Date().toISOString();
 
 		const result = await ctx.db.insert('ads', {
@@ -27,10 +31,15 @@ export const createAds = mutation({
 			numberOfDaysRunning: args.numberOfDaysRunning,
 			adResourceUrl: args.adResourceUrl,
 			description: args.description,
+			duration: args.duration ?? 30,
+			isActive: args.isActive ?? false,
+			isPublished: args.isPublished ?? false,
+			lastModifiedBy: args.lastModifiedBy,
+			endDate: args.endDate,
+			// Required fields
 			createdAt: now,
 			lastModifiedAt: now,
-			isPublished: false,
-			isActive: false,
+			startDate: now,
 		});
 
 		// Return the complete ad object
@@ -130,7 +139,11 @@ export const updateAd = mutation({
 		const { id, ...updateFields } = args;
 
 		try {
-			const result = await ctx.db.patch(id, updateFields);
+			const now = new Date().toISOString();
+			const result = await ctx.db.patch(id, {
+				...updateFields,
+				lastModifiedAt: now,
+			});
 			return result;
 		} catch (error) {
 			console.error('Error updating ad:', error);
@@ -174,24 +187,18 @@ export const togglePublish = mutation({
 
 			const now = new Date().toISOString();
 
-			// Define update data with proper typing
-			const updateData: {
-				isPublished: boolean;
-				isActive: boolean;
-				startDate?: string;
-				duration?: number;
-			} = {
+			const updateData = {
 				isPublished: args.isPublished,
 				isActive: args.isPublished,
+				lastModifiedAt: now,
+				...(args.isPublished
+					? {
+							startDate: now,
+							duration: 30,
+						}
+					: {}),
 			};
 
-			if (args.isPublished) {
-				// When publishing
-				updateData.startDate = now;
-				updateData.duration = 30;
-			}
-
-			// Update the ad
 			await ctx.db.patch(args.id, updateData);
 
 			// Get user ID for audit log
@@ -387,5 +394,25 @@ export const extendAdDuration = mutation({
 			duration: (ad.duration ?? 0) + args.extensionDays,
 			isActive: true,
 		});
+	},
+});
+
+// Add a migration mutation to fix existing documents
+export const fixMissingFields = mutation({
+	handler: async (ctx) => {
+		const now = new Date().toISOString();
+
+		// Get all ads
+		const ads = await ctx.db.query('ads').collect();
+
+		// Update each ad that's missing required fields
+		for (const ad of ads) {
+			if (!ad.createdAt || !ad.lastModifiedAt) {
+				await ctx.db.patch(ad._id, {
+					createdAt: ad.createdAt || now,
+					lastModifiedAt: ad.lastModifiedAt || now,
+				});
+			}
+		}
 	},
 });
