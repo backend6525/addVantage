@@ -37,8 +37,8 @@
 		"src/app/api/product/route.ts",
 		"src/app/api/notifications/route.ts",
 		"src/app/api/extendAd/route.ts",
-		"src/app/api/checkAdExpiration/route.ts",
-		"src/app/api/checkAdExpiration/route.ts",
+		"src/app/api/checkAdExpiration/route.js",
+		"src/app/api/checkAdExpiration/route.js",
 		"src/app/api/adRequest/route.tsx",
 		"src/app/api/adRequest/route.tsx"
 	],
