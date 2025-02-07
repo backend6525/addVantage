@@ -8,6 +8,7 @@ import {
 	LoginLink,
 	RegisterLink,
 } from '@kinde-oss/kinde-auth-nextjs/components';
+import { ThemeToggle } from '../ThemeToggle';
 
 //import { UserButton } from '@kinde-oss/kinde-auth-nextjs/components';
 
@@ -23,7 +24,7 @@ function Navbar() {
 
 	return (
 		<motion.header
-			className='fixed w-full top-0 z-50 bg-gray-900/60 backdrop-blur-md border-b border-gray-700'
+			className='fixed w-full top-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200/80 dark:border-gray-700/80 shadow-sm'
 			initial={{ opacity: 0 }}
 			animate={{ opacity: 1 }}
 			transition={{ duration: 0.3 }}>
@@ -31,9 +32,8 @@ function Navbar() {
 				{/* Logo */}
 				<Link
 					href='/'
-					className='h-8 w-8 text-2xl font-bold text-white flex items-center space-x-2'>
+					className='h-8 w-8 text-2xl font-bold text-gray-900 dark:text-white flex items-center space-x-2 hover:opacity-80 transition-opacity'>
 					<Brand />
-
 					<span>AdZPay</span>
 				</Link>
 
@@ -46,37 +46,45 @@ function Navbar() {
 							whileTap={{ scale: 0.95 }}>
 							<Link
 								href={item.href}
-								className='text-gray-300 hover:text-white transition-colors'>
+								className='text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors'>
 								{item.name}
 							</Link>
 						</motion.div>
 					))}
 				</nav>
 
-				{/* Auth Buttons */}
+				{/* Auth Buttons and Theme Toggle */}
 				<div className='hidden md:flex items-center space-x-4'>
-					<LoginLink className='flex items-center space-x-2 text-gray-300 hover:text-white'>
-						<LogIn size={18} />
+					<ThemeToggle />
+					<LoginLink className='flex items-center space-x-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-all px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800'>
+						<LogIn className='h-[1.2rem] w-[1.2rem]' />
 						<span>Sign In</span>
 					</LoginLink>
-					<RegisterLink className='bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700 transition-colors flex items-center space-x-2'>
-						<User size={18} />
+					<RegisterLink className='bg-primary text-primary-foreground px-4 py-2 rounded-xl hover:bg-primary/90 transition-colors flex items-center space-x-2 shadow-md hover:shadow-lg'>
+						<User className='h-[1.2rem] w-[1.2rem]' />
 						<span>Sign Up</span>
 					</RegisterLink>
 				</div>
 
 				{/* Mobile Menu Toggle */}
-				<button
-					className='md:hidden text-white'
-					onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-					{mobileMenuOpen ? <X /> : <Menu />}
-				</button>
+				<div className='flex items-center space-x-4 md:hidden'>
+					<ThemeToggle />
+					<button
+						className='text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg'
+						onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+						{mobileMenuOpen ? (
+							<X className='h-6 w-6' />
+						) : (
+							<Menu className='h-6 w-6' />
+						)}
+					</button>
+				</div>
 			</div>
 
 			{/* Mobile Menu */}
 			{mobileMenuOpen && (
 				<motion.div
-					className='md:hidden absolute top-full left-0 w-full bg-gray-900 shadow-2xl'
+					className='md:hidden absolute top-full left-0 w-full bg-white dark:bg-gray-900 shadow-lg border-b border-gray-200/80 dark:border-gray-700/80'
 					initial={{ opacity: 0, y: -20 }}
 					animate={{ opacity: 1, y: 0 }}
 					transition={{ duration: 0.3 }}>
@@ -85,16 +93,16 @@ function Navbar() {
 							<Link
 								key={item.name}
 								href={item.href}
-								className='block py-2 text-gray-300 hover:text-white'
+								className='block py-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg px-3 transition-colors'
 								onClick={() => setMobileMenuOpen(false)}>
 								{item.name}
 							</Link>
 						))}
-						<div className='border-t border-gray-700 pt-4 space-y-4'>
-							<LoginLink className='block py-2 text-gray-300 hover:text-white'>
+						<div className='border-t border-gray-200 dark:border-gray-700 pt-4 space-y-4'>
+							<LoginLink className='block py-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg px-3 transition-colors'>
 								Sign In
 							</LoginLink>
-							<RegisterLink className='block bg-blue-600 text-white py-2 rounded-xl text-center hover:bg-blue-700'>
+							<RegisterLink className='block bg-primary text-primary-foreground py-2 rounded-xl text-center hover:bg-primary/90 shadow-md hover:shadow-lg transition-all'>
 								Sign Up
 							</RegisterLink>
 						</div>

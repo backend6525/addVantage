@@ -2,6 +2,13 @@ import { ConvexHttpClient } from 'convex/browser';
 import { api } from '../../../../convex/_generated/api';
 import { NextResponse } from 'next/server';
 import { headers } from 'next/headers';
+import { Id } from '../../../../convex/_generated/dataModel';
+
+interface NotificationBody {
+	notificationId: Id<'notifications'>;
+	status?: string;
+	action: 'status' | 'markAsRead';
+}
 
 function getConvexClient() {
 	if (!process.env.NEXT_PUBLIC_CONVEX_URL) {
@@ -10,7 +17,7 @@ function getConvexClient() {
 	return new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL);
 }
 
-export async function GET() {
+export async function GET(): Promise<NextResponse> {
 	try {
 		const headersList = headers();
 		const userEmail = headersList.get('x-user-email');
@@ -55,7 +62,7 @@ export async function GET() {
 			console.error('Convex query error:', convexError);
 			throw convexError;
 		}
-	} catch (error) {
+	} catch (error: any) {
 		console.error('Error in notifications GET route:', error);
 		return NextResponse.json(
 			{ error: 'Failed to fetch notifications', details: error.message },
@@ -64,7 +71,7 @@ export async function GET() {
 	}
 }
 
-export async function PATCH() {
+export async function PATCH(request: Request): Promise<NextResponse> {
 	try {
 		const headersList = headers();
 		const userEmail = headersList.get('x-user-email');
@@ -76,7 +83,7 @@ export async function PATCH() {
 			);
 		}
 
-		const body = await request.json();
+		const body: NotificationBody = await request.json();
 		const { notificationId, status, action } = body;
 
 		if (!notificationId || (!status && action !== 'markAsRead')) {
@@ -100,7 +107,7 @@ export async function PATCH() {
 		}
 
 		return NextResponse.json({ success: true });
-	} catch (error) {
+	} catch (error: any) {
 		console.error('Error updating notification:', error);
 		return NextResponse.json(
 			{ error: 'Failed to update notification' },

@@ -118,72 +118,85 @@
 
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { ArrowRight, Rocket, Star } from 'lucide-react';
 import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 
 const CTA = () => {
+	const [isHovered, setIsHovered] = useState(false);
+
 	return (
-		<section className='relative py-32 bg-gradient-to-b from-gray-900 via-purple-900/20 to-gray-900'>
+		<section className='section-transition'>
 			{/* Animated Background Elements */}
 			<div className='absolute inset-0 pointer-events-none overflow-hidden'>
-				<div className='absolute top-[-10%] right-[-5%] w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-pulse'></div>
-				<div className='absolute bottom-[-10%] left-[-5%] w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse delay-500'></div>
+				<div
+					className={`absolute top-[-10%] right-[-5%] w-96 h-96 bg-primary/5 rounded-full blur-3xl transition-all duration-700 ${isHovered ? 'scale-110 opacity-70' : 'scale-100 opacity-50'} animate-pulse`}></div>
+				<div
+					className={`absolute bottom-[-10%] left-[-5%] w-96 h-96 bg-secondary/5 rounded-full blur-3xl transition-all duration-700 ${isHovered ? 'scale-110 opacity-70' : 'scale-100 opacity-50'} animate-pulse delay-500`}></div>
 			</div>
 
 			<div className='relative z-10 max-w-screen-xl mx-auto px-4'>
 				<div className='max-w-4xl mx-auto'>
-					<div className='relative bg-gradient-to-br from-gray-800/50 via-gray-800/30 to-transparent backdrop-blur-sm rounded-3xl border border-gray-700/50 overflow-hidden p-8 md:p-12'>
-						{/* Decorative Elements */}
-						<div className='absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 via-blue-500 to-purple-500'></div>
-						<div className='absolute top-1 left-0 w-full h-px bg-gradient-to-r from-purple-500/50 via-blue-500/50 to-purple-500/50 blur-sm'></div>
+					<div
+						className='glass rounded-3xl overflow-hidden hover:shadow-2xl transition-all duration-300'
+						onMouseEnter={() => setIsHovered(true)}
+						onMouseLeave={() => setIsHovered(false)}>
+						{/* Enhanced Decorative Elements */}
+						<div className='absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary via-secondary to-accent'></div>
+						<div className='absolute top-1 left-0 w-full h-px bg-gradient-to-r from-primary/50 via-secondary/50 to-accent/50 blur-sm'></div>
 
-						<div className='flex flex-col md:flex-row items-center justify-between gap-8'>
-							<div className='flex-1 text-center md:text-left'>
-								<div className='flex items-center justify-center md:justify-start gap-3 mb-6'>
-									<Rocket className='w-6 h-6 text-purple-400 animate-pulse' />
-									<span className='font-semibold text-lg tracking-wide text-purple-400'>
-										Ready to Get Started?
+						<div className='grid md:grid-cols-[1fr,auto] items-center gap-8 p-8 md:p-12'>
+							{/* Content Section */}
+							<div className='flex flex-col items-center md:items-start text-center md:text-left'>
+								{/* Enhanced Badge */}
+								<div className='inline-flex items-center gap-2 glass px-4 py-2 rounded-full mb-6 hover:scale-105 transition-transform cursor-pointer'>
+									<Star className='w-5 h-5 text-primary animate-pulse' />
+									<span className='text-sm font-medium text-foreground'>
+										Limited Time Offer
 									</span>
 								</div>
-								<h2 className='text-4xl md:text-5xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-white to-purple-400'>
-									Transform Your Marketing Today
+
+								{/* Enhanced Heading */}
+								<h2 className='text-3xl md:text-4xl font-bold mb-4'>
+									Ready to{' '}
+									<span className='text-gradient bg-[size:400%] animate-gradient'>
+										Transform
+									</span>{' '}
+									Your Marketing?
 								</h2>
-								<p className='text-lg text-gray-300 leading-relaxed mb-8'>
-									Join thousands of successful marketers who are already
-									leveraging our platform to grow their business and increase
-									their revenue.
+
+								{/* Enhanced Description */}
+								<p className='text-lg text-muted-foreground mb-8 max-w-2xl'>
+									Join thousands of successful marketers who have already
+									revolutionized their digital marketing strategy with our
+									platform.
 								</p>
-								<div className='flex flex-col sm:flex-row items-center gap-4 justify-center md:justify-start'>
-									<Link
-										href='/get-started'
-										className='inline-flex items-center px-8 py-4 rounded-xl bg-purple-600 text-white font-semibold hover:bg-purple-500 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/25 group'>
-										Get Started Free
-										<ArrowRight className='w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform' />
-									</Link>
-									<Link
-										href='/contact'
-										className='inline-flex items-center px-8 py-4 rounded-xl border border-gray-600 text-gray-300 font-semibold hover:bg-gray-800/50 hover:border-purple-500/50 transition-all duration-300 group'>
-										Contact Sales
-										<Star className='w-5 h-5 ml-2 text-yellow-400 group-hover:rotate-45 transition-transform' />
-									</Link>
-								</div>
+
+								{/* Enhanced CTA Button */}
+								<Button
+									size='lg'
+									className='group gap-2 text-lg px-8 py-6 hover:scale-105 transition-all duration-300'
+									variant='gradient'>
+									Get Started Now
+									<ArrowRight className='w-5 h-5 group-hover:translate-x-1 transition-transform' />
+								</Button>
 							</div>
 
-							{/* Stats Section */}
-							<div className='flex flex-col gap-6 min-w-[240px]'>
+							{/* Enhanced Stats Section */}
+							<div className='flex flex-col gap-6 glass rounded-xl p-6 hover:scale-105 transition-transform duration-300'>
 								{[
 									{ value: '10K+', label: 'Active Users' },
-									{ value: '95%', label: 'Satisfaction Rate' },
-									{ value: '$2M+', label: 'Revenue Generated' },
+									{ value: '95%', label: 'Success Rate' },
+									{ value: '24/7', label: 'Support' },
 								].map((stat, idx) => (
-									<div
-										key={idx}
-										className='group bg-gray-800/30 rounded-xl p-4 border border-gray-700/50 hover:border-purple-500/50 transition-all duration-300'>
-										<div className='text-2xl font-bold text-white group-hover:text-purple-400 transition-colors'>
+									<div key={idx} className='text-center'>
+										<div className='text-2xl font-bold text-gradient mb-1'>
 											{stat.value}
 										</div>
-										<div className='text-sm text-gray-400'>{stat.label}</div>
+										<div className='text-sm text-muted-foreground'>
+											{stat.label}
+										</div>
 									</div>
 								))}
 							</div>

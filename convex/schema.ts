@@ -10,6 +10,8 @@ const ads = defineTable({
 	numberOfDaysRunning: v.optional(v.string()),
 	adResourceUrl: v.optional(v.string()), // URL to the ad resource
 	description: v.optional(v.string()),
+	createdAt: v.string(),
+	lastModifiedAt: v.string(),
 
 	// Added fields to match your existing functions
 	isPublished: v.optional(v.boolean()),
@@ -20,7 +22,6 @@ const ads = defineTable({
 	duration: v.optional(v.number()),
 	isActive: v.optional(v.boolean()),
 	lastModifiedBy: v.optional(v.string()),
-	lastModifiedAt: v.optional(v.string()),
 })
 	.index('by_createdBy', ['createdBy'])
 	.index('by_published', ['isPublished']);

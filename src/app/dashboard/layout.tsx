@@ -2,7 +2,7 @@
 import React, { ReactNode, useState, useEffect, Suspense } from 'react';
 import Header from '../components/dashboardUi/Header';
 import SideMenu from '../components/dashboardUi/SideMenu';
-
+import styles from './layout.module.css';
 import { ChatProvider } from '@/context/ChatContext';
 import { GlobalChatInterface } from '@/app/components/GlobalChatInterface';
 
@@ -36,9 +36,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 	return (
 		<Suspense fallback={<div>Loading...</div>}>
 			<ChatProvider>
-				<div className='dark:bg-gray-950 bg-gray-50 dark:text-white min-h-screen flex flex-col'>
+				<div className={styles.dashboardContainer}>
 					{/* Header */}
-					<header className='z-50 w-full bg-white dark:bg-gray-900 shadow-sm border-b border-gray-100 dark:border-gray-800'>
+					<header className={styles.header}>
 						<Header />
 					</header>
 
@@ -46,14 +46,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 					<div className='flex flex-1 relative'>
 						{/* Sidebar */}
 						<aside
-							className={`transition-all duration-300 ease-in-out
-								${
-									isMobile
-										? `fixed inset-y-0 left-0 z-40 transform shadow-xl
-										${isMenuOpen ? 'translate-x-0' : '-translate-x-full'}`
-										: `static ${isMenuOpen ? 'w-64' : 'w-16'}`
-								}
-								bg-white dark:bg-gray-900 border-r border-gray-100 dark:border-gray-800 h-full  `}>
+							className={`${styles.sidebar} ${
+								isMobile
+									? `fixed inset-y-0 left-0 z-40 transform shadow-xl ${
+											isMenuOpen ? 'translate-x-0' : '-translate-x-full'
+										}`
+									: `static ${isMenuOpen ? 'w-64' : 'w-16'}`
+							}`}>
 							<SideMenu
 								isMenuOpen={isMenuOpen}
 								setIsMenuOpen={setIsMenuOpen}
@@ -64,7 +63,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 						{/* Mobile Overlay */}
 						{isMobile && isMenuOpen && (
 							<div
-								className='fixed inset-0 z-30 bg-black bg-opacity-50 backdrop-blur-sm'
+								className={styles.mobileOverlay}
 								onClick={handleOverlayClick}
 							/>
 						)}
@@ -72,9 +71,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 						{/* Main Content */}
 						<main
 							id='main-content'
-							className={`flex-1 overflow-auto transition-all duration-300
-								${!isMobile && isMenuOpen ? 'ml-0' : 'ml-0'}
-								bg-gray-50 dark:bg-gray-900`}>
+							className={`${styles.mainContent} ${
+								!isMobile && isMenuOpen ? 'ml-0' : 'ml-0'
+							}`}>
 							<div className='pt-6 max-w-8xl mx-auto'>{children}</div>
 						</main>
 					</div>

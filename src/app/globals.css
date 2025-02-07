@@ -2,26 +2,151 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-	--foreground-rgb: 0, 0, 0;
-	--background-start-rgb: 214, 219, 220;
-	--background-end-rgb: 255, 255, 255;
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
 	:root {
-		--foreground-rgb: 255, 255, 255;
-		--background-start-rgb: 0, 0, 0;
-		--background-end-rgb: 0, 0, 0;
+		/* Light Mode */
+		--background: 0 0% 100%;
+		--foreground: 222 47% 11%;
+
+		/* Primary Colors - Blue */
+		--primary: 221 83% 53%;
+		--primary-light: 221 83% 65%;
+		--primary-dark: 221 83% 45%;
+		--primary-foreground: 0 0% 100%;
+
+		/* Secondary Colors - Indigo */
+		--secondary: 234 89% 74%;
+		--secondary-light: 234 89% 84%;
+		--secondary-dark: 234 89% 64%;
+		--secondary-foreground: 0 0% 100%;
+
+		/* Accent Colors - Sky */
+		--accent: 199 89% 48%;
+		--accent-light: 199 89% 58%;
+		--accent-dark: 199 89% 38%;
+		--accent-foreground: 0 0% 100%;
+
+		/* Surface Colors */
+		--card: 0 0% 100%;
+		--card-foreground: 222 47% 11%;
+		--popover: 0 0% 100%;
+		--popover-foreground: 222 47% 11%;
+
+		/* Neutral Colors */
+		--muted: 210 40% 96.1%;
+		--muted-foreground: 215.4 16.3% 46.9%;
+		--border: 214.3 31.8% 91.4%;
+		--input: 214.3 31.8% 91.4%;
+
+		/* Functional Colors */
+		--ring: 221 83% 53%;
+		--success: 142 76% 36%;
+		--warning: 38 92% 50%;
+		--error: 0 84% 60%;
+
+		/* Radius */
+		--radius: 0.75rem;
+	}
+
+	.dark {
+		/* Dark Mode */
+		--background: 222 47% 11%;
+		--foreground: 210 40% 98%;
+
+		/* Primary Colors - Blue */
+		--primary: 217 91% 60%;
+		--primary-light: 217 91% 70%;
+		--primary-dark: 217 91% 50%;
+		--primary-foreground: 0 0% 100%;
+
+		/* Secondary Colors - Indigo */
+		--secondary: 234 89% 74%;
+		--secondary-light: 234 89% 84%;
+		--secondary-dark: 234 89% 64%;
+		--secondary-foreground: 0 0% 100%;
+
+		/* Accent Colors - Sky */
+		--accent: 199 89% 48%;
+		--accent-light: 199 89% 58%;
+		--accent-dark: 199 89% 38%;
+		--accent-foreground: 0 0% 100%;
+
+		/* Surface Colors */
+		--card: 222 47% 11%;
+		--card-foreground: 210 40% 98%;
+		--popover: 222 47% 11%;
+		--popover-foreground: 210 40% 98%;
+
+		/* Neutral Colors */
+		--muted: 217.2 32.6% 17.5%;
+		--muted-foreground: 215 20.2% 65.1%;
+		--border: 217.2 32.6% 17.5%;
+		--input: 217.2 32.6% 17.5%;
+
+		/* Functional Colors */
+		--ring: 217 91% 60%;
+		--success: 142 76% 46%;
+		--warning: 38 92% 60%;
+		--error: 0 84% 60%;
 	}
 }
 
-body {
-	color: rgb(var(--foreground-rgb));
-	background: linear-gradient(
-			to bottom,
-			transparent,
-			rgb(var(--background-end-rgb))
-		)
-		rgb(var(--background-start-rgb));
+@layer base {
+	* {
+		@apply border-border;
+	}
+	body {
+		@apply bg-background text-foreground antialiased;
+	}
+}
+
+/* Custom Gradients */
+.gradient-primary {
+	@apply bg-gradient-to-r from-[hsl(var(--primary))] via-[hsl(var(--secondary))] to-[hsl(var(--accent))];
+}
+
+.gradient-secondary {
+	@apply bg-gradient-to-r from-[hsl(var(--secondary))] via-[hsl(var(--accent))] to-[hsl(var(--primary))];
+}
+
+.gradient-accent {
+	@apply bg-gradient-to-r from-[hsl(var(--accent))] via-[hsl(var(--primary))] to-[hsl(var(--secondary))];
+}
+
+/* Soft Gradients for Backgrounds */
+.gradient-soft {
+	@apply bg-gradient-to-b from-background via-[hsl(var(--primary)/0.02)] to-background;
+}
+
+/* Glass Effect */
+.glass {
+	@apply bg-background/80 backdrop-blur-lg border border-border/50;
+}
+
+/* Section Transitions */
+.section-transition {
+	@apply relative py-32;
+}
+
+.section-transition::before {
+	@apply content-[''] absolute inset-0 bg-gradient-to-b from-background via-[hsl(var(--primary)/0.02)] to-background pointer-events-none;
+}
+
+/* Hover Effects */
+.hover-card {
+	@apply transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1;
+}
+
+/* Text Gradients */
+.text-gradient {
+	@apply bg-clip-text text-transparent bg-gradient-to-r from-[hsl(var(--primary))] via-[hsl(var(--secondary))] to-[hsl(var(--accent))];
+}
+
+/* Glow Effects */
+.glow {
+	@apply relative;
+}
+
+.glow::after {
+	@apply content-[''] absolute inset-0 -z-10 bg-gradient-to-r from-primary/10 via-secondary/10 to-accent/10 blur-2xl opacity-30;
 }

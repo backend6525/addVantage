@@ -99,12 +99,12 @@ const SideMenu: React.FC<SidebarProps> = ({
 		<aside
 			className={`${
 				isMenuOpen ? 'w-[16rem]' : 'w-[5.2rem]'
-			} bg-gray-900 text-white px-6  pb-6 shadow-lg transition-all duration-300 fixed top-16 border border-gray-700 left-0 h-[calc(100%-4rem)] flex flex-col backdrop-blur-md bg-opacity-50 overflow-hidden z-40`}>
+			} bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-6 pb-6 shadow-lg transition-all duration-300 fixed top-16 border-r border-gray-200 dark:border-gray-800 left-0 h-[calc(100%-4rem)] flex flex-col overflow-hidden z-40`}>
 			{/* Sidebar Header */}
 			<div className='flex-shrink-0'>
 				<button
 					onClick={toggleMenu}
-					className='text-gray-300 hover:text-white transition-colors pl-2 mt-4'>
+					className='text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors pl-2 mt-4'>
 					{isMenuOpen ? <FiArrowLeft size={24} /> : <FiArrowRight size={24} />}
 				</button>
 			</div>
@@ -119,7 +119,7 @@ const SideMenu: React.FC<SidebarProps> = ({
 							<li key={item.label} className='group'>
 								<button
 									onClick={() => setIsTeamsOpen(!isTeamsOpen)}
-									className={`flex items-center p-3 w-full text-left rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white backdrop-blur-lg bg-gray-800/40 transition-colors
+									className={`flex items-center p-3 w-full text-left rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white transition-colors
 										${!isMenuOpen ? 'justify-center' : ''}`}>
 									<span className={`${!isMenuOpen ? '' : 'mr-3'}`}>
 										{item.icon}
@@ -131,7 +131,7 @@ const SideMenu: React.FC<SidebarProps> = ({
 										<li>
 											<Link
 												href='/dashboard/teams/create'
-												className='text-gray-300 hover:text-white transition-colors'>
+												className='text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors'>
 												Create Team
 											</Link>
 										</li>
@@ -147,7 +147,7 @@ const SideMenu: React.FC<SidebarProps> = ({
 							<li key={item.label} className='group'>
 								<Link
 									href={item.href!}
-									className={`flex items-center p-3 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white backdrop-blur-lg bg-gray-800/40 transition-colors
+									className={`flex items-center p-3 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white transition-colors
 										${!isMenuOpen ? 'justify-center' : ''}`}>
 									<span className={`${!isMenuOpen ? '' : 'mr-3'}`}>
 										{item.icon}
@@ -164,18 +164,18 @@ const SideMenu: React.FC<SidebarProps> = ({
 			<div className='mt-auto-mt-8 pl-0.5'>
 				<Create onCreateAdd={onCreateAdd} isMenuOpen={isMenuOpen} />
 				<div className='mt-4'>
-					<div className='h-4 w-full bg-gray-700 rounded'>
+					<div className='h-4 w-full bg-gray-200 dark:bg-gray-700 rounded'>
 						<div
-							className='h-4 bg-green-500 rounded'
+							className='h-4 bg-primary rounded'
 							style={{ width: '35%' }}></div>
 					</div>
 					{isMenuOpen && (
-						<p className='text-xs text-gray-400 mt-2 text-center'>
+						<p className='text-xs text-gray-500 dark:text-gray-400 mt-2 text-center'>
 							Upgrade Account to enjoy more features!
 						</p>
 					)}
 				</div>
-				<Separator className='bg-gray-600 mt-3' />
+				<Separator className='bg-gray-200 dark:bg-gray-700 mt-3' />
 
 				{/* UpCard adjusted to fit screen */}
 				<div className='overflow-y-auto max-h-[40vh] mt-4'>

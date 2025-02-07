@@ -1,155 +1,135 @@
 'use client';
 
 import React, { useState } from 'react';
-import { ChevronRight, CheckCircle, Zap } from 'lucide-react';
-import GradientWrapper from '@/app/components/GradientWrapper';
+import { ChevronRight, Rocket, Star } from 'lucide-react';
 import Image from 'next/image';
-import NavLink from '../NavLink';
-import HeroImg from '@/../../public/images/hero.svg';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import Brand from '../Brand';
+import HeroImg from '@/../../public/images/hero.avif';
 import LayoutEffect from '@/app/components/LayoutEffect';
-import ParticleBackground from '@/app/components/ui/PaticleBackground';
 
 const Hero = () => {
-	const [isHovered, setIsHovered] = useState({
-		getStarted: false,
-		learnMore: false,
-	});
+	const [isHovered, setIsHovered] = useState(false);
 
 	return (
-		<GradientWrapper className='min-h-[90vh] pt-40 bg-gradient-to-b from-gray-900 to-gray-800 overflow-hidden absolute inset-0 z-0 opacity-70 mix-blend-screen'>
-			{/* Particle Background */}
-			<ParticleBackground color='#818cf8' count={200} speed={2} maxSize={5} />
-
-			{/* Subtle Animated Background Elements */}
-			<div className='absolute top-10 left-0 right-0 bottom-0 pointer-events-none'>
-				<div className='absolute top-[-10%] right-[-5%] w-96 h-96 bg-primary-600/20 rounded-full blur-3xl animate-pulse'></div>
-				<div className='absolute bottom-[-10%] left-[-5%] w-96 h-96 bg-primary-500/10 rounded-full blur-3xl animate-pulse delay-500'></div>
+		<section className='section-transition min-h-screen pt-40 pb-24'>
+			{/* Enhanced Animated Background Elements */}
+			<div className='absolute inset-0 pointer-events-none overflow-hidden'>
+				<div
+					className={`absolute top-[-20%] right-[-10%] w-[40rem] h-[40rem] bg-primary/5 rounded-full blur-3xl transition-all duration-700 ${isHovered ? 'scale-110 opacity-70' : 'scale-100 opacity-50'} animate-pulse`}></div>
+				<div
+					className={`absolute bottom-[-20%] left-[-10%] w-[40rem] h-[40rem] bg-secondary/5 rounded-full blur-3xl transition-all duration-700 ${isHovered ? 'scale-110 opacity-70' : 'scale-100 opacity-50'} animate-pulse delay-500`}></div>
 			</div>
 
-			<div className='container mx-auto px-4 lg:px-6 grid md:grid-cols-2 gap-8 items-center max-w-[95%] xl:max-w-[90%] relative z-10'>
-				{/* Text Content */}
-				<div className='space-y-8 max-w-3xl mx-auto md:mx-0 text-gray-100'>
+			<div className='relative z-10 max-w-[90rem] mx-auto px-6 lg:px-8'>
+				<div className='grid lg:grid-cols-2 gap-16 items-center'>
+					{/* Enhanced Text Content */}
 					<LayoutEffect
 						className='duration-1000 delay-300'
 						isInviewState={{
 							trueState: 'opacity-1 translate-y-0',
-							falseState: 'opacity-0 translate-y-10',
+							falseState: 'opacity-0 translate-y-12',
 						}}>
-						<div>
-							<div className='flex items-center gap-3 text-primary-500'>
-								<Zap className='w-8 h-8 animate-pulse text-primary-400' />
-								<span className='font-semibold text-xl tracking-wide'>
-									AdZpay: Personalized Ad Discovery
+						<div className='text-center lg:text-left max-w-3xl mx-auto lg:mx-0'>
+							{/* Enhanced Badge */}
+							<div className='inline-flex items-center gap-2 glass px-6 py-3 rounded-full mb-10 hover:scale-105 transition-transform cursor-pointer'>
+								<Rocket className='w-6 h-6 text-primary animate-pulse' />
+								<span className='text-base font-medium text-foreground'>
+									Revolutionizing Digital Marketing
 								</span>
 							</div>
-							<h1 className='text-6xl md:text-7xl lg:text-8xl font-extrabold leading-tight mt-4 text-transparent bg-clip-text bg-gradient-to-r from-white to-primary-400'>
-								Connect. Discover. <br />
-								Recommend.
+
+							{/* Enhanced Heading with Gradient Animation */}
+							<h1 className='text-5xl md:text-6xl lg:text-7xl font-bold leading-tight mb-8'>
+								Connect. Share.{' '}
+								<span className='text-gradient bg-[size:400%] animate-gradient'>
+									Earn.
+								</span>
 							</h1>
-							<p className='mt-6 text-lg lg:text-xl text-gray-300 max-w-2xl leading-relaxed'>
-								Explore a curated marketplace of ads tailored just for you. Find
-								products and services that resonate with your lifestyle and
-								passions.
+
+							{/* Enhanced Description */}
+							<p className='text-xl text-muted-foreground leading-relaxed mb-10 max-w-2xl mx-auto lg:mx-0'>
+								Join the future of digital marketing. Share ads you love, earn
+								rewards, and help brands reach their perfect audience through
+								authentic connections.
 							</p>
+
+							{/* Enhanced CTA Buttons */}
+							<div className='flex flex-col sm:flex-row gap-6 justify-center lg:justify-start mb-16'>
+								<Button
+									size='lg'
+									className='group gap-2 text-lg px-8 py-6 hover:scale-105 transition-all duration-300'
+									variant='gradient'
+									onMouseEnter={() => setIsHovered(true)}
+									onMouseLeave={() => setIsHovered(false)}>
+									Get Started
+									<ChevronRight className='w-5 h-5 group-hover:translate-x-1 transition-transform' />
+								</Button>
+
+								<Button
+									size='lg'
+									variant='outline'
+									className='group gap-2 text-lg px-8 py-6 hover:scale-105 transition-all duration-300'>
+									<Star className='w-5 h-5 text-primary group-hover:rotate-45 transition-transform' />
+									Learn More
+								</Button>
+							</div>
+
+							{/* Enhanced Trust Indicators */}
+							<div className='flex items-center gap-8 justify-center lg:justify-start'>
+								<div className='flex -space-x-4 hover:space-x-1 transition-all duration-300'>
+									{[1, 2, 3, 4].map((_, idx) => (
+										<div
+											key={idx}
+											className='w-12 h-12 rounded-full glass border-2 border-background hover:scale-110 transition-all duration-300 cursor-pointer'
+										/>
+									))}
+								</div>
+								<div className='text-base text-muted-foreground hover:text-foreground transition-colors'>
+									Trusted by{' '}
+									<span className='font-bold text-foreground animate-pulse'>
+										10,000+
+									</span>{' '}
+									marketers
+								</div>
+							</div>
 						</div>
 					</LayoutEffect>
 
-					{/* Call to Action */}
-					<div className='flex space-x-4'>
-						<NavLink
-							href='/get-started'
-							className={`
-                                flex items-center gap-3 px-10 py-5
-                                text-xl font-semibold
-                                bg-primary-500 text-white rounded-xl
-                                hover:bg-primary-600 
-                                focus:outline focus:ring-2 focus:ring-primary-400
-                                transition-all duration-300 ease-in-out
-                                shadow-xl shadow-primary-500/40
-                                ${
-																	isHovered.getStarted
-																		? 'scale-105 ring-2 ring-primary-300 shadow-2xl'
-																		: ''
-																}
-                            `}
-							aria-label='Get Started'
-							onMouseEnter={() =>
-								setIsHovered((prev) => ({ ...prev, getStarted: true }))
-							}
-							onMouseLeave={() =>
-								setIsHovered((prev) => ({ ...prev, getStarted: false }))
-							}>
-							Get Started
-							<ChevronRight className='w-7 h-7' />
-						</NavLink>
-
-						<button
-							className={`
-                                flex items-center gap-2 px-8 py-4
-                                text-lg font-medium
-                                border border-gray-500 text-gray-400
-                                rounded-xl hover:bg-gray-700 hover:text-gray-200
-                                focus:outline focus:ring-2 focus:ring-gray-600
-                                transition-all duration-300
-                                ${
-																	isHovered.learnMore
-																		? 'shadow-lg scale-105 border-primary-500'
-																		: ''
-																}
-                            `}
-							onMouseEnter={() =>
-								setIsHovered((prev) => ({ ...prev, learnMore: true }))
-							}
-							onMouseLeave={() =>
-								setIsHovered((prev) => ({ ...prev, learnMore: false }))
-							}>
-							<CheckCircle className='w-6 h-6 text-green-500' />
-							Learn More
-						</button>
-					</div>
-
-					{/* Social Proof */}
-					<div className='mt-10 flex items-center gap-6 text-md text-gray-400'>
-						<div className='flex -space-x-3'>
-							{[1, 2, 3].map((_, index) => (
-								<Image
-									key={index}
-									src={`/api/placeholder/48/48?user=${index}`}
-									alt={`User ${index + 1}`}
-									width={48}
-									height={48}
-									className='w-12 h-12 rounded-full border-3 border-gray-700 shadow-md hover:scale-110 transition-transform hover:z-10'
-								/>
-							))}
-						</div>
-						<span>
-							Join <span className='font-bold text-white'>10,000+</span>{' '}
-							satisfied users
-						</span>
-					</div>
-				</div>
-
-				{/* Hero Image */}
-				<div className='flex justify-center items-center relative'>
+					{/* Enhanced Hero Image */}
 					<LayoutEffect
-						className='duration-1000 delay-300'
+						className='duration-1000 delay-500'
 						isInviewState={{
 							trueState: 'opacity-1 scale-100',
 							falseState: 'opacity-0 scale-95',
 						}}>
-						<Image
-							src={HeroImg}
-							alt='AdZpay Hero Illustration'
-							width={800}
-							height={800}
-							className='hover:scale-105 transition-transform duration-500 ease-in-out drop-shadow-2xl'
-							priority
-							aria-hidden='true'
-						/>
+						<div
+							className='relative mx-auto max-w-2xl lg:max-w-none'
+							onMouseEnter={() => setIsHovered(true)}
+							onMouseLeave={() => setIsHovered(false)}>
+							{/* Enhanced Gradient Glow */}
+							<div
+								className={`absolute inset-0 bg-gradient-to-tr from-primary/20 via-secondary/20 to-accent/20 rounded-3xl blur-3xl transition-all duration-700 ${isHovered ? 'scale-110 opacity-70' : 'scale-100 opacity-50'}`}></div>
+
+							{/* Enhanced Image Container */}
+							<div className='relative glass rounded-3xl p-6 hover:scale-[1.02] transition-all duration-500 hover:shadow-2xl'>
+								<Image
+									src={HeroImg}
+									alt='AdZPay Platform Preview'
+									className='w-full h-auto rounded-2xl'
+									priority
+								/>
+
+								{/* Enhanced Decorative Elements */}
+								<div className='absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary via-secondary to-accent'></div>
+								<div className='absolute top-1 left-0 w-full h-px bg-gradient-to-r from-primary/50 via-secondary/50 to-accent/50 blur-sm'></div>
+							</div>
+						</div>
 					</LayoutEffect>
 				</div>
 			</div>
-		</GradientWrapper>
+		</section>
 	);
 };
 

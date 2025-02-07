@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
 	PlusCircle,
@@ -428,8 +428,7 @@ const Dashboard: React.FC<DashboardProps> = ({ isMenuOpen, user }) => {
 	);
 	const [isInitialized, setIsInitialized] = useState(false);
 
-	// Separate function to fetch products
-	const fetchProducts = async () => {
+	const fetchProducts = useCallback(async () => {
 		try {
 			const response = await fetch(
 				`/api/product?email=${encodeURIComponent(user?.email || '')}`
@@ -446,10 +445,9 @@ const Dashboard: React.FC<DashboardProps> = ({ isMenuOpen, user }) => {
 			console.error('Error fetching products:', error);
 			throw error;
 		}
-	};
+	}, [user?.email]);
 
-	// Separate function to fetch published ads
-	const fetchPublishedAds = async () => {
+	const fetchPublishedAds = useCallback(async () => {
 		try {
 			const response = await fetch('/api/publishProducts', {
 				headers: {
@@ -465,7 +463,7 @@ const Dashboard: React.FC<DashboardProps> = ({ isMenuOpen, user }) => {
 			console.error('Error fetching published ads:', error);
 			throw error;
 		}
-	};
+	}, [user?.email]);
 
 	// Initialize data
 	useEffect(() => {
@@ -501,7 +499,7 @@ const Dashboard: React.FC<DashboardProps> = ({ isMenuOpen, user }) => {
 		};
 
 		initializeData();
-	}, [user?.email, isInitialized]);
+	}, [user?.email, isInitialized, fetchProducts, fetchPublishedAds]);
 
 	// Check ad expirations
 	useEffect(() => {

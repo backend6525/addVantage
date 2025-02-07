@@ -15,6 +15,9 @@ export const createAds = mutation({
 		description: v.optional(v.string()),
 	},
 	handler: async (ctx, args) => {
+		// Add timestamp for better tracking
+		const now = new Date().toISOString();
+
 		const result = await ctx.db.insert('ads', {
 			adName: args.adName,
 			teamId: args.teamId,
@@ -22,28 +25,33 @@ export const createAds = mutation({
 			type: args.type,
 			costPerView: args.costPerView,
 			numberOfDaysRunning: args.numberOfDaysRunning,
-			adResourceUrl: args.adResourceUrl, // Store URL, not the file itself
+			adResourceUrl: args.adResourceUrl,
 			description: args.description,
+			createdAt: now,
+			lastModifiedAt: now,
+			isPublished: false,
+			isActive: false,
 		});
-		return result;
+
+		// Return the complete ad object
+		const createdAd = await ctx.db.get(result);
+		return createdAd;
 	},
 });
 
-// List Ads by Email
+// List Ads by Email with improved querying
 export const list = query({
 	args: {
-		email: v.optional(v.string()),
+		email: v.string(),
 	},
 	handler: async (ctx, args) => {
-		if (!args.email) {
-			return [];
-		}
-
 		const ads = await ctx.db
 			.query('ads')
-			.filter((q) => q.eq(q.field('createdBy'), args.email))
+			.withIndex('by_createdBy', (q) => q.eq('createdBy', args.email))
+			.order('desc')
 			.collect();
 
+		// Map the results with consistent formatting
 		return ads.map((ad) => ({
 			id: ad._id,
 			title: ad.adName || 'No Title',
@@ -55,6 +63,8 @@ export const list = query({
 			teamId: ad.teamId || 'N/A',
 			createdBy: ad.createdBy,
 			isPublished: ad.isPublished || false,
+			createdAt: ad.createdAt,
+			lastModifiedAt: ad.lastModifiedAt,
 		}));
 	},
 });
