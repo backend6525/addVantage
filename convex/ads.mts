@@ -36,7 +36,7 @@ export const createAds = mutation({
 			isPublished: args.isPublished ?? false,
 			lastModifiedBy: args.lastModifiedBy,
 			endDate: args.endDate,
-			// Required fields
+
 			createdAt: now,
 			lastModifiedAt: now,
 			startDate: now,
