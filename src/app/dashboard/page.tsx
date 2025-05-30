@@ -4,16 +4,28 @@ import Dashboard from './Dashboard';
 import { Suspense } from 'react';
 
 export default async function DashboardPage() {
-	const { getUser } = await getKindeServerSession();
-	const user = await getUser();
+	try {
+		const { getUser } = getKindeServerSession();
+		const user = await getUser();
 
-	if (!user) {
+		if (!user) {
+			redirect('/login');
+		}
+
+		// Create a simple user object for the dashboard
+		const dashboardUser = {
+			email: user.email!,
+			name: `${user.given_name || ''} ${user.family_name || ''}`.trim(),
+			picture: user.picture || '',
+		};
+
+		return (
+			<Suspense fallback={<div>Loading...</div>}>
+				<Dashboard isMenuOpen={false} user={dashboardUser} />
+			</Suspense>
+		);
+	} catch (error) {
+		console.error('Dashboard error:', error);
 		redirect('/login');
 	}
-
-	return (
-		<Suspense fallback={<div>Loading...</div>}>
-			<Dashboard isMenuOpen={false} user={user} />
-		</Suspense>
-	);
 }

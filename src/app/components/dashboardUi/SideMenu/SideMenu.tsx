@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import {
 	FiHome,
@@ -9,20 +9,20 @@ import {
 	FiArrowLeft,
 	FiArrowRight,
 	FiGift,
-	FiGithub,
-	FiArchive,
+	FiAlertCircle,
 } from 'react-icons/fi';
 import { Separator } from '@/app/components/separator';
-import Create from './create';
-import { useMutation } from 'convex/react';
-import { api } from '../../../../../convex/_generated/api';
+import { Create } from '../CreateAd/Create';
 import TeamDropDown from './TeamDropDown';
 import UpCard from './upgradeAccCard/upCard';
 import './styles/sidebar.css';
+import { useToast } from '../../ui/toast/use-toast';
+
+// Define navigation items
 const navItems = [
 	{ href: '/dashboard', label: 'Dashboard', icon: <FiHome size={20} /> },
 	{
-		href: '/dashboard/addstudio',
+		href: '/dashboard/adstudio',
 		label: 'Add Studio',
 		icon: <FiPlusCircle size={20} />,
 	},
@@ -42,117 +42,131 @@ const navItems = [
 		label: 'Referrals',
 		icon: <FiGift size={20} />,
 	},
-];
-
-const bottomMenuItems = [
 	{
-		id: 1,
-		name: 'GitHub',
-		icon: <FiGithub size={20} />,
-		path: 'https://github.com',
+		href: '/dashboard/callcenter',
+		label: 'Call Center',
+		icon: <FiGift size={20} />,
 	},
-	{
-		id: 2,
-		name: 'Docs',
-		icon: <FiGithub size={20} />,
-		path: 'https://docs.github.com',
-	},
-	{ id: 3, name: 'Archive', icon: <FiArchive size={20} />, path: '/archive' },
 ];
 
 interface SidebarProps {
 	userEmail: string;
 	isMenuOpen: boolean;
 	setIsMenuOpen: React.Dispatch<React.SetStateAction<boolean>>;
+	// These are passed from parent component
+	dailyAdCount: number;
+	weeklyAdCount: number;
+	hasCredits: boolean;
+	refreshLimits: () => Promise<void>;
+	accountType?: 'free' | 'pro' | 'enterprise';
 }
 
-const SideMenu: React.FC<SidebarProps> = ({
+export default function SideMenu({
+	userEmail,
 	isMenuOpen,
 	setIsMenuOpen,
-	userEmail,
-}) => {
-	const [isTeamsOpen, setIsTeamsOpen] = useState(false);
-	const [teamsExist, setTeamsExist] = useState(true);
-	const createAdd = useMutation(api.adds.createAdd);
+	dailyAdCount,
+	weeklyAdCount,
+	hasCredits,
+	refreshLimits,
+	accountType,
+}: SidebarProps) {
+	const [isLoading, setIsLoading] = useState(false);
+	const [isTeamDropdownOpen, setIsTeamDropdownOpen] = useState(false);
+	const { toast } = useToast();
 
-	const onCreateAdd = (fileName: string) => {
-		console.log(fileName);
-	};
+	// Define limits - these are the actual limits for free accounts
+	const dailyAdLimit = 1;
+	const weeklyAdLimit = 5;
 
 	const toggleMenu = () => {
 		setIsMenuOpen(!isMenuOpen);
 	};
 
-	// Resize effect to adjust dashboard when sidebar changes
-	useEffect(() => {
-		const dashboardContent = document.getElementById('dashboard-content');
-		if (dashboardContent) {
-			if (isMenuOpen) {
-				dashboardContent.style.marginLeft = '0rem'; // Full width sidebar
-			} else {
-				dashboardContent.style.marginLeft = '0rem'; // Collapsed sidebar
-			}
+	const calculateProgress = () => {
+		const dailyProgress = (dailyAdCount / dailyAdLimit) * 100;
+		const weeklyProgress = (weeklyAdCount / weeklyAdLimit) * 100;
+		return { dailyProgress, weeklyProgress };
+	};
+
+	const getProgressBarColor = () => {
+		const { dailyProgress, weeklyProgress } = calculateProgress();
+		if (dailyProgress >= 90 || weeklyProgress >= 90) {
+			return 'bg-red-500';
+		} else if (dailyProgress >= 70 || weeklyProgress >= 70) {
+			return 'bg-yellow-500';
+		} else {
+			return 'bg-green-500';
 		}
-	}, [isMenuOpen]);
+	};
+
+	// Handle ad creation and refresh limits
+	const handleAdCreated = async (limits: {
+		dailyCount: number;
+		weeklyCount: number;
+	}) => {
+		// Refresh the limits from the parent
+		await refreshLimits();
+
+		toast({
+			title: 'Ad Created',
+			description: 'Your ad has been successfully created!',
+		});
+	};
 
 	return (
-		<aside
-			className={`${
+		<div
+			className={`h-full bg-slate-800/70 text-white flex flex-col overflow-y-auto custom-scrollbar ${
 				isMenuOpen ? 'w-[16rem]' : 'w-[5.2rem]'
-			} bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-6 pb-6 shadow-lg transition-all duration-300 fixed top-16 border-r border-gray-200 dark:border-gray-800 left-0 h-[calc(100%-4rem)] flex flex-col overflow-hidden z-40`}>
-			{/* Sidebar Header */}
-			<div className='flex-shrink-0'>
+			} transition-all duration-300 px-6 pb-6 shadow-lg border-r border-slate-700/50`}>
+			<div className='flex-shrink-0 pt-4'>
 				<button
 					onClick={toggleMenu}
-					className='text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors pl-2 mt-4'>
-					{isMenuOpen ? <FiArrowLeft size={24} /> : <FiArrowRight size={24} />}
+					className='flex items-center justify-center w-full py-2 text-gray-300 hover:text-white'>
+					{isMenuOpen ? <FiArrowLeft size={20} /> : <FiArrowRight size={20} />}
 				</button>
 			</div>
 
 			{/* Sidebar Menu */}
-			<div
-				className='flex-grow overflow-y-auto mt-6 glass-scroll'
-				style={{ maxHeight: 'calc(100% - 32rem)' }}>
-				<ul className='space-y-2'>
+			<div className='flex-grow overflow-y-auto custom-scrollbar mt-2'>
+				<ul className='space-y-1.5'>
 					{navItems.map((item) =>
 						item.label === 'Teams' ? (
 							<li key={item.label} className='group'>
 								<button
-									onClick={() => setIsTeamsOpen(!isTeamsOpen)}
-									className={`flex items-center p-3 w-full text-left rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white transition-colors
-										${!isMenuOpen ? 'justify-center' : ''}`}>
-									<span className={`${!isMenuOpen ? '' : 'mr-3'}`}>
-										{item.icon}
-									</span>
-									{isMenuOpen && item.label}
+									onClick={() => setIsTeamDropdownOpen(!isTeamDropdownOpen)}
+									className={`flex items-center p-2.5 w-full text-left rounded-lg text-gray-300 hover:bg-slate-700/50 hover:text-white transition-colors
+                    ${!isMenuOpen ? 'justify-center' : ''}`}>
+									<div className='flex-shrink-0'>{item.icon}</div>
+									{isMenuOpen && (
+										<span className='ml-3 truncate'>{item.label}</span>
+									)}
+									{isMenuOpen && (
+										<span className='ml-auto'>
+											{isTeamDropdownOpen ? (
+												<FiArrowLeft size={16} />
+											) : (
+												<FiArrowRight size={16} />
+											)}
+										</span>
+									)}
 								</button>
-								{isTeamsOpen && isMenuOpen && (
-									<ul className='ml-8 mt-2 space-y-2'>
-										<li>
-											<Link
-												href='/dashboard/teams/create'
-												className='text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors'>
-												Create Team
-											</Link>
-										</li>
-										{teamsExist && (
-											<li>
-												<TeamDropDown userEmail={userEmail} />
-											</li>
-										)}
-									</ul>
+								{isMenuOpen && isTeamDropdownOpen && (
+									<div className='mt-2 ml-6 space-y-2'>
+										<TeamDropDown userEmail={userEmail} />
+									</div>
 								)}
 							</li>
 						) : (
-							<li key={item.label} className='group'>
+							<li key={item.label}>
 								<Link
-									href={item.href!}
-									className={`flex items-center p-3 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white transition-colors
-										${!isMenuOpen ? 'justify-center' : ''}`}>
-									<span className={`${!isMenuOpen ? '' : 'mr-3'}`}>
-										{item.icon}
-									</span>
-									{isMenuOpen && item.label}
+									href={item.href || '#'}
+									className={`flex items-center p-2.5 rounded-lg text-gray-300 hover:bg-slate-700/50 hover:text-white transition-colors
+                    ${!isMenuOpen ? 'justify-center' : ''}`}>
+									<div className='flex-shrink-0'>{item.icon}</div>
+									{isMenuOpen && (
+										<span className='ml-3 truncate'>{item.label}</span>
+									)}
 								</Link>
 							</li>
 						)
@@ -160,30 +174,85 @@ const SideMenu: React.FC<SidebarProps> = ({
 				</ul>
 			</div>
 
-			{/* Footer Area */}
-			<div className='mt-auto-mt-8 pl-0.5'>
-				<Create onCreateAdd={onCreateAdd} isMenuOpen={isMenuOpen} />
-				<div className='mt-4'>
-					<div className='h-4 w-full bg-gray-200 dark:bg-gray-700 rounded'>
-						<div
-							className='h-4 bg-primary rounded'
-							style={{ width: '35%' }}></div>
-					</div>
-					{isMenuOpen && (
-						<p className='text-xs text-gray-500 dark:text-gray-400 mt-2 text-center'>
-							Upgrade Account to enjoy more features!
-						</p>
-					)}
-				</div>
-				<Separator className='bg-gray-200 dark:bg-gray-700 mt-3' />
-
-				{/* UpCard adjusted to fit screen */}
-				<div className='overflow-y-auto max-h-[40vh] mt-4'>
-					{isMenuOpen && <UpCard />}
-				</div>
+			{/* Create Component */}
+			<div className='flex-shrink-0 mt-2'>
+				<Create
+					onCreateAd={handleAdCreated}
+					isMenuOpen={isMenuOpen}
+					dailyAdCount={dailyAdCount}
+					weeklyAdCount={weeklyAdCount}
+					hasCredits={hasCredits}
+					userEmail={userEmail}
+				/>
 			</div>
-		</aside>
-	);
-};
 
-export default SideMenu;
+			{/* Usage Limits */}
+			{isMenuOpen && (
+				<div className='flex-shrink-0 mt-2 bg-slate-800/90 rounded-lg p-4 border border-slate-700/50'>
+					{/* Account Type and Credits */}
+					<div className='flex justify-between items-center mb-3'>
+						<span className='text-sm text-gray-300'>
+							{accountType
+								? accountType.charAt(0).toUpperCase() + accountType.slice(1)
+								: 'Free'}{' '}
+							Account
+						</span>
+						<span className='text-xs text-gray-400'>
+							{hasCredits ? 'Credits Available' : 'No Credits'}
+						</span>
+					</div>
+
+					<div className='flex justify-between items-center mb-2'>
+						<span className='text-sm text-gray-300'>Weekly Ad Usage</span>
+						<span className='text-xs text-gray-400'>
+							{weeklyAdCount}/{weeklyAdLimit} used
+						</span>
+					</div>
+					<div className='h-2 bg-slate-700/50 rounded-full overflow-hidden'>
+						<div
+							className={`h-full ${getProgressBarColor()} transition-all duration-300`}
+							style={{ width: `${calculateProgress().weeklyProgress}%` }}></div>
+					</div>
+					<div className='mt-4 text-xs text-gray-400'>
+						{dailyAdCount >= dailyAdLimit ? (
+							<div className='flex items-center text-yellow-400'>
+								<FiAlertCircle className='mr-1' size={12} />
+								Daily limit reached
+							</div>
+						) : (
+							<div>
+								Daily: {dailyAdCount}/{dailyAdLimit} used
+							</div>
+						)}
+					</div>
+
+					{/* Always show credits warning if !hasCredits */}
+					{!hasCredits && (
+						<div className='mt-2 flex items-center text-yellow-400 text-xs'>
+							<FiAlertCircle className='mr-1' size={12} />
+							Add credits to publish ads
+						</div>
+					)}
+
+					{/* Add refresh button */}
+					<button
+						onClick={refreshLimits}
+						className='mt-2 text-xs text-blue-400 hover:text-blue-300 transition-colors flex items-center'>
+						<FiArrowRight className='mr-1' size={12} />
+						Refresh limits
+					</button>
+				</div>
+			)}
+
+			{/* Footer Links */}
+			{isMenuOpen && (
+				<div className='flex-shrink-0 mt-auto pt-2'>
+					<Separator className='my-2 bg-slate-700/50' />
+
+					{/* Upgrade Account Card */}
+					<div className='flex-shrink-0 mt-2'>{isMenuOpen && <UpCard />}</div>
+				</div>
+			)}
+		</div>
+	);
+}

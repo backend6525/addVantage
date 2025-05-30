@@ -1,5 +1,6 @@
-import React, { useState, useMemo, useCallback } from 'react';
-import { motion } from 'framer-motion';
+// // create.tsx file
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
 	Dialog,
 	DialogClose,
@@ -8,11 +9,24 @@ import {
 	DialogFooter,
 	DialogHeader,
 	DialogTitle,
-} from '@/app/components/ui/DialogPopup/dialog';
-import { FiFilePlus, FiAlertCircle } from 'react-icons/fi';
-import { useRouter } from 'next/navigation';
-import { useKindeAuth } from '@kinde-oss/kinde-auth-nextjs';
+} from '@/app/components/ui/dialog';
+import {
+	FileUp,
+	AlertCircle,
+	Check,
+	X,
+	Info,
+	Upload,
+	Clock,
+	DollarSign,
+	Users,
+	FileText,
+	Send,
+	Loader2,
+} from 'lucide-react';
 import { useToast } from '@/app/components/ui/toast/use-toast';
+import { useMutation, useQuery } from 'convex/react';
+import { api } from '../../../../../convex/_generated/api';
 
 type CreateAdPayload = {
 	adName: string;
@@ -25,12 +39,117 @@ type CreateAdPayload = {
 	description: string;
 };
 
-function Create({ onCreateAd = () => {}, isMenuOpen }: any) {
+interface CreateProps {
+	onCreateAd: (counts: { dailyCount: number; weeklyCount: number }) => void;
+	isMenuOpen: boolean;
+	dailyAdCount: number;
+	weeklyAdCount: number;
+}
+
+function Create({
+	onCreateAd,
+	isMenuOpen,
+	dailyAdCount,
+	weeklyAdCount,
+}: CreateProps) {
+	const [error, setError] = useState<string | null>(null);
 	const { toast } = useToast();
+	//const { user } = useKindeAuth();
+	const incrementAdCount = useMutation(api.ads.incrementAdCounts);
+	const checkAndResetLimit = useMutation(api.ads.checkAndResetLimits);
+	const getUserLimit = useMutation(api.ads.getUserAdLimits);
+
+	const fetchUserData = useCallback(async () => {
+		try {
+			const response = await fetch('/api/auth/user');
+			if (!response.ok) throw new Error('Failed to fetch user data');
+
+			const data = await response.json();
+			console.log('User data from API:', data);
+
+			// Check if we have a valid token
+			if (!data.idToken) {
+				console.error('No ID token in user data');
+				throw new Error('No authentication token found');
+			}
+
+			// Store token for later API calls
+			sessionStorage.setItem('userToken', data.idToken);
+			console.log('Token stored in sessionStorage:', data.idToken);
+
+			//Set user data in state
+			setUserData(data);
+			return data;
+		} catch (error) {
+			console.error('Error fetching user data:', error);
+			setError('Authentication failed');
+			throw error;
+		}
+	}, []);
+
+	useEffect(() => {
+		fetchUserData();
+	}, [fetchUserData]);
+
+	const [userLimits, setUserLimits] = useState<{
+		dailyCount: number;
+		weeklyCount: number;
+		hasCredits?: boolean;
+	}>({
+		dailyCount: dailyAdCount,
+		weeklyCount: weeklyAdCount,
+		hasCredits: true, // Default value until we get real data
+	});
+	const [isLoading, setIsLoading] = useState(true);
+	// Fetch and sync limits when component mounts
+	const [userData, setUserData] = useState<{
+		email: string;
+		[key: string]: any;
+	} | null>(null);
+	// const user = useQuery(api.user.getUserByEmail);
+	useEffect(() => {
+		const fetchUserLimits = async () => {
+			if (userData?.email) {
+				try {
+					// First check and reset limits if needed
+					await checkAndResetLimit({ userEmail: userData.email });
+
+					// Then fetch current limits
+					const limits = await getUserLimit({
+						userEmail: userData.email,
+						// timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+					});
+					if (limits) {
+						setUserLimits((prev) => ({
+							...prev,
+							dailyCount: limits.dailyCount,
+							weeklyCount: limits.weeklyCount,
+							hasCredits: limits.hasCredits,
+						}));
+
+						// Sync parent component with our data
+						onCreateAd({
+							dailyCount: 0, // Send 0 to avoid incrementing
+							weeklyCount: 0, // Just syncing the state
+						});
+					}
+				} catch (error) {
+					console.error('Error fetching user limits:', error);
+				}
+			}
+			setIsLoading(false);
+		};
+
+		fetchUserLimits();
+	}, [userData, checkAndResetLimit, getUserLimit, onCreateAd]);
+
+	// Use our local state for all limit checks
+	const actualDailyCount = userLimits.dailyCount;
+	const actualWeeklyCount = userLimits.weeklyCount;
+
 	const [formData, setFormData] = useState({
 		adName: '',
 		teamId: '',
-		createdBy: '',
 		type: '',
 		costPerView: '',
 		numberOfDaysRunning: '',
@@ -42,7 +161,6 @@ function Create({ onCreateAd = () => {}, isMenuOpen }: any) {
 	const [errors, setErrors] = useState({
 		adName: '',
 		teamId: '',
-		createdBy: '',
 		costPerView: '',
 		numberOfDaysRunning: '',
 		adResource: '',
@@ -63,13 +181,6 @@ function Create({ onCreateAd = () => {}, isMenuOpen }: any) {
 		if (!teamId) return 'Team ID is required';
 		const teamIdRegex = /^[A-Za-z0-9]{6,10}$/;
 		if (!teamIdRegex.test(teamId)) return 'Invalid Team ID format';
-		return '';
-	}, []);
-
-	const validateEmail = useCallback((email: string) => {
-		if (!email) return 'Email is required';
-		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-		if (!emailRegex.test(email)) return 'Invalid email format';
 		return '';
 	}, []);
 
@@ -110,8 +221,6 @@ function Create({ onCreateAd = () => {}, isMenuOpen }: any) {
 					return validateAdName(value as string);
 				case 'teamId':
 					return validateTeamId(value as string);
-				case 'createdBy':
-					return validateEmail(value as string);
 				case 'costPerView':
 					return validateCostPerView(value as string);
 				case 'numberOfDaysRunning':
@@ -131,34 +240,12 @@ function Create({ onCreateAd = () => {}, isMenuOpen }: any) {
 			formData.adResource,
 			validateAdName,
 			validateTeamId,
-			validateEmail,
 			validateCostPerView,
 			validateDays,
 			validateAdResource,
 			validateAdDescription,
 		]
 	);
-
-	// const handleChange = useCallback(
-	// 	(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-	// 		const { name, value } = e.target;
-	// 		const files = (e.target as HTMLInputElement).files;
-
-	// 		const newFormData = {
-	// 			...formData,
-	// 			[name]: files ? files[0] : value,
-	// 		};
-	// 		setFormData(newFormData);
-
-	// 		const error = validateField(name, files ? files[0] : value);
-
-	// 		setErrors((prev) => ({
-	// 			...prev,
-	// 			[name]: error,
-	// 		}));
-	// 	},
-	// 	[formData, validateField]
-	// );
 
 	const handleChange = useCallback(
 		(
@@ -184,11 +271,14 @@ function Create({ onCreateAd = () => {}, isMenuOpen }: any) {
 		},
 		[formData, validateField]
 	);
+
 	const isFormValid = useMemo(() => {
+		// Only validate when the dialog is open
+		if (!showDialog) return false;
+
 		const newErrors = {
 			adName: validateAdName(formData.adName),
 			teamId: validateTeamId(formData.teamId),
-			createdBy: validateEmail(formData.createdBy),
 			costPerView: validateCostPerView(formData.costPerView),
 			numberOfDaysRunning: validateDays(formData.numberOfDaysRunning),
 			adResource: validateAdResource(formData.type, formData.adResource),
@@ -199,9 +289,9 @@ function Create({ onCreateAd = () => {}, isMenuOpen }: any) {
 
 		return Object.values(newErrors).every((error) => error === '');
 	}, [
+		showDialog,
 		formData.adName,
 		formData.teamId,
-		formData.createdBy,
 		formData.type,
 		formData.costPerView,
 		formData.numberOfDaysRunning,
@@ -209,7 +299,6 @@ function Create({ onCreateAd = () => {}, isMenuOpen }: any) {
 		formData.description,
 		validateAdName,
 		validateTeamId,
-		validateEmail,
 		validateCostPerView,
 		validateDays,
 		validateAdResource,
@@ -260,11 +349,75 @@ function Create({ onCreateAd = () => {}, isMenuOpen }: any) {
 
 	const handleCreateAd = useCallback(async () => {
 		try {
-			if (!isFormValid) {
+			// Ensure user is authenticated
+			if (!userData || !userData.email) {
+				toast({
+					title: 'Authentication Error',
+					description: 'You must be logged in to create an ad.',
+					variant: 'destructive',
+				});
+				return;
+			}
+
+			// Get fresh user data to ensure we have the latest token
+			const freshUserData = await fetchUserData();
+			if (!freshUserData?.idToken) {
+				toast({
+					title: 'Authentication Error',
+					description: 'Please log in again to create an ad.',
+					variant: 'destructive',
+				});
+				return;
+			}
+
+			// Check limits using our local state that mirrors the database
+			if (actualDailyCount >= 1) {
+				toast({
+					title: 'Daily Limit Reached',
+					description:
+						'You can only create one ad per day. Try again tomorrow.',
+					variant: 'destructive',
+				});
+				return;
+			}
+
+			if (actualWeeklyCount >= 5) {
+				toast({
+					title: 'Weekly Limit Reached',
+					description: "You've reached your weekly limit of 5 ads.",
+					variant: 'destructive',
+				});
+				return;
+			}
+
+			// Check if user has credits
+			if (!userLimits.hasCredits) {
+				toast({
+					title: 'No Credits',
+					description:
+						'Your ad will be created but you need to add credits to publish it.',
+					variant: 'warning',
+				});
+				//			return;
+			}
+
+			// Validate all fields before submission
+			const newErrors = {
+				adName: validateAdName(formData.adName),
+				teamId: validateTeamId(formData.teamId),
+				costPerView: validateCostPerView(formData.costPerView),
+				numberOfDaysRunning: validateDays(formData.numberOfDaysRunning),
+				adResource: validateAdResource(formData.type, formData.adResource),
+				description: validateAdDescription(formData.description),
+			};
+
+			setErrors(newErrors);
+
+			if (Object.values(newErrors).some((error) => error !== '')) {
 				toast({
 					variant: 'destructive',
 					title: 'Error',
-					description: 'Please fill in the required fields.',
+					description: 'Please fill in the required fields correctly.',
 				});
 				return;
 			}
@@ -277,7 +430,7 @@ function Create({ onCreateAd = () => {}, isMenuOpen }: any) {
 			const payload: CreateAdPayload = {
 				adName: formData.adName,
 				teamId: formData.teamId,
-				createdBy: formData.createdBy,
+				createdBy: userData.email,
 				type: formData.type,
 				costPerView: formData.costPerView,
 				numberOfDaysRunning: formData.numberOfDaysRunning,
@@ -285,23 +438,82 @@ function Create({ onCreateAd = () => {}, isMenuOpen }: any) {
 				description: formData.description,
 			};
 
+			// Get the token and log it for debugging
+			let token = sessionStorage.getItem('userToken');
+			console.log('Token from sessionStorage:', token);
+
+			if (!token) {
+				// Try to refresh the token
+				const freshUserData = await fetchUserData();
+				if (!freshUserData?.idToken) {
+					toast({
+						title: 'Authentication Error',
+						description: 'No authentication token found. Please log in again.',
+						variant: 'destructive',
+					});
+					return;
+				}
+				// Use the fresh token
+				token = freshUserData.idToken;
+			}
+
 			const res = await fetch('/api/createAd', {
 				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
+				headers: {
+					'Content-Type': 'application/json',
+					Authorization: `Bearer ${token}`,
+				},
 				body: JSON.stringify(payload),
 			});
 
+			console.log('Response status:', res.status);
 			const result = await res.json();
+			console.log('Response data:', result);
 
 			if (res.ok) {
+				// Update the backend
+				const updatedLimits = await incrementAdCount({
+					userEmail: userData.email,
+					dailyCount: 1,
+					weeklyCount: 1,
+				});
+
+				// Update local state with the new values
+				if (updatedLimits) {
+					setUserLimits({
+						dailyCount: updatedLimits.dailyCount,
+						weeklyCount: updatedLimits.weeklyCount,
+						hasCredits: updatedLimits.hasCredits,
+					});
+				} else {
+					// Fallback if no response with values
+					setUserLimits((prev) => ({
+						...prev,
+						dailyCount: prev.dailyCount + 1,
+						weeklyCount: prev.weeklyCount + 1,
+					}));
+				}
+
+				// Update parent component
+				onCreateAd({
+					dailyCount: 1,
+					weeklyCount: 1,
+				});
+
+				// Dispatch custom event to trigger dashboard refresh
+				const adCreatedEvent = new CustomEvent('adCreated', {
+					detail: { success: true },
+				});
+				window.dispatchEvent(adCreatedEvent);
+
 				toast({
 					variant: 'default',
 					title: 'Ad created successfully!',
 					description: 'Your ad has been created and is ready to go.',
 				});
+
 				setShowDialog(false);
 				setShowSuccessDialog(true);
-				onCreateAd();
 			} else {
 				toast({
 					variant: 'destructive',
@@ -317,220 +529,353 @@ function Create({ onCreateAd = () => {}, isMenuOpen }: any) {
 				description: 'Ad creation failed. Please try again.',
 			});
 		}
-	}, [isFormValid, formData, uploadFileToS3, onCreateAd]);
+	}, [
+		formData,
+		uploadFileToS3,
+		onCreateAd,
+		toast,
+		actualDailyCount,
+		actualWeeklyCount,
+		userLimits.hasCredits,
+		validateAdName,
+		validateTeamId,
+		validateCostPerView,
+		validateDays,
+		validateAdResource,
+		validateAdDescription,
+		incrementAdCount,
+		userData,
+		fetchUserData,
+	]);
+
+	// Only limit by quota for the initial button click, not form validity
+	const isInitialClickDisabled = isLoading
+		? false
+		: actualDailyCount >= 1 || actualWeeklyCount >= 5;
+
+	// Use this for the actual form submission button
+	const isSubmitDisabled =
+		!userData?.email ||
+		actualDailyCount >= 1 ||
+		actualWeeklyCount >= 5 ||
+		// !userLimits.hasCredits ||
+		!isFormValid;
+
+	// Check if user is authenticated
+	console.log('this is the: ', userData);
+	const isAuthenticated = !!userData;
+	//console.log('this is the: ', user);
 
 	return (
-		<div className=' '>
-			<div className='container mx-auto px-4 py-2'>
-				<motion.div
-					initial={{ opacity: 0, y: 20 }}
-					animate={{ opacity: 1, y: 0 }}
-					className={`
-						flex items-center p-0.7 rounded-lg hover:bg-gray-800/50 transition-all duration-300 cursor-pointer group
-						${!isMenuOpen ? 'justify-center w-full' : ''}
-					`}
-					onClick={() => setShowDialog(true)}>
-					<div className='bg-blue-500/20 p-2.5 rounded-lg group-hover:bg-blue-500/30 transition-colors duration-300'>
-						<FiFilePlus
-							size={24}
-							className='text-blue-400 group-hover:text-blue-300'
-						/>
-					</div>
-					{isMenuOpen && (
-						<span className='ml-3 text-gray-300 font-medium group-hover:text-blue-300 transition-colors duration-300'>
-							Create Ad
-						</span>
-					)}
-				</motion.div>
+		<div className='relative'>
+			<button
+				onClick={() => setShowDialog(true)}
+				className='w-full px-4 py-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center space-x-2 font-medium'>
+				<FileUp className='w-5 h-5' />
+				<span>Create New Ad</span>
+			</button>
 
-				<Dialog open={showDialog} onOpenChange={setShowDialog}>
-					<DialogContent className='bg-gradient-to-br from-gray-800 to-gray-900 text-white rounded-2xl max-w-2xl p-8 border border-gray-700 shadow-2xl'>
-						<motion.div
-							initial={{ opacity: 0, y: 20 }}
-							animate={{ opacity: 1, y: 0 }}
-							transition={{ duration: 0.5 }}>
-							<DialogHeader>
-								<DialogTitle className='text-2xl font-bold text-blue-400'>
-									Create Ad
-								</DialogTitle>
-								<DialogDescription className='text-gray-400'>
-									Fill in the details carefully to create your ad.
-								</DialogDescription>
-							</DialogHeader>
+			<AnimatePresence>
+				{showDialog && (
+					<Dialog open={showDialog} onOpenChange={setShowDialog}>
+						<DialogContent className='max-w-2xl bg-gray-900/95 border border-slate-700/50 shadow-2xl rounded-xl backdrop-blur-sm'>
+							<motion.div
+								initial={{ opacity: 0, y: 20 }}
+								animate={{ opacity: 1, y: 0 }}
+								exit={{ opacity: 0, y: 20 }}
+								className='space-y-6'>
+								<DialogHeader>
+									<DialogTitle className='text-2xl font-bold text-white flex items-center space-x-3'>
+										<FileUp className='w-6 h-6 text-purple-400' />
+										<span>Create New Advertisement</span>
+									</DialogTitle>
+									<DialogDescription className='text-gray-400'>
+										Fill in the details below to create your new advertisement
+										campaign.
+									</DialogDescription>
+								</DialogHeader>
 
-							<div className='space-y-6 mt-6'>
-								<div>
-									<label className='text-gray-400 text-sm mb-2 block'>
-										Ad Name
-									</label>
-									<input
-										name='adName'
-										placeholder='Enter ad name'
-										onChange={handleChange}
-										className='w-full bg-gray-700/50 text-white rounded-lg p-3 border border-gray-600 focus:ring-2 focus:ring-blue-500'
-									/>
-									{errors.adName && (
-										<p className='text-red-400 text-sm mt-1'>{errors.adName}</p>
-									)}
-								</div>
-								<div>
-									<label className='text-gray-400 text-sm mb-2 block'>
-										Description
-									</label>
-									<textarea
-										name='description'
-										placeholder='Enter ad description'
-										onChange={handleChange}
-										className='w-full bg-gray-700/50 text-white rounded-lg p-3 border border-gray-600 focus:ring-2 focus:ring-blue-500'
-										rows={4}
-									/>
-									{errors.description && (
-										<p className='text-red-400 text-sm mt-1'>
-											{errors.description}
-										</p>
-									)}
-								</div>
-
-								<div>
-									<label className='text-gray-400 text-sm mb-2 block'>
-										Team ID
-									</label>
-									<input
-										name='teamId'
-										placeholder='Enter team ID'
-										onChange={handleChange}
-										className='w-full bg-gray-700/50 text-white rounded-lg p-3 border border-gray-600 focus:ring-2 focus:ring-blue-500'
-									/>
-									{errors.teamId && (
-										<p className='text-red-400 text-sm mt-1'>{errors.teamId}</p>
-									)}
-								</div>
-
-								<div>
-									<label className='text-gray-400 text-sm mb-2 block'>
-										Creator Email
-									</label>
-									<input
-										name='createdBy'
-										placeholder='johndoe@gmail.com'
-										onChange={handleChange}
-										className='w-full bg-gray-700/50 text-white rounded-lg p-3 border border-gray-600 focus:ring-2 focus:ring-blue-500'
-									/>
-									{errors.createdBy && (
-										<p className='text-red-400 text-sm mt-1'>
-											{errors.createdBy}
-										</p>
-									)}
-								</div>
-
-								<div>
-									<label className='text-gray-400 text-sm mb-2 block'>
-										Ad Type
-									</label>
-									<select
-										name='type'
-										onChange={handleChange}
-										className='w-full bg-gray-700/50 text-white rounded-lg p-3 border border-gray-600 focus:ring-2 focus:ring-blue-500'>
-										<option value=''>Select Type</option>
-										<option value='Poster'>Poster</option>
-										<option value='Audio File'>Audio File</option>
-										<option value='Video'>Video</option>
-										<option value='Text'>Text</option>
-									</select>
-								</div>
-
-								{formData.type && formData.type !== 'Text' && (
-									<div>
-										<label className='text-gray-400 text-sm mb-2 block'>
-											Ad Resource
-										</label>
-										<input
-											type='file'
-											name='adResource'
-											onChange={handleChange}
-											className='w-full bg-gray-700/50 text-white rounded-lg p-3 border border-gray-600 focus:ring-2 focus:ring-blue-500'
-										/>
-									</div>
+								{/* Limits Warning */}
+								{(actualDailyCount >= 5 ||
+									actualWeeklyCount >= 20 ||
+									!userLimits.hasCredits) && (
+									<motion.div
+										initial={{ opacity: 0, x: -20 }}
+										animate={{ opacity: 1, x: 0 }}
+										className='bg-red-500/10 border border-red-500/20 rounded-lg p-4 flex items-start space-x-3'>
+										<AlertCircle className='w-5 h-5 text-red-400 mt-0.5' />
+										<div>
+											<h4 className='font-medium text-red-400'>
+												Limit Reached
+											</h4>
+											<p className='text-sm text-red-300/80'>
+												{!userLimits.hasCredits
+													? 'You have no remaining credits. Please upgrade your plan.'
+													: actualDailyCount >= 5
+														? 'You have reached your daily ad creation limit.'
+														: 'You have reached your weekly ad creation limit.'}
+											</p>
+										</div>
+									</motion.div>
 								)}
 
-								<div className='grid md:grid-cols-2 gap-4'>
-									<div>
-										<label className='text-gray-400 text-sm mb-2 block'>
-											Cost Per View
+								{/* Form Grid */}
+								<div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+									{/* Ad Name */}
+									<div className='space-y-2'>
+										<label className='text-sm font-medium text-gray-300 flex items-center space-x-2'>
+											<span>Ad Name</span>
+											<Info className='w-4 h-4 text-gray-500 cursor-help' />
 										</label>
 										<input
-											name='costPerView'
-											placeholder='Optional'
+											type='text'
+											name='adName'
+											value={formData.adName}
 											onChange={handleChange}
-											className='w-full bg-gray-700/50 text-white rounded-lg p-3 border border-gray-600 focus:ring-2 focus:ring-blue-500'
+											className={`w-full p-3 bg-gray-800/90 border ${
+												errors.adName
+													? 'border-red-500/50'
+													: 'border-slate-600/50'
+											} rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50`}
+											placeholder='Enter ad name'
 										/>
+										{errors.adName && (
+											<p className='text-red-400 text-sm'>{errors.adName}</p>
+										)}
 									</div>
-									<div>
-										<label className='text-gray-400 text-sm mb-2 block'>
-											Days Running
+
+									{/* Team ID */}
+									<div className='space-y-2'>
+										<label className='text-sm font-medium text-gray-300 flex items-center space-x-2'>
+											<span>Team ID</span>
+											<Info className='w-4 h-4 text-gray-500 cursor-help' />
 										</label>
 										<input
-											name='numberOfDaysRunning'
-											placeholder='Optional'
+											type='text'
+											name='teamId'
+											value={formData.teamId}
 											onChange={handleChange}
-											className='w-full bg-gray-700/50 text-white rounded-lg p-3 border border-gray-600 focus:ring-2 focus:ring-blue-500'
+											className={`w-full p-3 bg-gray-800/90 border ${
+												errors.teamId
+													? 'border-red-500/50'
+													: 'border-slate-600/50'
+											} rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50`}
+											placeholder='Enter team ID'
 										/>
+										{errors.teamId && (
+											<p className='text-red-400 text-sm'>{errors.teamId}</p>
+										)}
+									</div>
+
+									{/* Ad Type */}
+									<div className='space-y-2'>
+										<label className='text-sm font-medium text-gray-300'>
+											Ad Type
+										</label>
+										<select
+											name='type'
+											value={formData.type}
+											onChange={handleChange}
+											className='w-full p-3 bg-gray-800/90 border border-slate-600/50 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50'>
+											<option value='' className='bg-gray-900'>
+												Select Type
+											</option>
+											<option value='Image' className='bg-gray-900'>
+												Image
+											</option>
+											<option value='Video' className='bg-gray-900'>
+												Video
+											</option>
+											<option value='Audio' className='bg-gray-900'>
+												Audio
+											</option>
+											<option value='Text' className='bg-gray-900'>
+												Text
+											</option>
+										</select>
+									</div>
+
+									{/* Cost Per View */}
+									<div className='space-y-2'>
+										<label className='text-sm font-medium text-gray-300 flex items-center space-x-2'>
+											<span>Cost Per View</span>
+											<Info className='w-4 h-4 text-gray-500 cursor-help' />
+										</label>
+										<div className='relative'>
+											<DollarSign className='absolute left-3 top-3.5 w-4 h-4 text-gray-500' />
+											<input
+												type='text'
+												name='costPerView'
+												value={formData.costPerView}
+												onChange={handleChange}
+												className={`w-full p-3 pl-10 bg-gray-800/90 border ${
+													errors.costPerView
+														? 'border-red-500/50'
+														: 'border-slate-600/50'
+												} rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50`}
+												placeholder='0.00'
+											/>
+										</div>
+										{errors.costPerView && (
+											<p className='text-red-400 text-sm'>
+												{errors.costPerView}
+											</p>
+										)}
+									</div>
+
+									{/* Duration */}
+									<div className='space-y-2'>
+										<label className='text-sm font-medium text-gray-300 flex items-center space-x-2'>
+											<span>Duration (Days)</span>
+											<Info className='w-4 h-4 text-gray-500 cursor-help' />
+										</label>
+										<div className='relative'>
+											<Clock className='absolute left-3 top-3.5 w-4 h-4 text-gray-500' />
+											<input
+												type='number'
+												name='numberOfDaysRunning'
+												value={formData.numberOfDaysRunning}
+												onChange={handleChange}
+												className={`w-full p-3 pl-10 bg-gray-800/90 border ${
+													errors.numberOfDaysRunning
+														? 'border-red-500/50'
+														: 'border-slate-600/50'
+												} rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50`}
+												placeholder='Enter duration'
+											/>
+										</div>
+										{errors.numberOfDaysRunning && (
+											<p className='text-red-400 text-sm'>
+												{errors.numberOfDaysRunning}
+											</p>
+										)}
+									</div>
+
+									{/* File Upload */}
+									{formData.type && formData.type !== 'Text' && (
+										<div className='space-y-2 col-span-2'>
+											<label className='text-sm font-medium text-gray-300'>
+												Upload Media
+											</label>
+											<div
+												className={`border-2 border-dashed ${
+													errors.adResource
+														? 'border-red-500/50'
+														: 'border-slate-600/50'
+												} rounded-lg p-8 text-center hover:border-purple-500/50 transition-colors bg-gray-800/50`}>
+												<input
+													type='file'
+													name='adResource'
+													onChange={handleChange}
+													className='hidden'
+													id='file-upload'
+												/>
+												<label
+													htmlFor='file-upload'
+													className='cursor-pointer flex flex-col items-center'>
+													<Upload className='w-8 h-8 text-gray-400 mb-2' />
+													<span className='text-gray-300'>
+														{formData.adResource
+															? formData.adResource.name
+															: 'Click to upload or drag and drop'}
+													</span>
+													<span className='text-gray-500 text-sm mt-1'>
+														Supported formats: PNG, JPG, MP4, MP3
+													</span>
+												</label>
+											</div>
+											{errors.adResource && (
+												<p className='text-red-400 text-sm'>
+													{errors.adResource}
+												</p>
+											)}
+										</div>
+									)}
+
+									{/* Description */}
+									<div className='col-span-2 space-y-2'>
+										<label className='text-sm font-medium text-gray-300'>
+											Description
+										</label>
+										<textarea
+											name='description'
+											value={formData.description}
+											onChange={handleChange}
+											rows={4}
+											className={`w-full p-3 bg-gray-800/90 border ${
+												errors.description
+													? 'border-red-500/50'
+													: 'border-slate-600/50'
+											} rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 resize-none`}
+											placeholder='Enter ad description'
+										/>
+										{errors.description && (
+											<p className='text-red-400 text-sm'>
+												{errors.description}
+											</p>
+										)}
 									</div>
 								</div>
-							</div>
 
-							<DialogFooter className='mt-8 flex justify-end space-x-4'>
-								<button
-									onClick={() => setShowDialog(false)}
-									className='bg-gray-700 text-white px-4 py-2 rounded-lg hover:bg-gray-600'>
-									Cancel
-								</button>
-								<button
-									disabled={!isFormValid}
-									onClick={handleCreateAd}
-									className='bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed'>
-									Create Ad
-								</button>
-							</DialogFooter>
-						</motion.div>
-					</DialogContent>
-				</Dialog>
-				{/* 
-				<Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
-					<DialogContent className='bg-gradient-to-br from-green-600 to-green-800 text-white rounded-2xl max-w-md p-8'>
-						<motion.div
-							initial={{ opacity: 0, scale: 0.9 }}
-							animate={{ opacity: 1, scale: 1 }}
-							transition={{ duration: 0.3 }}>
-							<div className='text-center'>
-								<FiAlertCircle size={64} className='mx-auto mb */}
-
-				<Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
-					<DialogContent className='bg-gradient-to-br from-green-600 to-green-800 text-white rounded-2xl max-w-md p-8'>
-						<motion.div
-							initial={{ opacity: 0, scale: 0.9 }}
-							animate={{ opacity: 1, scale: 1 }}
-							transition={{ duration: 0.3 }}>
-							<div className='text-center'>
-								<FiAlertCircle size={64} className='mx-auto mb-4 text-white' />
-								<DialogTitle className='text-2xl font-bold mb-2'>
-									Ad Created Successfully!
-								</DialogTitle>
-								<DialogDescription className='text-white/80'>
-									Your ad has been created and is ready to go.
-								</DialogDescription>
-								<div className='mt-6'>
+								<DialogFooter className='flex justify-between items-center pt-6 border-t border-slate-700/50'>
 									<button
-										onClick={() => setShowSuccessDialog(false)}
-										className='bg-white text-green-700 px-6 py-2 rounded-lg hover:bg-gray-100'>
-										Close
+										onClick={() => setShowDialog(false)}
+										className='px-4 py-2 text-gray-400 hover:text-white transition-colors'>
+										Cancel
 									</button>
+									<button
+										onClick={handleCreateAd}
+										disabled={isSubmitDisabled || isLoading}
+										className='px-6 py-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-lg shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2'>
+										{isLoading ? (
+											<>
+												<Loader2 className='w-4 h-4 animate-spin' />
+												<span>Creating...</span>
+											</>
+										) : (
+											<>
+												<Send className='w-4 h-4' />
+												<span>Create Ad</span>
+											</>
+										)}
+									</button>
+								</DialogFooter>
+							</motion.div>
+						</DialogContent>
+					</Dialog>
+				)}
+			</AnimatePresence>
+
+			{/* Success Dialog */}
+			<AnimatePresence>
+				{showSuccessDialog && (
+					<Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
+						<DialogContent className='max-w-md bg-gray-900/95 border border-slate-700/50 shadow-2xl rounded-xl backdrop-blur-sm'>
+							<motion.div
+								initial={{ opacity: 0, scale: 0.95 }}
+								animate={{ opacity: 1, scale: 1 }}
+								exit={{ opacity: 0, scale: 0.95 }}
+								className='text-center p-6'>
+								<div className='w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-4'>
+									<Check className='w-8 h-8 text-green-400' />
 								</div>
-							</div>
-						</motion.div>
-					</DialogContent>
-				</Dialog>
-			</div>
+								<h3 className='text-xl font-semibold text-white mb-2'>
+									Advertisement Created!
+								</h3>
+								<p className='text-gray-400 mb-6'>
+									Your advertisement has been successfully created and is now
+									being processed.
+								</p>
+								<button
+									onClick={() => setShowSuccessDialog(false)}
+									className='px-6 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg shadow-lg hover:from-green-600 hover:to-emerald-700 transition-all duration-300'>
+									Continue
+								</button>
+							</motion.div>
+						</DialogContent>
+					</Dialog>
+				)}
+			</AnimatePresence>
 		</div>
 	);
 }

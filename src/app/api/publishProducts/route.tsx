@@ -90,6 +90,13 @@ export async function PATCH(request: Request) {
 		const body = await request.json();
 		const { id, isPublished } = body;
 
+		if (!id || typeof isPublished === 'undefined') {
+			return NextResponse.json(
+				{ error: 'Product ID and isPublished status are required' },
+				{ status: 400 }
+			);
+		}
+
 		if (!id) {
 			return NextResponse.json(
 				{ error: 'Product ID is required' },

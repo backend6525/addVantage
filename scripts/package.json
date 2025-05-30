@@ -1,0 +1,13 @@
+{
+	"name": "addvantage-scripts",
+	"version": "1.0.0",
+	"description": "Migration scripts for AddVantage",
+	"main": "migrate-user-credits.js",
+	"scripts": {
+		"migrate": "node migrate-user-credits.js"
+	},
+	"dependencies": {
+		"convex": "^1.8.0",
+		"dotenv": "^16.3.1"
+	}
+}

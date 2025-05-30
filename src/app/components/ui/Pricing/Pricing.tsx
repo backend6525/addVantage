@@ -1,7 +1,18 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Check, Sparkles, Zap, Building2, X } from 'lucide-react';
+import {
+	Check,
+	Sparkles,
+	Zap,
+	Building2,
+	X,
+	ChevronRight,
+	Users,
+	TrendingUp,
+	Globe,
+	DollarSign,
+} from 'lucide-react';
 import LayoutEffect from '@/app/components/LayoutEffect';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
@@ -21,8 +32,9 @@ interface Plan {
 }
 
 const Pricing = () => {
-	const [isAnnual, setIsAnnual] = useState(false);
+	const [isHovered, setIsHovered] = useState(false);
 	const [hoveredPlan, setHoveredPlan] = useState<string | null>(null);
+	const [isAnnual, setIsAnnual] = useState(false);
 
 	const plans: Plan[] = [
 		{
@@ -97,104 +109,112 @@ const Pricing = () => {
 	];
 
 	return (
-		<section className='section-transition'>
-			{/* Animated Background Elements */}
-			<div className='absolute inset-0 pointer-events-none overflow-hidden'>
+		<section className='relative py-24 overflow-hidden bg-slate-900/50'>
+			{/* Enhanced Background Elements */}
+			<div className='absolute inset-0 pointer-events-none'>
 				<motion.div
-					className='absolute top-[-10%] right-[-5%] w-96 h-96 bg-primary/5 rounded-full blur-3xl'
 					animate={{
-						scale: [1, 1.2, 1],
-						opacity: [0.3, 0.5, 0.3],
+						scale: isHovered ? 1.1 : 1,
+						opacity: isHovered ? 0.7 : 0.5,
 					}}
-					transition={{
-						duration: 8,
-						repeat: Infinity,
-						ease: 'easeInOut',
-					}}
+					transition={{ duration: 0.7 }}
+					className='absolute top-[-20%] right-[-10%] w-[45rem] h-[45rem] bg-gradient-to-br from-blue-600/20 to-purple-600/10 rounded-full blur-3xl'
 				/>
 				<motion.div
-					className='absolute bottom-[-10%] left-[-5%] w-96 h-96 bg-secondary/5 rounded-full blur-3xl'
 					animate={{
-						scale: [1.2, 1, 1.2],
-						opacity: [0.5, 0.3, 0.5],
+						scale: isHovered ? 1.1 : 1,
+						opacity: isHovered ? 0.7 : 0.5,
 					}}
-					transition={{
-						duration: 8,
-						repeat: Infinity,
-						ease: 'easeInOut',
-						delay: 2,
-					}}
+					transition={{ duration: 0.7, delay: 0.2 }}
+					className='absolute bottom-[-20%] left-[-10%] w-[45rem] h-[45rem] bg-gradient-to-tr from-slate-700/20 to-blue-600/10 rounded-full blur-3xl'
 				/>
 			</div>
 
-			<div className='relative z-10 max-w-screen-xl mx-auto px-4'>
-				<div className='text-center max-w-2xl mx-auto mb-16'>
-					{/* Badge */}
-					<div className='inline-flex items-center gap-2 glass px-4 py-2 rounded-full mb-6'>
-						<Sparkles className='w-5 h-5 text-primary animate-pulse' />
-						<span className='text-sm font-medium text-foreground'>
-							Simple Pricing
-						</span>
-					</div>
-
-					<h2 className='text-4xl md:text-5xl font-bold mb-6 text-gradient'>
-						Choose Your Perfect Plan
-					</h2>
-					<p className='text-lg text-muted-foreground'>
-						Start free and scale as you grow. No hidden fees. Cancel anytime.
-					</p>
-
-					{/* Billing Toggle */}
-					<div className='mt-8 inline-flex items-center gap-4 glass p-1 rounded-full'>
-						<button
-							className={`px-4 py-2 rounded-full transition-all ${
-								!isAnnual ? 'bg-primary text-white' : 'hover:text-primary'
-							}`}
-							onClick={() => setIsAnnual(false)}>
-							Monthly
-						</button>
-						<button
-							className={`px-4 py-2 rounded-full transition-all ${
-								isAnnual ? 'bg-primary text-white' : 'hover:text-primary'
-							}`}
-							onClick={() => setIsAnnual(true)}>
-							Annual
-							<span className='ml-1 text-xs opacity-75'>(Save 20%)</span>
-						</button>
-					</div>
-				</div>
-
+			<div className='relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
 				<LayoutEffect
 					className='duration-1000 delay-300'
 					isInviewState={{
-						trueState: 'opacity-1',
+						trueState: 'opacity-100 translate-y-0',
 						falseState: 'opacity-0 translate-y-12',
 					}}>
-					<div className='grid md:grid-cols-3 gap-8'>
+					<div className='max-w-3xl mx-auto text-center mb-16'>
+						<motion.div
+							whileHover={{ scale: 1.02 }}
+							className='inline-flex items-center gap-2 bg-gradient-to-r from-slate-800/90 to-slate-800/70 backdrop-blur-sm px-4 py-2 rounded-full mb-6 border border-slate-700/50 shadow-lg'>
+							<Sparkles className='w-4 h-4 text-blue-400' />
+							<span className='text-sm font-medium bg-gradient-to-r from-slate-200 to-blue-400 bg-clip-text text-transparent'>
+								Simple, Transparent Pricing
+							</span>
+						</motion.div>
+						<h2 className='text-4xl font-bold mb-6'>
+							<span className='bg-gradient-to-r from-slate-100 to-slate-300 bg-clip-text text-transparent'>
+								Choose Your Perfect{' '}
+							</span>
+							<span className='bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent'>
+								Plan
+							</span>
+						</h2>
+						<p className='text-lg text-slate-300 max-w-2xl mx-auto'>
+							Start free and scale as you grow. No hidden fees. Cancel anytime.
+						</p>
+
+						{/* Enhanced Billing Toggle */}
+						<div className='mt-8 inline-flex items-center gap-4 bg-slate-800/50 backdrop-blur-sm p-1 rounded-full border border-slate-700/50'>
+							<motion.button
+								whileHover={{ scale: 1.02 }}
+								whileTap={{ scale: 0.98 }}
+								className={`px-6 py-2 rounded-full transition-all duration-300 ${
+									!isAnnual
+										? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg'
+										: 'text-slate-300 hover:text-slate-100'
+								}`}
+								onClick={() => setIsAnnual(false)}>
+								Monthly
+							</motion.button>
+							<motion.button
+								whileHover={{ scale: 1.02 }}
+								whileTap={{ scale: 0.98 }}
+								className={`px-6 py-2 rounded-full transition-all duration-300 ${
+									isAnnual
+										? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg'
+										: 'text-slate-300 hover:text-slate-100'
+								}`}
+								onClick={() => setIsAnnual(true)}>
+								Annual
+								<span className='ml-1 text-xs opacity-75'>(Save 20%)</span>
+							</motion.button>
+						</div>
+					</div>
+
+					<div
+						className='grid md:grid-cols-3 gap-8'
+						onMouseEnter={() => setIsHovered(true)}
+						onMouseLeave={() => setIsHovered(false)}>
 						{plans.map((plan, idx) => {
 							const Icon = plan.icon;
 							const price = isAnnual ? plan.price.annual : plan.price.monthly;
 							const isHovered = hoveredPlan === plan.name;
 
 							return (
-								<div
+								<motion.div
 									key={idx}
-									className={`group hover-card glass relative overflow-hidden ${
-										plan.isMostPop ? 'border-primary' : ''
-									}`}
+									whileHover={{ scale: 1.02 }}
+									className={`relative overflow-hidden bg-gradient-to-br from-slate-800/80 to-slate-800/60 backdrop-blur-sm rounded-2xl border ${
+										plan.isMostPop
+											? 'border-blue-500/50 shadow-lg shadow-blue-500/10'
+											: 'border-slate-700/50'
+									} transition-all duration-300`}
 									onMouseEnter={() => setHoveredPlan(plan.name)}
 									onMouseLeave={() => setHoveredPlan(null)}>
 									{/* Gradient Background */}
 									<motion.div
-										className={`absolute inset-0 bg-gradient-to-br ${plan.gradient}`}
-										initial={{ opacity: 0 }}
+										className={`absolute inset-0 bg-gradient-to-br ${plan.gradient} opacity-0 transition-opacity duration-300`}
 										animate={{ opacity: isHovered ? 0.1 : 0 }}
-										transition={{ duration: 0.3 }}
 									/>
 
 									{/* Popular Badge */}
 									{plan.isMostPop && (
-										<div className='absolute top-0 right-0 bg-primary text-primary-foreground text-sm font-medium py-1.5 px-4 rounded-bl-xl'>
+										<div className='absolute top-0 right-0 bg-gradient-to-r from-blue-600 to-blue-700 text-white text-sm font-medium py-1.5 px-4 rounded-bl-xl'>
 											Most Popular
 										</div>
 									)}
@@ -203,28 +223,26 @@ const Pricing = () => {
 										{/* Plan Header */}
 										<div className='flex items-center gap-4 mb-6'>
 											<motion.div
-												className={`p-3 rounded-xl bg-background/50 text-primary`}
+												className='p-3 rounded-xl bg-slate-700/50 text-blue-400'
 												animate={{ scale: isHovered ? 1.1 : 1 }}
 												transition={{ duration: 0.3 }}>
 												<Icon className='w-6 h-6' />
 											</motion.div>
 											<div>
-												<h3 className='text-xl font-bold text-foreground group-hover:text-primary transition-colors'>
+												<h3 className='text-xl font-bold text-slate-100'>
 													{plan.name}
 												</h3>
-												<p className='text-sm text-muted-foreground'>
-													{plan.desc}
-												</p>
+												<p className='text-sm text-slate-400'>{plan.desc}</p>
 											</div>
 										</div>
 
 										{/* Price */}
 										<div className='mb-6'>
 											<div className='flex items-baseline gap-2'>
-												<span className='text-4xl font-bold text-foreground group-hover:text-primary transition-colors'>
+												<span className='text-4xl font-bold bg-gradient-to-r from-slate-100 to-slate-300 bg-clip-text text-transparent'>
 													${price}
 												</span>
-												<span className='text-muted-foreground'>
+												<span className='text-slate-400'>
 													/{isAnnual ? 'year' : 'month'}
 												</span>
 											</div>
@@ -235,61 +253,85 @@ const Pricing = () => {
 											{plan.features.included.map((feature, featureIdx) => (
 												<div
 													key={featureIdx}
-													className='flex items-center gap-3 text-muted-foreground'>
-													<Check className='w-5 h-5 text-primary flex-shrink-0' />
-													<span>{feature}</span>
+													className='flex items-center gap-3'>
+													<Check className='w-5 h-5 text-green-400 flex-shrink-0' />
+													<span className='text-slate-300'>{feature}</span>
 												</div>
 											))}
 											{plan.features.notIncluded.map((feature, featureIdx) => (
 												<div
 													key={featureIdx}
-													className='flex items-center gap-3 text-muted-foreground/50'>
-													<X className='w-5 h-5 flex-shrink-0' />
-													<span>{feature}</span>
+													className='flex items-center gap-3 opacity-50'>
+													<X className='w-5 h-5 text-slate-400 flex-shrink-0' />
+													<span className='text-slate-400'>{feature}</span>
 												</div>
 											))}
 										</div>
 
 										{/* CTA Button */}
 										<Button
-											variant={plan.isMostPop ? 'gradient' : 'outline'}
-											className='w-full group'
-											size='lg'>
+											className={`w-full group gap-2 text-base py-6 transition-all duration-300 ${
+												plan.isMostPop
+													? 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg hover:shadow-xl'
+													: 'bg-slate-700/50 hover:bg-slate-700/70 text-slate-200 border border-slate-600/50 hover:border-slate-500/50'
+											}`}>
 											{plan.cta}
-											<motion.span
-												className='inline-block ml-2'
-												animate={{ x: isHovered ? 5 : 0 }}
-												transition={{ duration: 0.3 }}>
-												→
-											</motion.span>
+											<ChevronRight className='w-5 h-5 group-hover:translate-x-1 transition-transform' />
 										</Button>
 									</div>
-								</div>
+								</motion.div>
 							);
 						})}
 					</div>
-				</LayoutEffect>
 
-				{/* Trust Indicators */}
-				<div className='mt-20 grid grid-cols-2 md:grid-cols-4 gap-8'>
-					{[
-						{ value: '10K+', label: 'Active Users' },
-						{ value: '95%', label: 'Satisfaction Rate' },
-						{ value: '24/7', label: 'Support Available' },
-						{ value: '$2M+', label: 'Revenue Generated' },
-					].map((stat, idx) => (
-						<motion.div
-							key={idx}
-							className='group text-center glass hover-card p-6'
-							whileHover={{ scale: 1.05 }}
-							transition={{ duration: 0.3 }}>
-							<div className='text-3xl font-bold text-gradient mb-2'>
-								{stat.value}
-							</div>
-							<div className='text-sm text-muted-foreground'>{stat.label}</div>
-						</motion.div>
-					))}
-				</div>
+					{/* Enhanced Trust Indicators */}
+					<div className='mt-20 grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8'>
+						{[
+							{
+								value: '10K+',
+								label: 'Active Users',
+								icon: <Users className='w-5 h-5 text-blue-400' />,
+								description: 'Growing community',
+							},
+							{
+								value: '95%',
+								label: 'Satisfaction Rate',
+								icon: <TrendingUp className='w-5 h-5 text-green-400' />,
+								description: 'Happy clients',
+							},
+							{
+								value: '24/7',
+								label: 'Support',
+								icon: <Globe className='w-5 h-5 text-purple-400' />,
+								description: 'Always available',
+							},
+							{
+								value: '$2M+',
+								label: 'Revenue Generated',
+								icon: <DollarSign className='w-5 h-5 text-yellow-400' />,
+								description: 'User earnings',
+							},
+						].map((stat, idx) => (
+							<motion.div
+								key={idx}
+								whileHover={{ scale: 1.02 }}
+								className='bg-gradient-to-br from-slate-800/80 to-slate-800/60 backdrop-blur-sm rounded-xl p-6 border border-slate-700/50 shadow-lg hover:shadow-xl transition-all'>
+								<div className='flex items-center gap-3 mb-3'>
+									<div className='p-2 rounded-lg bg-slate-700/50'>
+										{stat.icon}
+									</div>
+									<div>
+										<p className='text-2xl font-bold bg-gradient-to-r from-slate-100 to-slate-300 bg-clip-text text-transparent'>
+											{stat.value}
+										</p>
+										<p className='text-sm text-slate-400'>{stat.label}</p>
+									</div>
+								</div>
+								<p className='text-xs text-slate-300'>{stat.description}</p>
+							</motion.div>
+						))}
+					</div>
+				</LayoutEffect>
 			</div>
 		</section>
 	);

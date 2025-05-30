@@ -2,46 +2,83 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { useKindeBrowserClient } from '@kinde-oss/kinde-auth-nextjs';
+import {
+	useKindeBrowserClient,
+	LogoutLink,
+} from '@kinde-oss/kinde-auth-nextjs';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, ChevronDown, Menu } from 'lucide-react';
 import Brand from '../../ui/Brand';
-import { NotificationCenter } from '../../ui/NotificationCenter/NotificationCenter';
+import { useRouter } from 'next/navigation';
+import { useToast } from '@/app/components/ui/toast/use-toast';
 
 interface NavbarProps {
-	search: {
-		placeholder: string;
+	search: string;
+	setIsMenuOpen: (isOpen: boolean) => void;
+	onMenuToggle: () => void;
+	userStatus: {
+		isOnline: boolean;
+		lastSeen?: string;
 	};
-	setIsMenuOpen: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
+interface DropdownOption {
+	href: string;
+	label: string;
+	onClick?: () => void;
 }
 
 const navItems = [
-	{ href: '/dashboard/tasks', label: 'Tasks' },
-	{ href: '/billing', label: 'Billing' },
+	{ href: '/dashboard', label: 'Dashboard' },
+	{ href: '/ads', label: 'Ads' },
 	{ href: '/analytics', label: 'Analytics' },
-	{ href: '/messages', label: 'Messages' },
+	{ href: '/dashboard/BulkSMS', label: 'Messages' },
 	{ href: '/help', label: 'Help' },
 ];
 
-const dropdownOptions = [
-	{ href: '/profile', label: 'Profile' },
-	{ href: '/settings', label: 'Settings' },
-	{ href: '/purchase-history', label: 'Purchase History' },
-	{ href: '/refer-friends', label: 'Refer Friends' },
-	{ href: '/create-team', label: 'Create Team' },
-	{ href: '/logout', label: 'Sign Out' },
-];
-
-const Navbar: React.FC<NavbarProps> = ({ search, setIsMenuOpen }) => {
+const Navbar: React.FC<NavbarProps> = ({
+	search,
+	setIsMenuOpen,
+	onMenuToggle,
+	userStatus,
+}) => {
 	const { user } = useKindeBrowserClient();
 	const [dropdownOpen, setDropdownOpen] = useState(false);
 	const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+	const router = useRouter();
+	const { toast } = useToast();
 
-	console.log('Navbar user state:', user);
+	const handleSignOut = async () => {
+		try {
+			// Call our signout API first
+			const response = await fetch('/api/auth/signout', {
+				method: 'POST',
+			});
+
+			// Clear session storage regardless of API response
+			sessionStorage.clear();
+
+			// Redirect to Kinde logout
+			window.location.href = '/api/auth/logout';
+		} catch (error) {
+			console.error('Error signing out:', error);
+			// If API call fails, still try to logout from Kinde
+			window.location.href = '/api/auth/logout';
+		}
+	};
+
+	const dropdownOptions: DropdownOption[] = [
+		{ href: '/dashboard/profile', label: 'Profile' },
+		{ href: '/settings', label: 'Settings' },
+		{ href: '/purchase-history', label: 'Purchase History' },
+		{ href: '/refer-friends', label: 'Refer Friends' },
+		{ href: '/create-team', label: 'Create Team' },
+		{ href: '#', label: 'Sign Out', onClick: handleSignOut },
+	];
 
 	return (
-		<nav className='fixed top-0 left-0 right-0 z-50 bg-gradient-to-b from-gray-900 to-gray-800/95 backdrop-blur-lg border-b border-white/10'>
-			<div className=' mx-auto flex items-center justify-between h-16 px-4 sm:px-8'>
+		<nav className='fixed top-0 left-0 right-0 z-50 bg-slate-800/70 border-b border-slate-700/50'>
+			<div className='mx-auto flex items-center justify-between h-16 px-4 sm:px-8'>
 				{/* Logo and Brand */}
 				<div className='flex items-center'>
 					<Brand className='w-10 h-10' />
@@ -64,27 +101,27 @@ const Navbar: React.FC<NavbarProps> = ({ search, setIsMenuOpen }) => {
 				<div className='flex items-center space-x-4'>
 					{/* Notifications */}
 
-					{/* <button className='relative p-2 text-gray-400 hover:text-white transition-colors duration-200'>
+					{/* <button className='relative p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white transition-colors duration-200'>
 						<Bell className='h-5 w-5' />
 					</button>
  */}
 
-					<span className='relative pr-12 text-gray-400 hover:text-white transition-colors duration-200'>
+					{/* <span className='relative pr-12 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white transition-colors duration-200'>
 						<NotificationCenter />
-					</span>
+					</span> */}
 
 					{/* Profile Dropdown */}
 					<div className='relative hidden md:block'>
 						<button
 							onClick={() => setDropdownOpen(!dropdownOpen)}
-							className='flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-800 transition-colors duration-200'>
+							className='flex items-center space-x-3 p-2 rounded-lg hover:bg-slate-700/50 transition-colors duration-200'>
 							<img
 								src={user?.picture ?? undefined}
 								alt='Profile'
-								className='h-8 w-8 rounded-full border-2 border-gray-700'
+								className='h-8 w-8 rounded-full border-2 border-slate-700/50'
 							/>
 							<ChevronDown
-								className={`h-4 w-4 text-gray-400 transition-transform duration-200 ${
+								className={`h-4 w-4 text-gray-300 transition-transform duration-200 ${
 									dropdownOpen ? 'rotate-180' : ''
 								}`}
 							/>
@@ -97,14 +134,15 @@ const Navbar: React.FC<NavbarProps> = ({ search, setIsMenuOpen }) => {
 									initial={{ opacity: 0, y: 10 }}
 									animate={{ opacity: 1, y: 0 }}
 									exit={{ opacity: 0, y: 10 }}
-									className='absolute right-0 mt-2 w-56 rounded-lg bg-gray-800 border border-gray-700 shadow-lg py-1'>
+									className='absolute right-0 mt-2 w-56 rounded-lg bg-slate-800/70 border border-slate-700/50 shadow-lg py-1'>
 									{dropdownOptions.map((option) => (
-										<Link
+										<a
 											key={option.label}
 											href={option.href}
-											className='block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 rounded-md'>
+											onClick={option.onClick}
+											className='block px-4 py-2 text-sm text-gray-300 hover:bg-slate-700/50 rounded-md cursor-pointer'>
 											{option.label}
-										</Link>
+										</a>
 									))}
 								</motion.div>
 							)}
@@ -114,7 +152,7 @@ const Navbar: React.FC<NavbarProps> = ({ search, setIsMenuOpen }) => {
 					{/* Mobile Menu Button */}
 					<button
 						onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-						className='md:hidden p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-800'>
+						className='md:hidden p-2 rounded-md text-gray-300 hover:text-white hover:bg-slate-700/50'>
 						<Menu className='h-6 w-6' />
 					</button>
 				</div>
@@ -128,13 +166,13 @@ const Navbar: React.FC<NavbarProps> = ({ search, setIsMenuOpen }) => {
 						animate={{ opacity: 1, y: 0 }}
 						exit={{ opacity: 0, y: -10 }}
 						className='md:hidden px-4 pt-2'>
-						<div className='bg-gray-800 rounded-lg shadow-lg'>
+						<div className='bg-slate-800/70 rounded-lg shadow-lg border border-slate-700/50'>
 							{/* Profile Section */}
 							<div className='flex items-center space-x-3 p-4'>
 								<img
 									src={user?.picture ?? undefined}
 									alt='Profile'
-									className='h-10 w-10 rounded-full border-2 border-gray-700'
+									className='h-10 w-10 rounded-full border-2 border-slate-700/50'
 								/>
 								<span className='text-sm text-gray-300 font-medium'>
 									{user?.family_name || 'User'}
@@ -154,14 +192,15 @@ const Navbar: React.FC<NavbarProps> = ({ search, setIsMenuOpen }) => {
 							</div>
 
 							{/* Dropdown Options */}
-							<div className='border-t border-gray-700 px-4 py-2'>
+							<div className='border-t border-slate-700/50 px-4 py-2'>
 								{dropdownOptions.map((option) => (
-									<Link
+									<a
 										key={option.label}
 										href={option.href}
-										className='block text-gray-300 hover:text-white py-2'>
+										onClick={option.onClick}
+										className='block text-gray-300 hover:text-white py-2 cursor-pointer'>
 										{option.label}
-									</Link>
+									</a>
 								))}
 							</div>
 						</div>

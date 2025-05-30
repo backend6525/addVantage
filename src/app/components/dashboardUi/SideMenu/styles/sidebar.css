@@ -16,3 +16,60 @@
 .glass-scroll::-webkit-scrollbar-track {
 	background: transparent;
 }
+
+/* Custom background utility classes */
+.bg-slate-800-70 {
+	background-color: rgba(30, 41, 59, 0.7);
+}
+
+.bg-slate-800-90 {
+	background-color: rgba(30, 41, 59, 0.9);
+}
+
+.bg-slate-700-50 {
+	background-color: rgba(51, 65, 85, 0.5);
+}
+
+/* Custom border utility class */
+.border-slate-700-50 {
+	border-color: rgba(51, 65, 85, 0.5);
+}
+
+/* Custom text utility classes */
+.text-slate-white {
+	color: #ffffff;
+}
+
+.text-slate-300 {
+	color: rgb(209, 213, 219);
+}
+
+.text-slate-400 {
+	color: rgb(156, 163, 175);
+}
+
+/* Interactive element styles */
+.hover-bg-slate-700-50:hover {
+	background-color: rgba(51, 65, 85, 0.5);
+}
+
+.hover-text-white:hover {
+	color: #ffffff;
+}
+
+.bg-purple-600 {
+	background-color: rgb(124, 58, 237);
+}
+
+.hover-bg-purple-700:hover {
+	background-color: rgb(109, 40, 217);
+}
+
+/* Form element styles */
+.focus-ring {
+	outline: none;
+}
+
+.focus-ring:focus {
+	box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.5);
+}

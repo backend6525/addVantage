@@ -1,23 +1,3 @@
-// import React from 'react';
-// import { X } from 'lucide-react';
-
-// interface AIChatHeaderProps {
-// 	onClose: () => void;
-// }
-
-// export const AIChatHeader: React.FC<AIChatHeaderProps> = ({ onClose }) => {
-// 	return (
-// 		<div className='flex justify-between items-center p-4 bg-blue-500 dark:bg-blue-700 text-white rounded-t-xl'>
-// 			<h2 className='text-lg font-semibold'>AI Assistant</h2>
-// 			<button
-// 				onClick={onClose}
-// 				className='hover:bg-blue-600 dark:hover:bg-blue-800 p-1 rounded-full'>
-// 				<X size={24} />
-// 			</button>
-// 		</div>
-// 	);
-// };
-
 'use client';
 
 import React from 'react';

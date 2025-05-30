@@ -3,16 +3,34 @@ import React, { ReactNode, useState } from 'react';
 import Navbar from './Navbar';
 
 // Define the search input properties for the Navbar
-
-function Header() {
-	const searchInput = {
-		placeholder: 'Search dashboard tasks',
-		// Add any other properties or event handlers you need for the search input
+interface HeaderProps {
+	onMenuToggle: () => void;
+	userStatus: {
+		email: string;
+		dailyAdCount: number;
+		weeklyAdCount: number;
+		dailyAdLimit: number;
+		weeklyAdLimit: number;
+		hasCredits: boolean;
+		credits: number;
+		accountType: 'free' | 'pro' | 'enterprise';
+		lastLimitReset: string;
 	};
+}
+
+function Header({ onMenuToggle, userStatus }: HeaderProps) {
 	const [isMenuOpen, setIsMenuOpen] = useState(false);
 	return (
 		<>
-			<Navbar search={searchInput} setIsMenuOpen={setIsMenuOpen} />
+			<Navbar
+				search=''
+				setIsMenuOpen={setIsMenuOpen}
+				onMenuToggle={onMenuToggle}
+				userStatus={{
+					isOnline: true,
+					lastSeen: new Date().toISOString(),
+				}}
+			/>
 		</>
 	);
 }

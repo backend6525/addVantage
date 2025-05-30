@@ -1,10 +1,10 @@
 import React, { useRef, useEffect } from 'react';
 
 const ParticleBackground = ({
-	color = '#4A90E2',
-	count = 100,
-	speed = 1,
-	maxSize = 3,
+	color = '#3E63DD',
+	count = 50,
+	speed = 0.5,
+	maxSize = 2,
 }) => {
 	const canvasRef = useRef(null);
 
@@ -20,6 +20,8 @@ const ParticleBackground = ({
 			speedX: number;
 			speedY: number;
 			opacity: number;
+			pulseSpeed: number;
+			pulseDirection: number;
 
 			constructor() {
 				this.reset();
@@ -31,14 +33,20 @@ const ParticleBackground = ({
 				this.radius = Math.random() * maxSize;
 				this.speedX = (Math.random() - 0.5) * speed;
 				this.speedY = (Math.random() - 0.5) * speed;
-				this.opacity = Math.random() * 0.5 + 0.1;
+				this.opacity = Math.random() * 0.4 + 0.05;
+				this.pulseSpeed = Math.random() * 0.005 + 0.001;
+				this.pulseDirection = 1;
 			}
 
 			update() {
 				this.x += this.speedX;
 				this.y += this.speedY;
 
-				// Wrap around screen
+				this.opacity += this.pulseSpeed * this.pulseDirection;
+				if (this.opacity >= 0.4 || this.opacity <= 0.05) {
+					this.pulseDirection *= -1;
+				}
+
 				if (this.x < 0) this.x = canvas.width;
 				if (this.x > canvas.width) this.x = 0;
 				if (this.y < 0) this.y = canvas.height;
@@ -48,7 +56,11 @@ const ParticleBackground = ({
 			draw(ctx) {
 				ctx.beginPath();
 				ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-				ctx.fillStyle = `rgba(${parseInt(color.slice(1, 3), 16)}, ${parseInt(color.slice(3, 5), 16)}, ${parseInt(color.slice(5, 7), 16)}, ${this.opacity})`;
+
+				const r = parseInt(color.slice(1, 3), 16);
+				const g = parseInt(color.slice(3, 5), 16);
+				const b = parseInt(color.slice(5, 7), 16);
+				ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${this.opacity})`;
 				ctx.fill();
 			}
 		}
@@ -88,7 +100,7 @@ const ParticleBackground = ({
 	return (
 		<canvas
 			ref={canvasRef}
-			className='fixed inset-0 z-0 pointer-events-none opacity-30'
+			className='fixed inset-0 z-0 pointer-events-none opacity-25'
 			style={{
 				position: 'absolute',
 				top: 0,

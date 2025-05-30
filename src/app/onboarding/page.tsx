@@ -1,6 +1,9 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useRouter } from 'next/navigation';
+import { useConvex } from 'convex/react';
+import { api } from '../../../convex/_generated/api';
 import {
 	ArrowRight,
 	ArrowLeft,
@@ -10,6 +13,12 @@ import {
 	CheckCircle,
 	ChevronRight,
 	Rocket,
+	Instagram,
+	Twitter,
+	Facebook,
+	Youtube,
+	Linkedin,
+	SkipForward,
 } from 'lucide-react';
 import OptionCard from '../components/ui/Cards/OptionCard';
 import ProfileForm from '../components/ui/Cards/ProfileForm';
@@ -22,88 +31,398 @@ interface Step {
 	content: React.ReactNode;
 }
 
-const steps: Step[] = [
-	{
-		title: 'Business Type',
-		description: 'Choose Your Path',
-		details:
-			'Select the business model that best describes your organization. This helps us tailor the experience to your needs.',
-		icon: Building2,
-		content: (
-			<div className='grid md:grid-cols-2 lg:grid-cols-3 gap-6'>
-				<OptionCard
-					title='Software as a Service'
-					description='Cloud-based software solutions delivered on a subscription basis. Perfect for recurring revenue models.'
-					value='saas'
-					className='bg-gradient-to-br from-purple-500/10 to-blue-500/10 hover:from-purple-500/20 hover:to-blue-500/20'
-				/>
-				<OptionCard
-					title='Infrastructure as a Service'
-					description='Scalable cloud infrastructure resources. Ideal for businesses requiring flexible computing power.'
-					value='iaas'
-					className='bg-gradient-to-br from-blue-500/10 to-cyan-500/10 hover:from-blue-500/20 hover:to-cyan-500/20'
-				/>
-				<OptionCard
-					title='Platform as a Service'
-					description='Complete development and deployment environment in the cloud. Best for application developers.'
-					value='paas'
-					className='bg-gradient-to-br from-cyan-500/10 to-teal-500/10 hover:from-cyan-500/20 hover:to-teal-500/20'
-				/>
-			</div>
-		),
-	},
-	{
-		title: 'Profile',
-		description: 'Tell Us About Yourself',
-		details:
-			'Help us personalize your experience by sharing some basic information about you and your role.',
-		icon: UserCircle,
-		content: <ProfileForm />,
-	},
-	{
-		title: 'Business Details',
-		description: 'Your Business Identity',
-		details:
-			'Provide information about your business to help us better understand your needs and goals.',
-		icon: Briefcase,
-		content: (
-			<div className='space-y-6 animate-in'>
+const OnboardingProcess: React.FC = () => {
+	const router = useRouter();
+	const convex = useConvex();
+	const [currentStep, setCurrentStep] = useState(1);
+	const [userType, setUserType] = useState<'influencer' | 'business' | null>(
+		null
+	);
+	const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
+	const [isLoading, setIsLoading] = useState(false);
+	const [userData, setUserData] = useState<any>(null);
+	const [isLoadingUserData, setIsLoadingUserData] = useState(true);
+
+	// Fetch user data on component mount
+	useEffect(() => {
+		const fetchUserData = async () => {
+			try {
+				setIsLoadingUserData(true);
+				const response = await fetch('/api/auth/user');
+				if (!response.ok) {
+					throw new Error('Failed to fetch user data');
+				}
+				const data = await response.json();
+
+				// Check if the data is nested (common in API responses)
+				let userDataObj = data;
+				if (data && data.data) {
+					userDataObj = data.data;
+				}
+
+				if (userDataObj) {
+					console.log('User data fetched successfully:', userDataObj);
+
+					// Store the complete user data
+					setUserData(userDataObj);
+
+					// Ensure user ID is stored in session storage
+					if (userDataObj._id) {
+						sessionStorage.setItem('userId', userDataObj._id);
+						console.log('User ID stored in session storage:', userDataObj._id);
+					} else {
+						console.error('User ID is missing from fetched data');
+					}
+
+					// Store user email in session storage for later use
+					if (userDataObj.email) {
+						sessionStorage.setItem('userEmail', userDataObj.email);
+					}
+
+					// If user has a type already set, use it
+					if (userDataObj.userType) {
+						setUserType(userDataObj.userType);
+					}
+
+					// If user has platforms already set, use them
+					if (userDataObj.platforms && Array.isArray(userDataObj.platforms)) {
+						setSelectedPlatforms(userDataObj.platforms);
+					}
+				}
+			} catch (error) {
+				console.error('Error fetching user data:', error);
+			} finally {
+				setIsLoadingUserData(false);
+			}
+		};
+
+		fetchUserData();
+	}, []);
+
+	// Save user data to database when it changes
+	useEffect(() => {
+		const saveUserData = async () => {
+			if (!userData || !userData._id) return;
+
+			try {
+				// Update user data in the database
+				await convex.mutation(api.user.updateUser, {
+					id: userData._id,
+					userType: userType || undefined,
+					platforms:
+						selectedPlatforms.length > 0 ? selectedPlatforms : undefined,
+				});
+			} catch (error) {
+				console.error('Error saving user data:', error);
+			}
+		};
+
+		saveUserData();
+	}, [userType, selectedPlatforms, userData]);
+
+	const steps: Step[] = [
+		{
+			title: 'User Type',
+			description: 'Choose Your Role',
+			details:
+				'Select whether you are an influencer looking to monetize your content or a business seeking to advertise.',
+			icon: UserCircle,
+			content: (
 				<div className='grid md:grid-cols-2 gap-6'>
-					{/* Business Details Form - To be implemented */}
-					<div className='p-6 rounded-xl bg-gray-800/50 border border-gray-700'>
-						<h3 className='text-lg font-semibold mb-4'>Coming Soon</h3>
+					<OptionCard
+						title='Influencer'
+						description='Create and monetize your content through ads. Perfect for content creators and social media personalities.'
+						value='influencer'
+						onClick={() => setUserType('influencer')}
+						className='bg-gradient-to-br from-purple-500/10 to-pink-500/10 hover:from-purple-500/20 hover:to-pink-500/20'
+						selected={userType === 'influencer'}
+					/>
+					<OptionCard
+						title='Business'
+						description='Advertise your products or services through influencer marketing. Ideal for brands and companies.'
+						value='business'
+						onClick={() => setUserType('business')}
+						className='bg-gradient-to-br from-blue-500/10 to-cyan-500/10 hover:from-blue-500/20 hover:to-cyan-500/20'
+						selected={userType === 'business'}
+					/>
+				</div>
+			),
+		},
+		{
+			title: 'Profile',
+			description: 'Tell Us About Yourself',
+			details:
+				'Help us personalize your experience by sharing some basic information about you and your role.',
+			icon: UserCircle,
+			content: isLoadingUserData ? (
+				<div className='flex justify-center items-center h-64'>
+					<div className='animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary'></div>
+				</div>
+			) : (
+				<ProfileForm
+					userType={userType}
+					selectedPlatforms={selectedPlatforms}
+					onPlatformSelect={(platform: string) => {
+						setSelectedPlatforms((prev) =>
+							prev.includes(platform)
+								? prev.filter((p) => p !== platform)
+								: [...prev, platform]
+						);
+					}}
+					userData={userData}
+					onSubmit={async (formData) => {
+						try {
+							setIsLoading(true);
+
+							// Update user profile in the database
+							await convex.mutation(api.user.updateProfile, {
+								userId: userData._id,
+								name: formData.name,
+								email: formData.email,
+								website: formData.website,
+								companyName: formData.companyName,
+								bio: formData.bio,
+							});
+
+							// Update local user data
+							setUserData({
+								...userData,
+								name: formData.name,
+								email: formData.email,
+								website: formData.website,
+								companyName: formData.companyName,
+								bio: formData.bio,
+							});
+
+							// Show success message
+							alert('Profile updated successfully!');
+
+							// Move to next step
+							setCurrentStep((prev) => Math.min(prev + 1, steps.length));
+						} catch (error) {
+							console.error('Error updating profile:', error);
+							alert('Failed to update profile. Please try again.');
+						} finally {
+							setIsLoading(false);
+						}
+					}}
+				/>
+			),
+		},
+		{
+			title: 'Social Media',
+			description: 'Connect Your Platforms',
+			details:
+				'Link your social media accounts to enhance your profile and reach. You can skip this step and connect later.',
+			icon: Instagram,
+			content: (
+				<div className='space-y-6'>
+					<div className='grid grid-cols-2 md:grid-cols-3 gap-4'>
+						{[
+							{
+								name: 'Instagram',
+								icon: Instagram,
+								color: 'from-pink-500 to-purple-500',
+							},
+							{
+								name: 'Twitter',
+								icon: Twitter,
+								color: 'from-blue-400 to-blue-600',
+							},
+							{
+								name: 'Facebook',
+								icon: Facebook,
+								color: 'from-blue-600 to-blue-800',
+							},
+							{
+								name: 'YouTube',
+								icon: Youtube,
+								color: 'from-red-500 to-red-700',
+							},
+
+							{
+								name: 'LinkedIn',
+								icon: Linkedin,
+								color: 'from-blue-700 to-blue-900',
+							},
+						].map((platform) => (
+							<button
+								key={platform.name}
+								onClick={() => {
+									setSelectedPlatforms((prev) =>
+										prev.includes(platform.name)
+											? prev.filter((p) => p !== platform.name)
+											: [...prev, platform.name]
+									);
+								}}
+								className={`p-4 rounded-xl border transition-all duration-300 ${
+									selectedPlatforms.includes(platform.name)
+										? 'border-primary bg-primary/10'
+										: 'border-gray-700 hover:border-primary/50'
+								}`}>
+								<div className='flex flex-col items-center gap-2'>
+									<platform.icon
+										className={`w-8 h-8 ${
+											selectedPlatforms.includes(platform.name)
+												? 'text-primary'
+												: 'text-gray-400'
+										}`}
+									/>
+									<span className='text-sm font-medium'>{platform.name}</span>
+								</div>
+							</button>
+						))}
+					</div>
+					<div className='flex justify-center'>
+						<button
+							onClick={() => setCurrentStep((prev) => prev + 1)}
+							className='flex items-center gap-2 text-gray-400 hover:text-primary transition-colors'>
+							<SkipForward className='w-5 h-5' />
+							Skip for now
+						</button>
+					</div>
+				</div>
+			),
+		},
+		{
+			title: userType === 'influencer' ? 'Content Details' : 'Business Details',
+			description:
+				userType === 'influencer'
+					? 'Your Content Profile'
+					: 'Your Business Profile',
+			details:
+				userType === 'influencer'
+					? 'Tell us about your content and audience to help match you with relevant advertising opportunities.'
+					: 'Provide information about your business to help us better understand your advertising needs.',
+			icon: Briefcase,
+			content: (
+				<div className='space-y-6'>
+					{userType === 'influencer' ? (
+						<div className='grid gap-6'>
+							<div className='p-6 rounded-xl bg-gray-800/50 border border-gray-700'>
+								<h3 className='text-lg font-semibold mb-4'>
+									Content Categories
+								</h3>
+								<div className='grid grid-cols-2 md:grid-cols-3 gap-4'>
+									{[
+										'Lifestyle',
+										'Tech',
+										'Fashion',
+										'Food',
+										'Travel',
+										'Fitness',
+									].map((category) => (
+										<button
+											key={category}
+											className='p-3 rounded-lg border border-gray-700 hover:border-primary/50 transition-colors'>
+											{category}
+										</button>
+									))}
+								</div>
+							</div>
+							<div className='p-6 rounded-xl bg-gray-800/50 border border-gray-700'>
+								<h3 className='text-lg font-semibold mb-4'>
+									Audience Demographics
+								</h3>
+								{/* Add audience demographics form fields */}
+							</div>
+						</div>
+					) : (
+						<div className='grid gap-6'>
+							<div className='p-6 rounded-xl bg-gray-800/50 border border-gray-700'>
+								<h3 className='text-lg font-semibold mb-4'>
+									Business Information
+								</h3>
+								{/* Add business information form fields */}
+							</div>
+							<div className='p-6 rounded-xl bg-gray-800/50 border border-gray-700'>
+								<h3 className='text-lg font-semibold mb-4'>
+									Advertising Goals
+								</h3>
+								{/* Add advertising goals form fields */}
+							</div>
+						</div>
+					)}
+				</div>
+			),
+		},
+		{
+			title: 'Confirmation',
+			description: 'Ready to Launch',
+			details:
+				'Review your information and confirm everything is correct before we finalize your setup.',
+			icon: CheckCircle,
+			content: (
+				<div className='space-y-6'>
+					<div className='p-6 rounded-xl bg-gradient-to-br from-purple-500/10 to-blue-500/10 border border-gray-700'>
+						<h3 className='text-lg font-semibold mb-4'>Almost There!</h3>
 						<p className='text-gray-400'>
-							Business details form will be available shortly.
+							Review and confirm your details to complete the setup.
 						</p>
 					</div>
 				</div>
-			</div>
-		),
-	},
-	{
-		title: 'Confirmation',
-		description: 'Ready to Launch',
-		details:
-			'Review your information and confirm everything is correct before we finalize your setup.',
-		icon: CheckCircle,
-		content: (
-			<div className='space-y-6'>
-				<div className='p-6 rounded-xl bg-gradient-to-br from-purple-500/10 to-blue-500/10 border border-gray-700'>
-					<h3 className='text-lg font-semibold mb-4'>Almost There!</h3>
-					<p className='text-gray-400'>
-						Review and confirm your details to complete the setup.
-					</p>
-				</div>
-			</div>
-		),
-	},
-];
+			),
+		},
+	];
 
-const OnboardingProcess: React.FC = () => {
-	const [currentStep, setCurrentStep] = useState(1);
+	const handleComplete = async () => {
+		try {
+			setIsLoading(true);
 
-	const nextStep = () =>
-		setCurrentStep((prev) => Math.min(prev + 1, steps.length));
+			// Get the user ID from session storage
+			let userId = sessionStorage.getItem('userId');
+
+			// If not in session storage, try to get it from the userData state
+			if (!userId && userData && userData._id) {
+				userId = userData._id;
+				// Also store it in session storage for future use
+				sessionStorage.setItem('userId', userId);
+			}
+
+			if (!userId) {
+				console.error('No user ID found');
+				alert('User ID not found. Please refresh the page and try again.');
+				return;
+			}
+
+			console.log('Completing onboarding for user ID:', userId);
+
+			// Mark onboarding as completed
+			await convex.mutation(api.user.completeOnboarding, {
+				userId: userId as any, // Type assertion needed for Convex ID
+			});
+
+			console.log(
+				'Onboarding completed successfully. Redirecting to dashboard.'
+			);
+
+			// Set a flag in session storage to indicate onboarding is complete
+			sessionStorage.setItem('onboardingCompleted', 'true');
+
+			// Redirect to dashboard with a small delay to ensure the mutation completes
+			setTimeout(() => {
+				router.push('/dashboard');
+			}, 500);
+		} catch (error) {
+			console.error('Error completing onboarding:', error);
+			alert('Failed to complete onboarding. Please try again.');
+		} finally {
+			setIsLoading(false);
+		}
+	};
+
+	const nextStep = () => {
+		if (currentStep === 1 && !userType) {
+			// Show error toast or message
+			return;
+		}
+		if (currentStep === steps.length) {
+			handleComplete();
+		} else {
+			setCurrentStep((prev) => Math.min(prev + 1, steps.length));
+		}
+	};
+
 	const prevStep = () => setCurrentStep((prev) => Math.max(prev - 1, 1));
 
 	return (
@@ -114,7 +433,7 @@ const OnboardingProcess: React.FC = () => {
 					<div className='flex items-center justify-center gap-3 mb-4'>
 						<Rocket className='w-8 h-8 text-purple-400 animate-pulse' />
 						<h1 className='text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-purple-400'>
-							Welcome to AdZPay
+							Welcome to AddVantage
 						</h1>
 					</div>
 					<p className='text-gray-400 max-w-2xl mx-auto'>
@@ -124,7 +443,7 @@ const OnboardingProcess: React.FC = () => {
 				</div>
 
 				{/* Progress Steps */}
-				<div className='max-w-5xl mx-auto mb-12'>
+				<div className='max-w-4xl mx-auto mb-12'>
 					<div className='flex justify-between relative'>
 						{steps.map((step, index) => {
 							const StepIcon = step.icon;
@@ -161,7 +480,7 @@ const OnboardingProcess: React.FC = () => {
 				</div>
 
 				{/* Content Area */}
-				<div className='max-w-5xl mx-auto'>
+				<div className='max-w-4xl mx-auto'>
 					<AnimatePresence mode='wait'>
 						<motion.div
 							key={currentStep}
@@ -193,23 +512,26 @@ const OnboardingProcess: React.FC = () => {
 									Back
 								</button>
 
-								<button
-									onClick={nextStep}
-									className={`flex items-center gap-2 px-6 py-3 rounded-xl bg-purple-600 text-white hover:bg-purple-500 transition-all duration-300 ${
-										currentStep === steps.length ? 'hidden' : ''
-									}`}>
-									{currentStep === steps.length ? 'Complete' : 'Continue'}
-									<ChevronRight className='w-5 h-5' />
-								</button>
-
-								{currentStep === steps.length && (
+								{currentStep === steps.length ? (
 									<button
-										onClick={() => {
-											// Handle completion
-										}}
-										className='flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-500 hover:to-blue-500 transition-all duration-300'>
-										Get Started
-										<Rocket className='w-5 h-5' />
+										onClick={handleComplete}
+										disabled={isLoading}
+										className='flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-500 hover:to-blue-500 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed'>
+										{isLoading ? (
+											<>Processing...</>
+										) : (
+											<>
+												Get Started
+												<Rocket className='w-5 h-5' />
+											</>
+										)}
+									</button>
+								) : (
+									<button
+										onClick={nextStep}
+										className='flex items-center gap-2 px-6 py-3 rounded-xl bg-purple-600 text-white hover:bg-purple-500 transition-all duration-300'>
+										Continue
+										<ChevronRight className='w-5 h-5' />
 									</button>
 								)}
 							</div>

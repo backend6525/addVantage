@@ -1,14 +1,26 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { ConvexHttpClient } from 'convex/browser';
 import { api } from '../../../../convex/_generated/api';
+import { getKindeServerSession } from '@kinde-oss/kinde-auth-nextjs/server';
 
 // Create Convex client
 const convexClient = new ConvexHttpClient(
 	process.env.NEXT_PUBLIC_CONVEX_URL || ''
 );
 
-export const POST = async (req) => {
+export const POST = async (req: NextRequest) => {
 	try {
+		// Get authenticated user
+		const { getUser } = getKindeServerSession();
+		const user = await getUser();
+
+		if (!user || !user.email) {
+			return NextResponse.json(
+				{ error: 'Authentication required to create an ad' },
+				{ status: 401 }
+			);
+		}
+
 		// Parse request body
 		const body = await req.json();
 
@@ -18,7 +30,6 @@ export const POST = async (req) => {
 		const {
 			adName,
 			teamId,
-			createdBy,
 			type,
 			costPerView,
 			numberOfDaysRunning,
@@ -30,7 +41,6 @@ export const POST = async (req) => {
 		if (
 			!adName ||
 			!teamId ||
-			!createdBy ||
 			!type ||
 			!costPerView ||
 			!numberOfDaysRunning ||
@@ -43,8 +53,23 @@ export const POST = async (req) => {
 			);
 		}
 
+		// Create payload with user email
+		const adPayload = {
+			adName,
+			teamId,
+			createdBy: user.email,
+			type,
+			costPerView,
+			numberOfDaysRunning,
+			adResourceUrl,
+			description,
+		};
+
 		// Send the payload to Convex API
-		const response = await convexClient.mutation(api.ads.createAds, body);
+		const response = await convexClient.mutation(
+			api.ads.createAdWithEmail,
+			adPayload
+		);
 		console.log('Response from Convex mutation:', response);
 
 		// Return success response
