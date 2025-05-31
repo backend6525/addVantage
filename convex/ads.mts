@@ -545,3 +545,95 @@ export const resetWeeklyAdCounts = mutation({
 		return { success: true, usersUpdated: allUserCredits.length };
 	},
 });
+
+// Check ad expiration status (READ-ONLY QUERY)
+export const checkAdExpiration = query({
+	args: {},
+	handler: async (ctx) => {
+		const publishedAds = await ctx.db
+			.query('ads')
+			.filter((q) => q.eq(q.field('isPublished'), true))
+			.collect();
+
+		const now = new Date();
+		const results = [];
+
+		for (const ad of publishedAds) {
+			const createdAt = new Date(ad.createdAt || ad._creationTime);
+			const durationDays = parseInt(ad.numberOfDaysRunning || '0', 10);
+			const expirationDate = new Date(createdAt);
+			expirationDate.setDate(expirationDate.getDate() + durationDays);
+			const timeDiff = expirationDate.getTime() - now.getTime();
+			const daysRemaining = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+			const isExpired = now > expirationDate;
+			const isExpiring = daysRemaining <= 1 && daysRemaining > 0;
+
+			results.push({
+				id: ad._id,
+				title: ad.adName || 'Untitled Ad',
+				isPublished: ad.isPublished,
+				daysRemaining: Math.max(0, daysRemaining),
+				isExpiring: isExpiring,
+				isExpired: isExpired,
+				startDate: createdAt.toISOString(),
+				expirationDate: expirationDate.toISOString(),
+				duration: durationDays,
+				createdBy: ad.createdBy,
+			});
+		}
+
+		return results;
+	},
+});
+
+// Mutation version to actually update the database (called periodically)
+export const updateExpiredAds = mutation({
+	args: {},
+	handler: async (ctx) => {
+		// Get all published ads
+		const publishedAds = await ctx.db
+			.query('ads')
+			.filter((q) => q.eq(q.field('isPublished'), true))
+			.collect();
+
+		const now = new Date();
+		let expiredCount = 0;
+
+		for (const ad of publishedAds) {
+			try {
+				// Parse the creation date and duration
+				const createdAt = new Date(ad.createdAt || ad._creationTime);
+				const durationDays = parseInt(ad.numberOfDaysRunning || '0', 10);
+
+				// Calculate expiration date
+				const expirationDate = new Date(createdAt);
+				expirationDate.setDate(expirationDate.getDate() + durationDays);
+
+				// Check if ad has expired
+				const isExpired = now > expirationDate;
+
+				// If ad has expired, unpublish it
+				if (isExpired) {
+					await ctx.db.patch(ad._id, {
+						isPublished: false,
+						lastModifiedAt: new Date().toISOString(),
+					});
+					expiredCount++;
+				}
+			} catch (error) {
+				console.error(`Error updating expired ad ${ad._id}:`, error);
+			}
+		}
+
+		console.log(
+			`Updated ${expiredCount} expired ads out of ${publishedAds.length} published ads`
+		);
+
+		return {
+			success: true,
+			totalChecked: publishedAds.length,
+			expiredCount,
+			timestamp: new Date().toISOString(),
+		};
+	},
+});
