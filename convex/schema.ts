@@ -75,24 +75,7 @@ const notifications = defineTable({
 	.index('by_status', ['status'])
 	.index('by_createdAt', ['createdAt']);
 
-// Your existing tables...
-
-// New table for tracking ad creation limits
-const adLimits = defineTable({
-	userId: v.optional(v.id('user')),
-	userEmail: v.string(),
-	dailyCount: v.number(),
-	weeklyCount: v.number(),
-	hasCredits: v.boolean(),
-	lastDailyReset: v.string(), // ISO date string
-	lastWeeklyReset: v.string(), // ISO date string
-	createdAt: v.string(),
-	updatedAt: v.string(),
-})
-	.index('by_user', ['userEmail'])
-	.index('by_userId', ['userId']);
-
-// New table for tracking user credits/account status
+// SINGLE SOURCE OF TRUTH: userCredits table for all limit and credit data
 export const userCredits = defineTable({
 	userId: v.string(),
 	userEmail: v.string(),
@@ -127,6 +110,7 @@ const user = defineTable({
 	bio: v.optional(v.string()),
 	userType: v.optional(v.string()),
 	platforms: v.optional(v.array(v.string())),
+	// Legacy fields kept for compatibility but no longer actively used for limits
 	dailyAdCount: v.optional(v.number()),
 	weeklyAdCount: v.optional(v.number()),
 	dailyAdLimit: v.optional(v.number()),
@@ -183,15 +167,14 @@ const templates = defineTable({
 	lastUsed: v.optional(v.number()),
 }).index('by_user', ['userId']);
 
-// Export the updated schema
+// Export the consolidated schema
 export default defineSchema({
 	ads,
 	teams,
 	user,
-	auditLog, // Add the new auditLog table
+	auditLog,
 	notifications,
-	adLimits,
-	userCredits,
+	userCredits, // SINGLE SOURCE OF TRUTH for limits and credits
 	socialAccounts,
 	metrics,
 	smsHistory,

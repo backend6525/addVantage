@@ -18,6 +18,11 @@ import {
 import { uploadFileToS3 } from './apiService';
 import { FormErrors, CreateAdPayload } from './types';
 import { Dialog } from '@radix-ui/react-dialog';
+import {
+	getDailyLimit,
+	getWeeklyLimit,
+	type AccountType,
+} from '../utils/accountLimits';
 
 interface CreateProps {
 	onCreateAd: (limits: { dailyCount: number; weeklyCount: number }) => void;
@@ -26,6 +31,8 @@ interface CreateProps {
 	weeklyAdCount: number;
 	hasCredits: boolean;
 	userEmail: string;
+	refreshLimits?: () => Promise<void>;
+	accountType?: AccountType;
 }
 
 export const Create = ({
@@ -35,6 +42,8 @@ export const Create = ({
 	weeklyAdCount,
 	hasCredits,
 	userEmail,
+	refreshLimits,
+	accountType = 'free',
 }: CreateProps) => {
 	// Initialize toast
 	const { toast } = useToast();
@@ -192,23 +201,65 @@ export const Create = ({
 				return;
 			}
 
-			// Check limits using our local state that mirrors the database
-			if (userLimits.dailyCount >= 1) {
+			// Fetch real-time backend limits before validating
+			console.log('Fetching real-time backend limits...');
+			let realTimeLimits = null;
+			try {
+				const response = await fetch(
+					`/api/auth/user/userLimits?email=${userEmail}`
+				);
+				if (response.ok) {
+					realTimeLimits = await response.json();
+					console.log('Real-time backend limits:', realTimeLimits);
+				}
+			} catch (error) {
+				console.error('Error fetching real-time limits:', error);
+			}
+
+			// Use real-time backend data if available, otherwise fall back to local state
+			const currentDailyCount =
+				realTimeLimits?.dailyAdCount ?? userLimits.dailyCount;
+			const currentWeeklyCount =
+				realTimeLimits?.weeklyAdCount ?? userLimits.weeklyCount;
+			const accountType = realTimeLimits?.accountType ?? 'free';
+
+			// Get dynamic limits based on actual account type
+			const dailyLimit = getDailyLimit(accountType as any);
+			const weeklyLimit = getWeeklyLimit(accountType as any);
+
+			console.log('Limit validation:', {
+				currentDailyCount,
+				currentWeeklyCount,
+				dailyLimit,
+				weeklyLimit,
+				accountType,
+			});
+
+			if (currentDailyCount >= dailyLimit) {
 				toast({
 					title: 'Daily Limit Reached',
-					description:
-						'You can only create one ad per day. Try again tomorrow.',
+					description: `You can only create ${dailyLimit} ad(s) per day. Try again tomorrow.`,
 					variant: 'destructive',
 				});
+
+				// Force refresh to sync UI with backend
+				if (refreshLimits) {
+					await refreshLimits();
+				}
 				return;
 			}
 
-			if (userLimits.weeklyCount >= 5) {
+			if (currentWeeklyCount >= weeklyLimit) {
 				toast({
 					title: 'Weekly Limit Reached',
-					description: "You've reached your weekly limit of 5 ads.",
+					description: `You've reached your weekly limit of ${weeklyLimit} ads.`,
 					variant: 'destructive',
 				});
+
+				// Force refresh to sync UI with backend
+				if (refreshLimits) {
+					await refreshLimits();
+				}
 				return;
 			}
 
@@ -273,15 +324,30 @@ export const Create = ({
 
 				console.log(`Updated limits for user ${userEmail}:`, updatedLimits);
 
-				// Update local state with the new values
-				setUserLimits({
-					dailyCount: userLimits.dailyCount + 1,
-					weeklyCount: userLimits.weeklyCount + 1,
-					hasCredits: userLimits.hasCredits,
-				});
+				// Update local state with the actual returned values from the backend
+				if (updatedLimits) {
+					setUserLimits({
+						dailyCount: updatedLimits.dailyCount,
+						weeklyCount: updatedLimits.weeklyCount,
+						hasCredits: userLimits.hasCredits,
+					});
 
-				// Update parent component
-				onCreateAd({ dailyCount: 1, weeklyCount: 1 });
+					// Update parent component with the actual counts
+					onCreateAd({
+						dailyCount: updatedLimits.dailyCount,
+						weeklyCount: updatedLimits.weeklyCount,
+					});
+				} else {
+					// Fallback if no response with values
+					setUserLimits((prev) => ({
+						...prev,
+						dailyCount: prev.dailyCount + 1,
+						weeklyCount: prev.weeklyCount + 1,
+					}));
+
+					// Update parent component
+					onCreateAd({ dailyCount: 1, weeklyCount: 1 });
+				}
 
 				// Dispatch custom event to trigger dashboard refresh
 				const adCreatedEvent = new CustomEvent('adCreated', {
@@ -300,6 +366,35 @@ export const Create = ({
 				setShowDialog(false);
 				setHasCreatedAd(true);
 				setShowSuccessDialog(true);
+
+				// Immediately refresh limits to sync UI with backend (no delay needed)
+				if (refreshLimits) {
+					console.log(
+						'Create: Triggering immediate limits refresh after ad creation...'
+					);
+					try {
+						// Small delay to ensure backend update is committed
+						await new Promise((resolve) => setTimeout(resolve, 500));
+						await refreshLimits();
+						console.log(
+							'Create: Limits refreshed successfully after ad creation'
+						);
+					} catch (error) {
+						console.error(
+							'Create: Error refreshing limits after ad creation:',
+							error
+						);
+						// Try again after a short delay if immediate refresh fails
+						setTimeout(async () => {
+							try {
+								await refreshLimits();
+								console.log('Create: Retry refresh succeeded');
+							} catch (retryError) {
+								console.error('Create: Retry refresh also failed:', retryError);
+							}
+						}, 1000);
+					}
+				}
 			} catch (error) {
 				console.error(
 					`Error incrementing ad counts for user ${userEmail}:`,
@@ -341,6 +436,7 @@ export const Create = ({
 		validateAdResource,
 		validateAdDescription,
 		uploadFileToS3,
+		refreshLimits,
 	]);
 
 	// Handler for closing success dialog
@@ -350,8 +446,13 @@ export const Create = ({
 	}, []);
 
 	// Derived state
+	const dailyLimit = getDailyLimit(accountType as any);
+	const weeklyLimit = getWeeklyLimit(accountType as any);
+
 	const isInitialClickDisabled =
-		isLoading || userLimits.dailyCount >= 1 || userLimits.weeklyCount >= 5;
+		isLoading ||
+		userLimits.dailyCount >= dailyLimit ||
+		userLimits.weeklyCount >= weeklyLimit;
 
 	const isSubmitDisabled = isInitialClickDisabled || !isFormValid;
 	const isAuthenticated = !!userData;

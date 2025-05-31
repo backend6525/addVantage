@@ -337,111 +337,15 @@ export const togglePublish = mutation({
 	},
 });
 
-interface adLimits {
-	_id: Id<'adLimits'>;
-	_creationTime: number;
-	userId?: Id<'user'>;
-	userEmail: string;
-	dailyCount: number;
-	weeklyCount: number;
-	hasCredits: boolean;
-	lastDailyReset: string;
-	lastWeeklyReset: string;
-	createdAt: string;
-	updatedAt: string;
-}
-export const getUserAdLimits = mutation({
-	args: {
-		userEmail: v.string(),
-	},
-	handler: async (ctx, args) => {
-		// First get the user by email to get their ID
-		const user = await ctx.db
-			.query('user')
-			.withIndex('by_email', (q) => q.eq('email', args.userEmail))
-			.first();
-
-		if (!user) {
-			throw new Error('User not found');
-		}
-
-		// Query the adLimits table using both userId and userEmail for safety
-		let limit = (await ctx.db
-			.query('adLimits')
-			.withIndex('by_user', (q) => q.eq('userEmail', args.userEmail))
-			.filter((q) => q.eq(q.field('userId'), user._id))
-			.first()) as adLimits | null;
-
-		// If no limits exist, create a default record with userId
-		if (!limit) {
-			const now = new Date().toISOString();
-			const newLimitsId = await ctx.db.insert('adLimits', {
-				userId: user._id, // Add the user ID to associate limits with the specific user
-				userEmail: args.userEmail,
-				dailyCount: 0,
-				weeklyCount: 0,
-				hasCredits: true, // Default to true for new users
-				lastDailyReset: now,
-				lastWeeklyReset: now,
-				createdAt: now,
-				updatedAt: now,
-			});
-			limit = (await ctx.db.get(newLimitsId)) as adLimits;
-		}
-
-		// Check if limits should reset
-		const now = new Date();
-		let shouldUpdate = false;
-		let newDailyCount = limit.dailyCount;
-		let newWeeklyCount = limit.weeklyCount;
-
-		// Check if daily limit should reset
-		const lastDailyReset = new Date(limit.lastDailyReset);
-		if (
-			now.getDate() !== lastDailyReset.getDate() ||
-			now.getMonth() !== lastDailyReset.getMonth() ||
-			now.getFullYear() !== lastDailyReset.getFullYear()
-		) {
-			newDailyCount = 0;
-			shouldUpdate = true;
-		}
-
-		// Check if weekly limit should reset
-		const lastWeeklyReset = new Date(limit.lastWeeklyReset);
-		const daysSinceWeeklyReset = Math.floor(
-			(now.getTime() - lastWeeklyReset.getTime()) / (1000 * 60 * 60 * 24)
-		);
-		if (daysSinceWeeklyReset >= 7) {
-			newWeeklyCount = 0;
-			shouldUpdate = true;
-		}
-
-		// Update if needed
-		if (shouldUpdate) {
-			const updatedLimit = await ctx.db.patch(limit._id, {
-				dailyCount: newDailyCount,
-				weeklyCount: newWeeklyCount,
-				lastDailyReset: now.toISOString(),
-				...(daysSinceWeeklyReset >= 7
-					? { lastWeeklyReset: now.toISOString() }
-					: {}),
-				updatedAt: now.toISOString(),
-			});
-			return updatedLimit;
-		}
-
-		return limit;
-	},
-});
-
+// SINGLE SOURCE OF TRUTH: Use userCredits for all limit checking
 export const checkAndResetLimits = mutation({
 	args: { userEmail: v.string() },
 	handler: async (ctx, args) => {
-		// Reuse the getUserAdLimits logic to avoid duplication
-		const limit = await ctx.runMutation(api.ads.getUserAdLimits, {
-			userEmail: args.userEmail,
+		// Use the getUserCredits function from credits.mts as the single source of truth
+		const userCredits = await ctx.runMutation(api.credits.getUserCredits, {
+			email: args.userEmail,
 		});
-		return limit;
+		return userCredits;
 	},
 });
 
@@ -460,70 +364,129 @@ export const incrementAdCounts = mutation({
 			throw new Error('User not found');
 		}
 
-		// Get user's current ad counts and limits from userCredits table
-		const userCredits = await ctx.db
+		// Get user's current ad counts and limits from userCredits table (SINGLE SOURCE OF TRUTH)
+		let userCredits = await ctx.db
 			.query('userCredits')
 			.withIndex('by_userId', (q) => q.eq('userId', user._id.toString()))
 			.first();
 
-		// Get current counts with defaults and type assertions
-		const currentDailyCount = userCredits?.dailyAdCount ?? 0;
-		const currentWeeklyCount = userCredits?.weeklyAdCount ?? 0;
-		const dailyLimit = (userCredits?.dailyAdLimit as number) ?? 5; // Default limit for free tier
-		const weeklyLimit = (userCredits?.weeklyAdLimit as number) ?? 20; // Default limit for free tier
-
-		// Check if incrementing would exceed limits
-		if (currentDailyCount >= dailyLimit) {
-			throw new Error('Daily ad limit reached');
-		}
-		if (currentWeeklyCount >= weeklyLimit) {
-			throw new Error('Weekly ad limit reached');
-		}
-
-		const now = new Date().toISOString();
-
-		// Update the userCredits table
-		if (userCredits) {
-			await ctx.db.patch(userCredits._id, {
-				dailyAdCount: currentDailyCount + 1,
-				weeklyAdCount: currentWeeklyCount + 1,
-				lastAdCreated: now,
-				updatedAt: now,
-			});
-		} else {
-			// Create a new userCredits record if it doesn't exist
-			await ctx.db.insert('userCredits', {
+		// If no userCredits record exists, create one with default values
+		if (!userCredits) {
+			const now = new Date().toISOString();
+			const newCreditsId = await ctx.db.insert('userCredits', {
 				userId: user._id.toString(),
 				userEmail: userId,
 				credits: 0,
 				accountType: 'free',
-				dailyAdCount: 1,
-				weeklyAdCount: 1,
-				dailyAdLimit: 5,
-				weeklyAdLimit: 20,
+				dailyAdCount: 0,
+				weeklyAdCount: 0,
+				dailyAdLimit: 1,
+				weeklyAdLimit: 5,
 				lastAdCreated: now,
 				createdAt: now,
 				updatedAt: now,
 			});
+			userCredits = await ctx.db.get(newCreditsId);
 		}
 
-		// Also update the user table
-		await ctx.db.patch(user._id, {
-			dailyAdCount: (user.dailyAdCount || 0) + 1,
-			weeklyAdCount: (user.weeklyAdCount || 0) + 1,
-			lastUpdated: now,
+		// At this point, userCredits is guaranteed to exist
+		if (!userCredits) {
+			throw new Error('Failed to create or retrieve user credits');
+		}
+
+		// Check if limits need to be reset based on time
+		const now = new Date();
+		const lastAdCreated = userCredits.lastAdCreated
+			? new Date(userCredits.lastAdCreated)
+			: new Date(0);
+
+		// Reset daily count if it's a new day
+		const isDifferentDay =
+			now.getDate() !== lastAdCreated.getDate() ||
+			now.getMonth() !== lastAdCreated.getMonth() ||
+			now.getFullYear() !== lastAdCreated.getFullYear();
+
+		// Reset weekly count if it's been a week
+		const daysSinceLastAd = Math.floor(
+			(now.getTime() - lastAdCreated.getTime()) / (1000 * 60 * 60 * 24)
+		);
+		const shouldResetWeekly = daysSinceLastAd >= 7;
+
+		let currentDailyCount = userCredits?.dailyAdCount ?? 0;
+		let currentWeeklyCount = userCredits?.weeklyAdCount ?? 0;
+
+		// Reset counts if needed
+		if (isDifferentDay) {
+			currentDailyCount = 0;
+		}
+		if (shouldResetWeekly) {
+			currentWeeklyCount = 0;
+		}
+
+		// Get dynamic limits based on account type
+		const accountType = userCredits?.accountType || 'free';
+		const getDailyLimit = (type: string) => {
+			switch (type) {
+				case 'pro':
+					return 10;
+				case 'enterprise':
+					return 50;
+				default:
+					return 1; // free account
+			}
+		};
+
+		const getWeeklyLimit = (type: string) => {
+			switch (type) {
+				case 'pro':
+					return 50;
+				case 'enterprise':
+					return 250;
+				default:
+					return 5; // free account
+			}
+		};
+
+		const dailyLimit = getDailyLimit(accountType);
+		const weeklyLimit = getWeeklyLimit(accountType);
+
+		// Check if incrementing would exceed limits
+		if (currentDailyCount >= dailyLimit) {
+			throw new Error(
+				`Daily ad limit reached (${dailyLimit} per day for ${accountType} account)`
+			);
+		}
+		if (currentWeeklyCount >= weeklyLimit) {
+			throw new Error(
+				`Weekly ad limit reached (${weeklyLimit} per week for ${accountType} account)`
+			);
+		}
+
+		const nowISO = now.toISOString();
+
+		// Update ONLY the userCredits table (SINGLE SOURCE OF TRUTH)
+		await ctx.db.patch(userCredits._id, {
+			dailyAdCount: currentDailyCount + 1,
+			weeklyAdCount: currentWeeklyCount + 1,
+			dailyAdLimit: dailyLimit,
+			weeklyAdLimit: weeklyLimit,
+			lastAdCreated: nowISO,
+			updatedAt: nowISO,
 		});
 
 		// Return the updated counts
 		return {
 			success: true,
-			dailyCount: (user.dailyAdCount || 0) + 1,
-			weeklyCount: (user.weeklyAdCount || 0) + 1,
+			dailyCount: currentDailyCount + 1,
+			weeklyCount: currentWeeklyCount + 1,
+			dailyLimit,
+			weeklyLimit,
+			accountType,
 		};
 	},
 });
 
-// Reset daily ad counts for all users
+// Reset daily ad counts for all users (admin function)
 export const resetDailyAdCounts = mutation({
 	args: {
 		adminEmail: v.string(),
@@ -539,22 +502,21 @@ export const resetDailyAdCounts = mutation({
 			throw new Error('Unauthorized: User does not exist');
 		}
 
-		// Get all users
-		const users = (await ctx.db.query('user').collect()) as UserWithAdCounts[];
+		// Get all userCredits records and reset daily counts
+		const allUserCredits = await ctx.db.query('userCredits').collect();
 
-		// Update each user's daily count
-		for (const user of users) {
-			await ctx.db.patch(user._id, {
+		for (const userCredit of allUserCredits) {
+			await ctx.db.patch(userCredit._id, {
 				dailyAdCount: 0,
-				lastUpdated: new Date().toISOString(),
+				updatedAt: new Date().toISOString(),
 			});
 		}
 
-		return { success: true, usersUpdated: users.length };
+		return { success: true, usersUpdated: allUserCredits.length };
 	},
 });
 
-// Reset weekly ad counts for all users
+// Reset weekly ad counts for all users (admin function)
 export const resetWeeklyAdCounts = mutation({
 	args: {
 		adminEmail: v.string(),
@@ -570,38 +532,16 @@ export const resetWeeklyAdCounts = mutation({
 			throw new Error('Unauthorized: User does not exist');
 		}
 
-		// Get all users
-		const users = (await ctx.db.query('user').collect()) as UserWithAdCounts[];
+		// Get all userCredits records and reset weekly counts
+		const allUserCredits = await ctx.db.query('userCredits').collect();
 
-		// Update each user's weekly count
-		for (const user of users) {
-			await ctx.db.patch(user._id, {
+		for (const userCredit of allUserCredits) {
+			await ctx.db.patch(userCredit._id, {
 				weeklyAdCount: 0,
-				lastUpdated: new Date().toISOString(),
+				updatedAt: new Date().toISOString(),
 			});
 		}
 
-		return { success: true, usersUpdated: users.length };
-	},
-});
-
-// Helper for migration: Get all ad limits records
-export const getAllAdLimits = query({
-	args: {},
-	handler: async (ctx) => {
-		return await ctx.db.query('adLimits').collect();
-	},
-});
-
-// Helper for migration: Update a specific ad limit record with a userId
-export const updateAdLimitUserId = mutation({
-	args: {
-		adLimitId: v.id('adLimits'),
-		userId: v.id('user'),
-	},
-	handler: async (ctx, args) => {
-		return await ctx.db.patch(args.adLimitId, {
-			userId: args.userId,
-		});
+		return { success: true, usersUpdated: allUserCredits.length };
 	},
 });

@@ -14,6 +14,24 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 	const [isMenuOpen, setIsMenuOpen] = useState(true);
 	const [isMobile, setIsMobile] = useState(false);
 	const { user, isLoading } = useUser();
+	const [userLimits, setUserLimits] = useState({
+		dailyAdCount: user?.dailyAdCount || 0,
+		weeklyAdCount: user?.weeklyAdCount || 0,
+		hasCredits: user?.credits > 0 || false,
+		accountType: user?.accountType || 'free',
+	});
+
+	// Update local limits when user data changes
+	useEffect(() => {
+		if (user) {
+			setUserLimits({
+				dailyAdCount: user.dailyAdCount || 0,
+				weeklyAdCount: user.weeklyAdCount || 0,
+				hasCredits: user.credits > 0,
+				accountType: user.accountType || 'free',
+			});
+		}
+	}, [user]);
 
 	useEffect(() => {
 		const handleResize = () => {
@@ -29,6 +47,36 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
 	const handleMenuToggle = () => {
 		setIsMenuOpen(!isMenuOpen);
+	};
+
+	// FIXED: Proper refreshLimits function that fetches fresh data
+	const refreshLimits = async () => {
+		try {
+			console.log('Dashboard: Refreshing limits for user:', user?.email);
+
+			// Fetch fresh user limits from API
+			const response = await fetch(
+				`/api/auth/user/userLimits?email=${user?.email}`
+			);
+			if (!response.ok) {
+				throw new Error('Failed to fetch updated limits');
+			}
+
+			const updatedData = await response.json();
+			console.log('Dashboard: Fresh limits data:', updatedData);
+
+			// Update local state with fresh data
+			setUserLimits({
+				dailyAdCount: updatedData.dailyAdCount || 0,
+				weeklyAdCount: updatedData.weeklyAdCount || 0,
+				hasCredits: updatedData.hasCredits || false,
+				accountType: updatedData.accountType || 'free',
+			});
+
+			console.log('Dashboard: Limits refreshed successfully');
+		} catch (error) {
+			console.error('Dashboard: Error refreshing limits:', error);
+		}
 	};
 
 	if (isLoading) {
@@ -49,17 +97,16 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 							onMenuToggle={handleMenuToggle}
 							userStatus={{
 								email: user.email,
-								dailyAdCount: user.dailyAdCount || 0,
-								weeklyAdCount: user.weeklyAdCount || 0,
-								dailyAdLimit: user.dailyAdLimit || 10,
-								weeklyAdLimit: user.weeklyAdLimit || 50,
-								hasCredits: user.credits > 0,
+								dailyAdCount: userLimits.dailyAdCount,
+								weeklyAdCount: userLimits.weeklyAdCount,
+								dailyAdLimit: user.dailyAdLimit || 1,
+								weeklyAdLimit: user.weeklyAdLimit || 5,
+								hasCredits: userLimits.hasCredits,
 								credits: user.credits || 0,
-								accountType:
-									user.accountType === 'pro' ||
-									user.accountType === 'enterprise'
-										? user.accountType
-										: 'free',
+								accountType: userLimits.accountType as
+									| 'free'
+									| 'pro'
+									| 'enterprise',
 								lastLimitReset: user.lastLimitReset || new Date().toISOString(),
 							}}
 						/>
@@ -78,10 +125,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 								isMenuOpen={isMenuOpen}
 								setIsMenuOpen={setIsMenuOpen}
 								userEmail={user.email}
-								dailyAdCount={user.dailyAdCount || 0}
-								weeklyAdCount={user.weeklyAdCount || 0}
-								hasCredits={user.credits > 0}
-								refreshLimits={async () => {}}
+								dailyAdCount={userLimits.dailyAdCount}
+								weeklyAdCount={userLimits.weeklyAdCount}
+								hasCredits={userLimits.hasCredits}
+								refreshLimits={refreshLimits}
+								accountType={
+									userLimits.accountType as 'free' | 'pro' | 'enterprise'
+								}
 							/>
 						</aside>
 

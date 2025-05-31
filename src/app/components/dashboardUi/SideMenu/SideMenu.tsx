@@ -9,12 +9,12 @@ import {
 	FiArrowLeft,
 	FiArrowRight,
 	FiGift,
-	FiAlertCircle,
 } from 'react-icons/fi';
 import { Separator } from '@/app/components/separator';
 import { Create } from '../CreateAd/Create';
 import TeamDropDown from './TeamDropDown';
 import UpCard from './upgradeAccCard/upCard';
+import UsageLimits from './UsageLimits';
 import './styles/sidebar.css';
 import { useToast } from '../../ui/toast/use-toast';
 
@@ -75,29 +75,8 @@ export default function SideMenu({
 	const [isTeamDropdownOpen, setIsTeamDropdownOpen] = useState(false);
 	const { toast } = useToast();
 
-	// Define limits - these are the actual limits for free accounts
-	const dailyAdLimit = 1;
-	const weeklyAdLimit = 5;
-
 	const toggleMenu = () => {
 		setIsMenuOpen(!isMenuOpen);
-	};
-
-	const calculateProgress = () => {
-		const dailyProgress = (dailyAdCount / dailyAdLimit) * 100;
-		const weeklyProgress = (weeklyAdCount / weeklyAdLimit) * 100;
-		return { dailyProgress, weeklyProgress };
-	};
-
-	const getProgressBarColor = () => {
-		const { dailyProgress, weeklyProgress } = calculateProgress();
-		if (dailyProgress >= 90 || weeklyProgress >= 90) {
-			return 'bg-red-500';
-		} else if (dailyProgress >= 70 || weeklyProgress >= 70) {
-			return 'bg-yellow-500';
-		} else {
-			return 'bg-green-500';
-		}
 	};
 
 	// Handle ad creation and refresh limits
@@ -183,65 +162,20 @@ export default function SideMenu({
 					weeklyAdCount={weeklyAdCount}
 					hasCredits={hasCredits}
 					userEmail={userEmail}
+					refreshLimits={refreshLimits}
+					accountType={accountType}
 				/>
 			</div>
 
-			{/* Usage Limits */}
+			{/* Usage Limits Component */}
 			{isMenuOpen && (
-				<div className='flex-shrink-0 mt-2 bg-slate-800/90 rounded-lg p-4 border border-slate-700/50'>
-					{/* Account Type and Credits */}
-					<div className='flex justify-between items-center mb-3'>
-						<span className='text-sm text-gray-300'>
-							{accountType
-								? accountType.charAt(0).toUpperCase() + accountType.slice(1)
-								: 'Free'}{' '}
-							Account
-						</span>
-						<span className='text-xs text-gray-400'>
-							{hasCredits ? 'Credits Available' : 'No Credits'}
-						</span>
-					</div>
-
-					<div className='flex justify-between items-center mb-2'>
-						<span className='text-sm text-gray-300'>Weekly Ad Usage</span>
-						<span className='text-xs text-gray-400'>
-							{weeklyAdCount}/{weeklyAdLimit} used
-						</span>
-					</div>
-					<div className='h-2 bg-slate-700/50 rounded-full overflow-hidden'>
-						<div
-							className={`h-full ${getProgressBarColor()} transition-all duration-300`}
-							style={{ width: `${calculateProgress().weeklyProgress}%` }}></div>
-					</div>
-					<div className='mt-4 text-xs text-gray-400'>
-						{dailyAdCount >= dailyAdLimit ? (
-							<div className='flex items-center text-yellow-400'>
-								<FiAlertCircle className='mr-1' size={12} />
-								Daily limit reached
-							</div>
-						) : (
-							<div>
-								Daily: {dailyAdCount}/{dailyAdLimit} used
-							</div>
-						)}
-					</div>
-
-					{/* Always show credits warning if !hasCredits */}
-					{!hasCredits && (
-						<div className='mt-2 flex items-center text-yellow-400 text-xs'>
-							<FiAlertCircle className='mr-1' size={12} />
-							Add credits to publish ads
-						</div>
-					)}
-
-					{/* Add refresh button */}
-					<button
-						onClick={refreshLimits}
-						className='mt-2 text-xs text-blue-400 hover:text-blue-300 transition-colors flex items-center'>
-						<FiArrowRight className='mr-1' size={12} />
-						Refresh limits
-					</button>
-				</div>
+				<UsageLimits
+					dailyAdCount={dailyAdCount}
+					weeklyAdCount={weeklyAdCount}
+					hasCredits={hasCredits}
+					refreshLimits={refreshLimits}
+					accountType={accountType}
+				/>
 			)}
 
 			{/* Footer Links */}

@@ -1,6 +1,11 @@
 import { getKindeServerSession } from '@kinde-oss/kinde-auth-nextjs/server';
 import jwt from 'jsonwebtoken';
 import { NextResponse } from 'next/server';
+import { ConvexHttpClient } from 'convex/browser';
+import { api } from '../../../../../convex/_generated/api';
+
+// Create Convex client
+const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL || '');
 
 export async function GET() {
 	try {
@@ -31,7 +36,46 @@ export async function GET() {
 		const rolesClaim = await getClaim('roles');
 		const roles = rolesClaim ? rolesClaim.value : [];
 
-		// Step 7: Construct the response with all available data
+		// Step 7: Get real user limits data from userCredits table (SINGLE SOURCE OF TRUTH)
+		let userLimitsData = {
+			dailyAdCount: 0,
+			weeklyAdCount: 0,
+			dailyAdLimit: 1,
+			weeklyAdLimit: 5,
+			credits: 0,
+			accountType: 'free' as const,
+			hasCredits: false,
+		};
+
+		try {
+			if (user.email) {
+				console.log('Fetching real user limits for:', user.email);
+				const limitsFromDB = await convex.query(
+					api.credits.getUserCreditsQuery,
+					{
+						email: user.email,
+					}
+				);
+
+				if (limitsFromDB) {
+					userLimitsData = {
+						dailyAdCount: limitsFromDB.dailyAdCount,
+						weeklyAdCount: limitsFromDB.weeklyAdCount,
+						dailyAdLimit: limitsFromDB.dailyAdLimit,
+						weeklyAdLimit: limitsFromDB.weeklyAdLimit,
+						credits: limitsFromDB.credits,
+						accountType: limitsFromDB.accountType,
+						hasCredits: limitsFromDB.hasCredits,
+					};
+					console.log('Retrieved real user limits:', userLimitsData);
+				}
+			}
+		} catch (limitsError) {
+			console.error('Error fetching user limits:', limitsError);
+			// Fall back to defaults if there's an error
+		}
+
+		// Step 8: Construct the response with real data from userCredits table
 		const responseData = {
 			email: user.email,
 			given_name: user.given_name,
@@ -41,19 +85,20 @@ export async function GET() {
 			idToken,
 			decodedToken,
 			roles: Array.isArray(roles) ? roles : [roles], // Ensure roles is always an array
-			// Default dashboard-related fields
-			dailyAdCount: 0,
-			weeklyAdCount: 0,
-			dailyAdLimit: 10,
-			weeklyAdLimit: 50,
-			credits: 5,
-			accountType: 'free',
+			// REAL data from userCredits table (SINGLE SOURCE OF TRUTH)
+			dailyAdCount: userLimitsData.dailyAdCount,
+			weeklyAdCount: userLimitsData.weeklyAdCount,
+			dailyAdLimit: userLimitsData.dailyAdLimit,
+			weeklyAdLimit: userLimitsData.weeklyAdLimit,
+			credits: userLimitsData.credits,
+			accountType: userLimitsData.accountType,
+			hasCredits: userLimitsData.hasCredits,
 			lastLimitReset: new Date().toISOString(),
 		};
 
-		console.log('User session data:', responseData); // Debugging logs
+		console.log('User session data with REAL limits:', responseData); // Debugging logs
 
-		// Step 8: Return the user details
+		// Step 9: Return the user details with real data
 		return NextResponse.json(responseData, { status: 200 });
 	} catch (error) {
 		// Log and handle unexpected errors

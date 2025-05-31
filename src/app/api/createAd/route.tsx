@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { ConvexHttpClient } from 'convex/browser';
 import { api } from '../../../../convex/_generated/api';
 import { getKindeServerSession } from '@kinde-oss/kinde-auth-nextjs/server';
@@ -8,7 +8,7 @@ const convexClient = new ConvexHttpClient(
 	process.env.NEXT_PUBLIC_CONVEX_URL || ''
 );
 
-export const POST = async (req: NextRequest) => {
+export const POST = async (req) => {
 	try {
 		// Get authenticated user
 		const { getUser } = getKindeServerSession();

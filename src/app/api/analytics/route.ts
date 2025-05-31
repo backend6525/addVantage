@@ -5,3 +5,4 @@ export async function GET() {
 		message: 'Analytics endpoint - not implemented yet',
 	});
 }
+
