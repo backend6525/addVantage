@@ -5,6 +5,7 @@ import SideMenu from '../components/dashboardUi/SideMenu';
 import { ChatProvider } from '@/context/ChatContext';
 import { GlobalChatInterface } from '@/app/components/GlobalChatInterface';
 import { useUser } from '@/hooks/useUser';
+import { useRouter } from 'next/navigation';
 
 interface DashboardLayoutProps {
 	children: ReactNode;
@@ -14,12 +15,36 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 	const [isMenuOpen, setIsMenuOpen] = useState(true);
 	const [isMobile, setIsMobile] = useState(false);
 	const { user, isLoading } = useUser();
+	const router = useRouter();
 	const [userLimits, setUserLimits] = useState({
 		dailyAdCount: user?.dailyAdCount || 0,
 		weeklyAdCount: user?.weeklyAdCount || 0,
 		hasCredits: user?.credits > 0 || false,
 		accountType: user?.accountType || 'free',
 	});
+
+	// Check onboarding status and redirect if needed
+	useEffect(() => {
+		if (!isLoading && user) {
+			console.log('Dashboard: Checking onboarding status for user:', {
+				email: user.email,
+				onboardingCompleted: user.onboardingCompleted,
+			});
+
+			// If user hasn't completed onboarding, redirect to onboarding page
+			if (user.onboardingCompleted === false) {
+				console.log(
+					'Dashboard: User has not completed onboarding, redirecting to /onboarding'
+				);
+				router.replace('/onboarding');
+				return;
+			}
+
+			console.log(
+				'Dashboard: User has completed onboarding, staying on dashboard'
+			);
+		}
+	}, [user, isLoading, router]);
 
 	// Update local limits when user data changes
 	useEffect(() => {

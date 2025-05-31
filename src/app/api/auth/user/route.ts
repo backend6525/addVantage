@@ -36,7 +36,56 @@ export async function GET() {
 		const rolesClaim = await getClaim('roles');
 		const roles = rolesClaim ? rolesClaim.value : [];
 
-		// Step 7: Get real user limits data from userCredits table (SINGLE SOURCE OF TRUTH)
+		// Step 7: Ensure user exists in Convex before fetching credits
+		let userRecord = null;
+		if (user.email) {
+			console.log('Ensuring user exists in Convex for:', user.email);
+			try {
+				// First try to get the user
+				userRecord = await convex.query(api.user.getUserByEmail, {
+					email: user.email,
+				});
+				console.log('User exists in Convex:', user.email);
+				console.log(
+					'User record fetched:',
+					JSON.stringify(userRecord, null, 2)
+				);
+			} catch (error) {
+				// User doesn't exist, create them
+				console.log('Creating user in Convex:', user.email);
+				await convex.mutation(api.user.createUser, {
+					name:
+						`${user.given_name || ''} ${user.family_name || ''}`.trim() ||
+						user.email.split('@')[0],
+					email: user.email,
+					picture: user.picture || '',
+					dailyAdCount: 0,
+					weeklyAdCount: 0,
+					dailyAdLimit: 1, // Default free limit
+					weeklyAdLimit: 5, // Default free limit
+					createdAt: new Date().toISOString(),
+					lastUpdated: new Date().toISOString(),
+					onboardingCompleted: false,
+				});
+
+				// Fetch the newly created user
+				userRecord = await convex.query(api.user.getUserByEmail, {
+					email: user.email,
+				});
+				console.log(
+					'Newly created user record:',
+					JSON.stringify(userRecord, null, 2)
+				);
+			}
+		}
+
+		console.log('Final userRecord before response:', {
+			exists: !!userRecord,
+			onboardingCompleted: userRecord?.onboardingCompleted,
+			email: userRecord?.email,
+		});
+
+		// Step 8: Get real user limits data from userCredits table (SINGLE SOURCE OF TRUTH)
 		let userLimitsData = {
 			dailyAdCount: 0,
 			weeklyAdCount: 0,
@@ -75,7 +124,7 @@ export async function GET() {
 			// Fall back to defaults if there's an error
 		}
 
-		// Step 8: Construct the response with real data from userCredits table
+		// Step 9: Construct the response with real data from userCredits table
 		const responseData = {
 			email: user.email,
 			given_name: user.given_name,
@@ -94,11 +143,16 @@ export async function GET() {
 			accountType: userLimitsData.accountType,
 			hasCredits: userLimitsData.hasCredits,
 			lastLimitReset: new Date().toISOString(),
+			onboardingCompleted: userRecord?.onboardingCompleted ?? false,
 		};
 
+		console.log(
+			'ONBOARDING DEBUG - Final response onboardingCompleted:',
+			responseData.onboardingCompleted
+		);
 		console.log('User session data with REAL limits:', responseData); // Debugging logs
 
-		// Step 9: Return the user details with real data
+		// Step 10: Return the user details with real data
 		return NextResponse.json(responseData, { status: 200 });
 	} catch (error) {
 		// Log and handle unexpected errors

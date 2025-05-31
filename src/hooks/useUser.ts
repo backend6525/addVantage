@@ -10,6 +10,7 @@ interface User {
 	credits?: number;
 	accountType?: string;
 	lastLimitReset?: string;
+	onboardingCompleted?: boolean;
 	[key: string]: any;
 }
 

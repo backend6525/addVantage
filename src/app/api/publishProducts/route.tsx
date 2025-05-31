@@ -49,6 +49,7 @@ export async function GET(request: Request) {
 
 		const convex = getConvexClient();
 
+		// Users are now created by the auth flow, so we can directly query
 		// Explicitly query only truly published ads
 		const publishedAds = await withRetry(() =>
 			convex.query(api.ads.listPublishedAds, {

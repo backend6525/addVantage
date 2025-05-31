@@ -170,6 +170,7 @@ export async function GET(request: Request) {
 			});
 		} else {
 			const products = await withRetry(async () => {
+				// Users are now created by the auth flow, so we can directly query
 				const result = (await convex.query(api.ads.list, {
 					email: userEmail,
 				})) as ProductResponse[];
