@@ -29,10 +29,11 @@ async function getOrCreateUser(ctx: any, email: string) {
 		.withIndex('by_email', (q: any) => q.eq('email', email))
 		.first();
 
-	// If user doesn't exist, create them
+	// If user doesn't exist, create them using the createUser mutation
 	if (!user) {
 		console.log(`Creating new user record for email: ${email}`);
 		const now = new Date().toISOString();
+
 		const userId = await ctx.db.insert('user', {
 			email: email,
 			name: email.split('@')[0], // Use email prefix as default name
@@ -43,6 +44,15 @@ async function getOrCreateUser(ctx: any, email: string) {
 			weeklyAdCount: 0,
 			dailyAdLimit: 1,
 			weeklyAdLimit: 5,
+			// Set default role for new users (consistent with auth route fallback)
+			roles: [
+				{
+					id: 'member',
+					key: 'MEMBER',
+					name: 'Member',
+				},
+			],
+			onboardingCompleted: false,
 		});
 
 		user = await ctx.db.get(userId);

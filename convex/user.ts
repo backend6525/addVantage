@@ -387,3 +387,128 @@ export const handleSignOut = mutation({
 		return { success: true };
 	},
 });
+
+// Fix users with empty roles (migration/utility function)
+export const fixUsersWithEmptyRoles = mutation({
+	args: {
+		adminEmail: v.string(),
+	},
+	handler: async (ctx: MutationCtx, args: { adminEmail: string }) => {
+		// Simple admin check - you might want to make this more robust
+		const adminUser = await ctx.db
+			.query('user')
+			.withIndex('by_email', (q) => q.eq('email', args.adminEmail))
+			.first();
+
+		if (!adminUser) {
+			throw new Error('Admin user not found');
+		}
+
+		// Find all users with empty or missing roles
+		const usersWithEmptyRoles = await ctx.db
+			.query('user')
+			.filter((q) =>
+				q.or(q.eq(q.field('roles'), []), q.eq(q.field('roles'), undefined))
+			)
+			.collect();
+
+		console.log(`Found ${usersWithEmptyRoles.length} users with empty roles`);
+
+		let updatedCount = 0;
+
+		// Update each user with default MEMBER role
+		for (const user of usersWithEmptyRoles) {
+			await ctx.db.patch(user._id, {
+				roles: [
+					{
+						id: 'member',
+						key: 'MEMBER',
+						name: 'Member',
+					},
+				],
+				lastUpdated: new Date().toISOString(),
+			});
+			updatedCount++;
+		}
+
+		console.log(`Updated ${updatedCount} users with default roles`);
+
+		return {
+			success: true,
+			usersFound: usersWithEmptyRoles.length,
+			usersUpdated: updatedCount,
+		};
+	},
+});
+
+// Sync user roles from Kinde auth data
+export const syncUserRolesFromKinde = mutation({
+	args: {
+		email: v.string(),
+		kindeRoles: v.array(v.any()), // Accept any format from Kinde
+	},
+	handler: async (
+		ctx: MutationCtx,
+		args: { email: string; kindeRoles: any[] }
+	) => {
+		const user = await ctx.db
+			.query('user')
+			.withIndex('by_email', (q) => q.eq('email', args.email))
+			.first();
+
+		if (!user) {
+			throw new Error('User not found');
+		}
+
+		// Transform Kinde roles to Convex format
+		let userRoles: Array<{ id: string; key: string; name: string }> = [];
+		if (Array.isArray(args.kindeRoles) && args.kindeRoles.length > 0) {
+			userRoles = args.kindeRoles
+				.map((role: any) => {
+					// Handle different role formats from Kinde
+					if (typeof role === 'string') {
+						return {
+							id: role.toLowerCase(),
+							key: role.toUpperCase(),
+							name: role.charAt(0).toUpperCase() + role.slice(1).toLowerCase(),
+						};
+					} else if (typeof role === 'object' && role.key) {
+						return {
+							id: role.id || role.key.toLowerCase(),
+							key: role.key,
+							name: role.name || role.key,
+						};
+					}
+					return null;
+				})
+				.filter(
+					(role): role is { id: string; key: string; name: string } =>
+						role !== null
+				);
+		}
+
+		// Fallback to default MEMBER role if no valid roles from Kinde
+		if (userRoles.length === 0) {
+			userRoles = [
+				{
+					id: 'member',
+					key: 'MEMBER',
+					name: 'Member',
+				},
+			];
+		}
+
+		await ctx.db.patch(user._id, {
+			roles: userRoles,
+			lastUpdated: new Date().toISOString(),
+		});
+
+		console.log(`Updated roles for user ${args.email}:`, userRoles);
+
+		return {
+			success: true,
+			userId: user._id,
+			updatedRoles: userRoles,
+		};
+	},
+});
