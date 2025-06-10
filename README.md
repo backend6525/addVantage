@@ -210,7 +210,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 📞 Support
 
 - Create a [GitHub Issue](https://github.com/yourusername/addvantage/issues)
-- Email: support@adzpay.com
+- Email: info@adzpay.net
 - Discord: [Join our community](https://discord.gg/adzpay)
 
 ## 🙏 Acknowledgments
