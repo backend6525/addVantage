@@ -10,9 +10,9 @@ const testimonials = [
 		content:
 			'AdZPay has transformed how we approach digital marketing. The platform is intuitive, and the results have been outstanding. Our ROI has increased significantly.',
 		author: {
-			name: 'Sarah Johnson',
+			name: 'Loan Johnson',
 			title: 'Marketing Director at TechCorp',
-			image: '/images/testimonials/1.jpg',
+			image: 'https://www.codeplay.com/assets/images/company/team/max.jpg',
 			rating: 5,
 		},
 	},
@@ -22,7 +22,8 @@ const testimonials = [
 		author: {
 			name: 'Michael Chen',
 			title: 'Growth Lead at StartupX',
-			image: '/images/testimonials/2.jpg',
+			image:
+				'	https://www.codeplay.com/assets/images/company/team/ruyman-reyes.jpg',
 			rating: 5,
 		},
 	},
@@ -32,7 +33,8 @@ const testimonials = [
 		author: {
 			name: 'Emma Davis',
 			title: 'Brand Manager at InnovateCo',
-			image: '/images/testimonials/3.jpg',
+			image:
+				'	https://www.codeplay.com/assets/images/portal/authors/przemyslaw-malon.png',
 			rating: 5,
 		},
 	},

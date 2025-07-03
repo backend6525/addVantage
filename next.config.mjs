@@ -5,7 +5,11 @@ const nextConfig = {
 		ignoreDuringBuilds: true,
 	},
 	images: {
-		domains: ['lh3.googleusercontent.com', 'd8wj16t6dyh1c.cloudfront.net'],
+		domains: [
+			'lh3.googleusercontent.com',
+			'd8wj16t6dyh1c.cloudfront.net',
+			'www.codeplay.com',
+		],
 	},
 	//  remotePatterns: [
 	//     {

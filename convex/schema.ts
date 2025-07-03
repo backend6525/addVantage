@@ -26,17 +26,345 @@ const ads = defineTable({
 	.index('by_createdBy', ['createdBy'])
 	.index('by_published', ['isPublished']);
 
+const campaignInfluencers = defineTable({
+	campaignId: v.id('campaigns'),
+	influencerId: v.id('influencers'),
+	assignedBy: v.string(),
+	status: v.string(), // "assigned", "accepted", "rejected", "completed"
+	agreedRate: v.optional(
+		v.object({
+			amount: v.number(),
+			currency: v.string(),
+		})
+	),
+	deliverables: v.optional(v.array(v.string())),
+	createdAt: v.number(),
+	updatedAt: v.number(),
+})
+	.index('by_campaign', ['campaignId'])
+	.index('by_influencer', ['influencerId'])
+	.index('by_campaign_influencer', ['campaignId', 'influencerId']);
+
+// Core team management
 const teams = defineTable({
 	teamName: v.string(),
-	createdBy: v.string(),
-	// Optional additional fields
-	createdAt: v.optional(v.string()),
-	members: v.optional(v.array(v.string())),
+	createdBy: v.string(), // email of team owner
 	description: v.optional(v.string()),
+	industry: v.optional(v.string()),
+	targetAudience: v.optional(v.string()),
+	defaultBudget: v.optional(
+		v.object({
+			min: v.number(),
+			max: v.number(),
+			currency: v.string(),
+		})
+	),
+	campaignTypes: v.optional(v.array(v.string())),
 	isActive: v.optional(v.boolean()),
+	createdAt: v.optional(v.float64()),
+	updatedAt: v.optional(v.number()),
+}).index('by_creator', ['createdBy']);
+
+// Simple team membership (separate from influencer profiles)
+const teamMembers = defineTable({
+	teamId: v.id('teams'),
+	email: v.string(),
+	firstName: v.string(),
+	lastName: v.string(),
+	role: v.string(), // "owner", "admin", "member", "viewer"
+	status: v.string(), // "active", "pending", "inactive"
+	invitedBy: v.optional(v.string()),
+	joinedAt: v.number(),
+	lastActive: v.optional(v.number()),
+	createdAt: v.number(),
+	updatedAt: v.number(),
 })
-	.index('by_teamName', ['teamName'])
-	.index('by_createdBy', ['createdBy']);
+	.index('by_team', ['teamId'])
+	.index('by_email', ['email'])
+	.index('by_team_and_email', ['teamId', 'email']);
+
+// Detailed influencer profiles (separate from team membership)
+// const influencers = defineTable({
+// 	// Basic Information
+// 	email: v.string(),
+// 	firstName: v.string(),
+// 	lastName: v.string(),
+// 	phoneNumber: v.optional(v.string()),
+// 	dateOfBirth: v.optional(v.number()), // timestamp
+// 	location: v.object({
+// 		city: v.optional(v.string()),
+// 		state: v.optional(v.string()),
+// 		country: v.string(),
+// 		timezone: v.optional(v.string()),
+// 	}),
+
+// 	// Professional Information
+// 	bio: v.optional(v.string()),
+// 	website: v.optional(v.string()),
+// 	occupation: v.optional(v.string()),
+// 	expertise: v.optional(v.array(v.string())),
+
+// 	// Verification Status
+// 	verificationStatus: v.object({
+// 		emailVerified: v.boolean(),
+// 		phoneVerified: v.boolean(),
+// 		identityVerified: v.boolean(),
+// 	}),
+
+// 	status: v.string(), // "active", "inactive", "suspended"
+// 	createdAt: v.number(),
+// 	updatedAt: v.number(),
+// })
+// 	.index('by_email', ['email'])
+// 	.index('by_status', ['status']);
+// convex/influencers.ts
+
+const influencers = defineTable({
+	// Basic Information
+	email: v.string(),
+	firstName: v.string(),
+	lastName: v.string(),
+	phoneNumber: v.optional(v.string()),
+	dateOfBirth: v.optional(v.number()), // timestamp
+	location: v.object({
+		city: v.optional(v.string()),
+		state: v.optional(v.string()),
+		country: v.string(),
+		timezone: v.optional(v.string()),
+	}),
+
+	// Professional Information
+	bio: v.optional(v.string()),
+	website: v.optional(v.string()),
+	occupation: v.optional(v.string()),
+	expertise: v.optional(v.array(v.string())),
+
+	// Verification Status
+	verificationStatus: v.object({
+		emailVerified: v.boolean(),
+		phoneVerified: v.boolean(),
+		identityVerified: v.boolean(),
+	}),
+
+	status: v.string(), // "active", "inactive", "suspended"
+	createdAt: v.number(),
+	updatedAt: v.number(),
+})
+	.index('by_email', ['email'])
+	.index('by_status', ['status']);
+
+// Social media profiles (normalized)
+const socialMediaProfiles = defineTable({
+	influencerId: v.id('influencers'),
+	platform: v.string(), // "instagram", "tiktok", "youtube", etc.
+	username: v.string(),
+	profileUrl: v.string(),
+	isVerified: v.boolean(),
+	followerCount: v.number(),
+	engagementRate: v.optional(v.number()),
+	averageLikes: v.optional(v.number()),
+	averageComments: v.optional(v.number()),
+	averageShares: v.optional(v.number()),
+	averageViews: v.optional(v.number()),
+	lastUpdated: v.number(),
+	isActive: v.boolean(),
+})
+	.index('by_influencer', ['influencerId'])
+	.index('by_platform', ['platform'])
+	.index('by_influencer_platform', ['influencerId', 'platform']);
+
+// Influencer business information
+const influencerBusiness = defineTable({
+	influencerId: v.id('influencers'),
+	contentCategories: v.array(v.string()),
+	primaryAudience: v.optional(
+		v.object({
+			ageRange: v.string(),
+			gender: v.string(),
+			topCountries: v.array(v.string()),
+			interests: v.array(v.string()),
+		})
+	),
+
+	ratesAndPricing: v.object({
+		sponsoredPost: v.optional(
+			v.object({
+				min: v.number(),
+				max: v.number(),
+				currency: v.string(),
+			})
+		),
+		story: v.optional(
+			v.object({
+				min: v.number(),
+				max: v.number(),
+				currency: v.string(),
+			})
+		),
+		reel: v.optional(
+			v.object({
+				min: v.number(),
+				max: v.number(),
+				currency: v.string(),
+			})
+		),
+		ugc: v.optional(
+			v.object({
+				min: v.number(),
+				max: v.number(),
+				currency: v.string(),
+			})
+		),
+	}),
+
+	availability: v.object({
+		isAvailable: v.boolean(),
+		workingHours: v.optional(v.string()),
+		responseTime: v.optional(v.string()),
+		blackoutDates: v.optional(v.array(v.number())), // timestamps
+	}),
+
+	collaborationPreferences: v.object({
+		preferredBrands: v.array(v.string()),
+		excludedBrands: v.array(v.string()),
+		contentTypes: v.array(v.string()),
+		campaignTypes: v.array(v.string()),
+		minimumNoticePeriod: v.optional(v.number()),
+		maxPostsPerWeek: v.optional(v.number()),
+	}),
+
+	updatedAt: v.number(),
+}).index('by_influencer', ['influencerId']);
+
+// Many-to-many relationship: teams can work with multiple influencers
+const teamInfluencers = defineTable({
+	teamId: v.id('teams'),
+	influencerId: v.id('influencers'),
+	addedBy: v.string(), // email of team member who added this influencer
+	tags: v.optional(v.array(v.string())),
+	internalNotes: v.optional(v.string()),
+	status: v.string(), // "active", "inactive", "archived"
+	createdAt: v.number(),
+	updatedAt: v.number(),
+})
+	.index('by_team', ['teamId'])
+	.index('by_influencer', ['influencerId'])
+	.index('by_team_influencer', ['teamId', 'influencerId']);
+
+// Campaigns
+const campaigns = defineTable({
+	teamId: v.id('teams'),
+	campaignName: v.string(),
+	description: v.string(),
+	budget: v.object({
+		total: v.number(),
+		currency: v.string(),
+	}),
+	startDate: v.number(), // timestamp
+	endDate: v.number(), // timestamp
+	status: v.string(), // "draft", "active", "completed", "cancelled"
+	targetAudience: v.object({
+		demographics: v.optional(v.string()),
+		interests: v.array(v.string()),
+		locations: v.array(v.string()),
+	}),
+	createdBy: v.string(),
+	createdAt: v.number(),
+	updatedAt: v.number(),
+})
+	.index('by_team', ['teamId'])
+	.index('by_status', ['status'])
+	.index('by_team_status', ['teamId', 'status']);
+
+// Campaign assignments (which influencers are assigned to which campaigns)
+const campaignAssignments = defineTable({
+	campaignId: v.id('campaigns'),
+	influencerId: v.id('influencers'),
+	assignedBy: v.string(),
+	status: v.string(), // "assigned", "accepted", "declined", "completed"
+	agreedRate: v.optional(
+		v.object({
+			amount: v.number(),
+			currency: v.string(),
+			contentType: v.string(),
+		})
+	),
+	deliverables: v.array(
+		v.object({
+			type: v.string(), // "post", "story", "reel", "ugc"
+			dueDate: v.number(),
+			status: v.string(), // "pending", "submitted", "approved", "revision_needed"
+			description: v.optional(v.string()),
+		})
+	),
+	assignedAt: v.number(),
+	updatedAt: v.number(),
+})
+	.index('by_campaign', ['campaignId'])
+	.index('by_influencer', ['influencerId'])
+	.index('by_campaign_influencer', ['campaignId', 'influencerId'])
+	.index('by_status', ['status']);
+
+// Content deliverables
+const contentDeliverables = defineTable({
+	assignmentId: v.id('campaignAssignments'),
+	campaignId: v.id('campaigns'),
+	influencerId: v.id('influencers'),
+	contentType: v.string(),
+	contentUrl: v.optional(v.string()),
+	caption: v.optional(v.string()),
+	hashtags: v.optional(v.array(v.string())),
+	scheduledPostTime: v.optional(v.number()),
+	actualPostTime: v.optional(v.number()),
+	status: v.string(), // "draft", "submitted", "approved", "published", "revision_needed"
+	feedback: v.optional(v.string()),
+	performance: v.optional(
+		v.object({
+			reach: v.optional(v.number()),
+			impressions: v.optional(v.number()),
+			engagement: v.optional(v.number()),
+			clicks: v.optional(v.number()),
+			conversions: v.optional(v.number()),
+		})
+	),
+	createdAt: v.number(),
+	updatedAt: v.number(),
+})
+	.index('by_assignment', ['assignmentId'])
+	.index('by_campaign', ['campaignId'])
+	.index('by_influencer', ['influencerId'])
+	.index('by_status', ['status']);
+
+// Media kit assets
+const mediaKitAssets = defineTable({
+	influencerId: v.id('influencers'),
+	type: v.string(), // "profile_photo", "content_sample", "statistics_screenshot"
+	url: v.string(),
+	platform: v.optional(v.string()),
+	description: v.optional(v.string()),
+	isActive: v.boolean(),
+	createdAt: v.number(),
+})
+	.index('by_influencer', ['influencerId'])
+	.index('by_type', ['type']);
+
+// Campaign performance history (for influencers)
+const campaignHistory = defineTable({
+	influencerId: v.id('influencers'),
+	brandName: v.string(),
+	campaignType: v.string(),
+	completedAt: v.number(),
+	performance: v.object({
+		reach: v.optional(v.number()),
+		impressions: v.optional(v.number()),
+		engagement: v.optional(v.number()),
+		clicks: v.optional(v.number()),
+		conversions: v.optional(v.number()),
+	}),
+	rating: v.optional(v.number()), // 1-5 stars
+	testimonial: v.optional(v.string()),
+	createdAt: v.number(),
+}).index('by_influencer', ['influencerId']);
 
 // New audit log table
 const auditLog = defineTable({
@@ -180,4 +508,15 @@ export default defineSchema({
 	smsHistory,
 	contacts,
 	templates,
+	teamMembers,
+	influencers,
+	socialMediaProfiles,
+	influencerBusiness,
+	teamInfluencers,
+	campaigns,
+	campaignAssignments,
+	contentDeliverables,
+	mediaKitAssets,
+	campaignHistory,
+	campaignInfluencers,
 });
