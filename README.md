@@ -4,7 +4,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0.4-blue.svg)](https://www.typescriptlang.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-13.0-black.svg)](https://nextjs.org/)
 
-[Live Demo](https://adzpay.demo.com) | [Documentation](https://docs.adzpay.com) | [Report Bug](https://github.com/yourusername/addvantage/issues) | [Request Feature](https://github.com/yourusername/addvantage/issues)
+[Live Demo](https://adzpay.demo.net) | [Documentation](https://github.com/backend6525/addVantage/tree/main/Docs) | [Report Bug](https://github.com/yourusername/addvantage/issues) | [Request Feature](https://github.com/yourusername/addvantage/issues)
 
 ## Overview
 
@@ -211,7 +211,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - Create a [GitHub Issue](https://github.com/yourusername/addvantage/issues)
 - Email: info@adzpay.net
-- Discord: [Join our community](https://discord.gg/adzpay)
+- Discord: [Join our community](https://discord.gg/YK6z6zu4ah)
 
 ## 🙏 Acknowledgments
 
