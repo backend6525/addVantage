@@ -137,20 +137,31 @@ export const list = query({
 			.collect();
 
 		// Map the results with consistent formatting
-		return ads.map((ad) => ({
-			id: ad._id,
-			title: ad.adName || 'No Title',
-			description: ad.description || 'No description available',
-			adResourceUrl: ad.adResourceUrl || '',
-			costPerView: ad.costPerView || '0',
-			type: ad.type || 'Unknown Type',
-			numberOfDaysRunning: ad.numberOfDaysRunning || '0',
-			teamId: ad.teamId || 'N/A',
-			createdBy: ad.createdBy,
-			isPublished: ad.isPublished || false,
-			createdAt: ad.createdAt,
-			lastModifiedAt: ad.lastModifiedAt,
-		}));
+		return ads.map((ad) => {
+			// Calculate daysRemaining
+			const createdAt = new Date(ad.createdAt || ad._creationTime);
+			const durationDays = parseInt(ad.numberOfDaysRunning || '0', 10);
+			const expirationDate = new Date(createdAt);
+			expirationDate.setDate(expirationDate.getDate() + durationDays);
+			const now = new Date();
+			const timeDiff = expirationDate.getTime() - now.getTime();
+			const daysRemaining = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+			return {
+				id: ad._id,
+				title: ad.adName || 'No Title',
+				description: ad.description || 'No description available',
+				adResourceUrl: ad.adResourceUrl || '',
+				costPerView: ad.costPerView || '0',
+				type: ad.type || 'Unknown Type',
+				numberOfDaysRunning: ad.numberOfDaysRunning || '0',
+				teamId: ad.teamId || 'N/A',
+				createdBy: ad.createdBy,
+				isPublished: ad.isPublished || false,
+				createdAt: ad.createdAt,
+				lastModifiedAt: ad.lastModifiedAt,
+				daysRemaining: Math.max(0, daysRemaining),
+			};
+		});
 	},
 });
 

@@ -3,7 +3,22 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
+import Link from 'next/link';
+import Image from 'next/image';
+// Removed Kinde direct import - using user API instead
 import {
+	LoadingState,
+	ErrorState,
+	MetricCard,
+	SocialLinks,
+	ReportAdModal,
+} from './components';
+import {
+	Twitter,
+	Linkedin,
+	Instagram,
+	Youtube,
+	Facebook,
 	ChevronLeft,
 	Share2,
 	Star,
@@ -16,592 +31,101 @@ import {
 	Award,
 	MessageCircle,
 	Info,
-	Globe,
 	MapPin,
 	DollarSign,
 	Zap,
 	Users as UsersIcon,
 	TrendingUp,
 	Flag,
-	Twitter,
-	Linkedin,
-	Instagram,
-	Youtube,
-	Facebook,
 	Send,
 	Eye,
 	Download,
 	ArrowUpRight,
 	Calendar,
+	Settings,
+	HelpCircle,
 } from 'lucide-react';
-import Link from 'next/link';
-import Image from 'next/image';
-import {
-	LineChart,
-	Line,
-	XAxis,
-	YAxis,
-	CartesianGrid,
-	Tooltip,
-	ResponsiveContainer,
-	Legend,
-	PieChart,
-	Pie,
-	Cell,
-} from 'recharts';
+import { PerformanceTab, DemographicsTab, ReviewsTab, TabSystem } from './tabs';
+import { ProductDetails, TabProps } from './interfaces';
 import OnlineStatus from '@/app/components/online/OnlineStatus';
-import { useKindeBrowserClient } from '@kinde-oss/kinde-auth-nextjs';
-import { Settings, HelpCircle, LucideIcon } from 'lucide-react';
 
-// Interfaces remain the same as your original
-interface Publisher {
+// User interface to match your API response
+interface UserData {
 	id: string;
+	_id: string;
+	kindeId: string;
+	convexId: string;
+	email: string;
+	given_name: string;
+	family_name: string;
 	name: string;
-	email?: string;
-	location?: string;
-	logoUrl?: string;
-	totalAds?: number;
-	rating?: number;
-	bio?: string;
-	socialLinks?: {
-		platform: string;
-		url: string;
-		icon: LucideIcon;
-	}[];
+	picture: string;
+	roles: string[];
+	dailyAdCount: number;
+	weeklyAdCount: number;
+	dailyAdLimit: number;
+	weeklyAdLimit: number;
+	credits: number;
+	accountType: 'free' | 'premium' | 'pro';
+	hasCredits: boolean;
+	onboardingCompleted: boolean;
+	lastLimitReset: string;
 }
-
-interface Product {
-	id: string;
-	type: string;
-	adResourceUrl?: string;
-	title: string;
-	description: string;
-	createdBy?: string;
-	costPerView?: string;
-	numberOfDaysRunning?: string;
-	publisher?: Publisher;
-	isPublished?: boolean;
-}
-
-interface ProductDetails extends Product {
-	publishDate?: string;
-	interestedUsers?: string[];
-	rating?: number;
-	totalViews?: number;
-	isOnline?: boolean;
-	targetAudience?: string[];
-	targetAudienceDescription?: string;
-	adCampaignDetails?: {
-		objective: string;
-		budget: string;
-		platform: string;
-		startDate?: string;
-		endDate?: string;
-		status?: string;
-	};
-	tags?: string[];
-	isPublished?: boolean;
-	reviews?: {
-		id: string;
-		user: string;
-		userAvatar?: string;
-		rating: number;
-		comment: string;
-		date: string;
-	}[];
-	performanceMetrics?: {
-		daily: {
-			date: string;
-			views: number;
-			interactions: number;
-			conversions: number;
-		}[];
-		demographics?: {
-			age: { group: string; value: number }[];
-			gender: { group: string; value: number }[];
-			location: { country: string; value: number }[];
-		};
-	};
-	relatedAds?: {
-		id: string;
-		title: string;
-		thumbnailUrl?: string;
-	}[];
-}
-
-interface MetricCardProps {
-	icon: LucideIcon;
-	label: string;
-	value: string | number;
-	color: string;
-}
-
-interface TabProps {
-	label: string;
-	icon: LucideIcon;
-	content: React.ReactNode;
-}
-
-const LoadingState = () => (
-	<div className='flex items-center justify-center h-screen bg-slate-800/70'>
-		<motion.div
-			initial={{ opacity: 0, scale: 0.9 }}
-			animate={{ opacity: 1, scale: 1 }}
-			transition={{ duration: 0.5 }}
-			className='text-white text-2xl font-semibold flex items-center space-x-4'>
-			<span className='animate-pulse'>Loading details...</span>
-		</motion.div>
-	</div>
-);
-
-const ErrorState = ({ error }: { error: string | null }) => (
-	<div className='flex items-center justify-center h-screen bg-slate-800/70'>
-		<motion.div className='text-center text-white'>
-			<div className='text-4xl text-red-500 mb-4'>Oops!</div>
-			<div className='text-2xl text-red-400'>
-				{error || 'Product not found'}
-			</div>
-			<button
-				onClick={() => window.history.back()}
-				className='mt-8 px-6 py-3 bg-white/10 hover:bg-white/20 rounded-full transition-colors'>
-				Go Back
-			</button>
-		</motion.div>
-	</div>
-);
-
-const MetricCard = ({ icon: Icon, label, value, color }: MetricCardProps) => (
-	<motion.div
-		whileHover={{ scale: 1.05 }}
-		className='p-4 rounded-xl bg-slate-700/50 border border-slate-600'>
-		<div className='text-slate-300 text-sm mb-1 flex items-center gap-2'>
-			<Icon className={`w-4 h-4 ${color}`} />
-			{label}
-		</div>
-		<div className='text-xl font-semibold text-white'>{value}</div>
-	</motion.div>
-);
-
-const SocialLinks = ({ links }: { links: Publisher['socialLinks'] }) => {
-	if (!links || links.length === 0) return null;
-
-	return (
-		<div className='flex flex-wrap gap-3 mt-4'>
-			{links.map(({ platform, url, icon: Icon }) => (
-				<motion.a
-					key={platform}
-					href={url}
-					target='_blank'
-					rel='noopener noreferrer'
-					whileHover={{ scale: 1.1 }}
-					whileTap={{ scale: 0.95 }}
-					className='p-2 rounded-full bg-slate-700 hover:bg-slate-600 transition-colors'
-					aria-label={`Visit ${platform}`}>
-					<Icon className='w-5 h-5 text-slate-300' />
-				</motion.a>
-			))}
-		</div>
-	);
-};
-
-const TabSystem = ({ tabs }: { tabs: TabProps[] }) => {
-	const [activeTab, setActiveTab] = useState(tabs[0]?.label || '');
-
-	return (
-		<div className='mt-8'>
-			<div className='border-b border-slate-600 flex overflow-x-auto'>
-				{tabs.map(({ label, icon: Icon }) => (
-					<button
-						key={label}
-						onClick={() => setActiveTab(label)}
-						className={`px-4 py-3 flex items-center gap-2 whitespace-nowrap transition-colors ${
-							activeTab === label
-								? 'border-b-2 border-purple-500 text-purple-400'
-								: 'text-slate-400 hover:text-slate-200'
-						}`}>
-						<Icon className='w-4 h-4' />
-						{label}
-					</button>
-				))}
-			</div>
-			<div className='py-6'>
-				{tabs.find((tab) => tab.label === activeTab)?.content}
-			</div>
-		</div>
-	);
-};
-
-const ReportAdModal = ({
-	isOpen,
-	onClose,
-	onSubmit,
-}: {
-	isOpen: boolean;
-	onClose: () => void;
-	onSubmit: (reason: string, description: string) => void;
-}) => {
-	const [reason, setReason] = useState('');
-	const [description, setDescription] = useState('');
-
-	if (!isOpen) return null;
-
-	return (
-		<motion.div
-			initial={{ opacity: 0 }}
-			animate={{ opacity: 1 }}
-			exit={{ opacity: 0 }}
-			className='fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4'>
-			<motion.div
-				initial={{ scale: 0.9, opacity: 0 }}
-				animate={{ scale: 1, opacity: 1 }}
-				exit={{ scale: 0.9, opacity: 0 }}
-				className='bg-slate-800 rounded-xl p-6 max-w-md w-full border border-slate-700'>
-				<h3 className='text-xl font-semibold mb-4 text-white'>Report Ad</h3>
-
-				<div className='mb-4'>
-					<label className='block text-slate-300 mb-2 text-sm'>
-						Reason for reporting
-					</label>
-					<select
-						value={reason}
-						onChange={(e) => setReason(e.target.value)}
-						className='w-full p-3 bg-slate-700 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-white'>
-						<option value=''>Select a reason</option>
-						<option value='inappropriate'>Inappropriate content</option>
-						<option value='misleading'>Misleading information</option>
-						<option value='offensive'>Offensive content</option>
-						<option value='spam'>Spam</option>
-						<option value='other'>Other</option>
-					</select>
-				</div>
-
-				<div className='mb-6'>
-					<label className='block text-slate-300 mb-2 text-sm'>
-						Additional details
-					</label>
-					<textarea
-						value={description}
-						onChange={(e) => setDescription(e.target.value)}
-						className='w-full p-3 bg-slate-700 border border-slate-600 rounded-lg h-32 focus:outline-none focus:ring-2 focus:ring-purple-500 text-white'
-						placeholder='Please provide more details about the issue...'
-					/>
-				</div>
-
-				<div className='flex justify-end gap-3'>
-					<button
-						onClick={onClose}
-						className='px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors text-white'>
-						Cancel
-					</button>
-					<button
-						onClick={() => {
-							onSubmit(reason, description);
-							onClose();
-						}}
-						disabled={!reason}
-						className={`px-4 py-2 bg-red-500/80 hover:bg-red-500 rounded-lg transition-colors text-white ${
-							!reason ? 'opacity-50 cursor-not-allowed' : ''
-						}`}>
-						Submit Report
-					</button>
-				</div>
-			</motion.div>
-		</motion.div>
-	);
-};
-
-const PerformanceTab = ({
-	metrics,
-}: {
-	metrics?: ProductDetails['performanceMetrics'];
-}) => {
-	const demoData = [
-		{ day: 'Mon', views: 320, interactions: 120, conversions: 22 },
-		{ day: 'Tue', views: 380, interactions: 150, conversions: 28 },
-		{ day: 'Wed', views: 410, interactions: 170, conversions: 32 },
-		{ day: 'Thu', views: 360, interactions: 135, conversions: 25 },
-		{ day: 'Fri', views: 450, interactions: 190, conversions: 38 },
-		{ day: 'Sat', views: 490, interactions: 210, conversions: 42 },
-		{ day: 'Sun', views: 380, interactions: 160, conversions: 30 },
-	];
-
-	const data = metrics?.daily || demoData;
-
-	return (
-		<div className='space-y-8'>
-			<div className='grid grid-cols-1 md:grid-cols-3 gap-6 mb-8'>
-				<MetricCard
-					icon={Eye}
-					label='Total Views'
-					value='2,790'
-					color='text-blue-400'
-				/>
-				<MetricCard
-					icon={Heart}
-					label='Engagement Rate'
-					value='6.8%'
-					color='text-red-400'
-				/>
-				<MetricCard
-					icon={ArrowUpRight}
-					label='Conversion Rate'
-					value='2.3%'
-					color='text-green-400'
-				/>
-			</div>
-
-			<div className='bg-slate-700/50 rounded-xl p-4 border border-slate-600'>
-				<h3 className='text-lg font-medium mb-2 text-white'>
-					Performance Trends
-				</h3>
-				<div className='h-64'>
-					<ResponsiveContainer width='100%' height='100%'>
-						<LineChart
-							data={data}
-							margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
-							<CartesianGrid strokeDasharray='3 3' stroke='#4b5563' />
-							<XAxis dataKey='day' stroke='#9ca3af' />
-							<YAxis stroke='#9ca3af' />
-							<Tooltip
-								contentStyle={{
-									backgroundColor: 'rgba(30, 41, 59, 0.9)',
-									border: '1px solid rgba(255, 255, 255, 0.2)',
-									borderRadius: '8px',
-									color: '#fff',
-								}}
-							/>
-							<Legend />
-							<Line
-								type='monotone'
-								dataKey='views'
-								stroke='#4ade80'
-								activeDot={{ r: 8 }}
-								strokeWidth={2}
-							/>
-							<Line
-								type='monotone'
-								dataKey='interactions'
-								stroke='#60a5fa'
-								strokeWidth={2}
-							/>
-							<Line
-								type='monotone'
-								dataKey='conversions'
-								stroke='#f472b6'
-								strokeWidth={2}
-							/>
-						</LineChart>
-					</ResponsiveContainer>
-				</div>
-			</div>
-		</div>
-	);
-};
-
-const DemographicsTab = ({
-	metrics,
-}: {
-	metrics?: ProductDetails['performanceMetrics'];
-}) => {
-	const demoAgeData = [
-		{ name: '18-24', value: 25 },
-		{ name: '25-34', value: 35 },
-		{ name: '35-44', value: 20 },
-		{ name: '45-54', value: 12 },
-		{ name: '55+', value: 8 },
-	];
-
-	const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
-
-	return (
-		<div className='space-y-8'>
-			<div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
-				<div className='bg-slate-700/50 rounded-xl p-4 border border-slate-600'>
-					<h3 className='text-lg font-medium mb-4 text-white'>
-						Age Distribution
-					</h3>
-					<div className='h-64 flex items-center justify-center'>
-						<ResponsiveContainer width='100%' height='100%'>
-							<PieChart>
-								<Pie
-									data={demoAgeData}
-									cx='50%'
-									cy='50%'
-									labelLine={false}
-									outerRadius={80}
-									fill='#8884d8'
-									dataKey='value'
-									label={({ name, percent }) =>
-										`${name} ${(percent * 100).toFixed(0)}%`
-									}>
-									{demoAgeData.map((entry, index) => (
-										<Cell
-											key={`cell-${index}`}
-											fill={COLORS[index % COLORS.length]}
-										/>
-									))}
-								</Pie>
-								<Tooltip
-									contentStyle={{
-										backgroundColor: 'rgba(30, 41, 59, 0.9)',
-										border: '1px solid rgba(255, 255, 255, 0.2)',
-										borderRadius: '8px',
-										color: '#fff',
-									}}
-								/>
-							</PieChart>
-						</ResponsiveContainer>
-					</div>
-				</div>
-
-				<div className='bg-slate-700/50 rounded-xl p-4 border border-slate-600'>
-					<h3 className='text-lg font-medium mb-4 text-white'>Top Locations</h3>
-					<div className='space-y-4'>
-						{[
-							{ country: 'United States', value: 42 },
-							{ country: 'United Kingdom', value: 18 },
-							{ country: 'Canada', value: 12 },
-							{ country: 'Australia', value: 8 },
-							{ country: 'Germany', value: 6 },
-						].map((location) => (
-							<div
-								key={location.country}
-								className='flex items-center justify-between text-slate-300'>
-								<div className='flex items-center gap-2'>
-									<MapPin className='w-4 h-4 text-blue-400' />
-									<span>{location.country}</span>
-								</div>
-								<div className='flex items-center gap-2'>
-									<div className='w-32 h-2 bg-slate-600 rounded-full overflow-hidden'>
-										<div
-											className='h-full bg-blue-500 rounded-full'
-											style={{ width: `${location.value}%` }}
-										/>
-									</div>
-									<span className='text-slate-400 text-sm'>
-										{location.value}%
-									</span>
-								</div>
-							</div>
-						))}
-					</div>
-				</div>
-			</div>
-		</div>
-	);
-};
-
-const ReviewsTab = ({ reviews }: { reviews?: ProductDetails['reviews'] }) => {
-	const demoReviews = [
-		{
-			id: '1',
-			user: 'Alex Johnson',
-			userAvatar: '/api/placeholder/32/32',
-			rating: 4.5,
-			comment:
-				'This ad campaign significantly increased our conversions. Well worth the investment.',
-			date: '2025-03-15',
-		},
-		{
-			id: '2',
-			user: 'Sarah Miller',
-			userAvatar: '/api/placeholder/32/32',
-			rating: 5,
-			comment:
-				'Exceptional results with this campaign. Targeting was spot on and the ROI was impressive.',
-			date: '2025-03-10',
-		},
-		{
-			id: '3',
-			user: 'David Chen',
-			userAvatar: '/api/placeholder/32/32',
-			rating: 3.5,
-			comment:
-				'Good campaign overall, but took a bit longer than expected to see results.',
-			date: '2025-03-05',
-		},
-	];
-
-	const displayReviews = reviews || demoReviews;
-
-	return (
-		<div className='space-y-6'>
-			<div className='flex justify-between items-center'>
-				<h3 className='text-lg font-medium text-white'>Client Reviews</h3>
-				<button className='text-purple-400 hover:text-purple-300 text-sm'>
-					Write a Review
-				</button>
-			</div>
-
-			{displayReviews.length > 0 ? (
-				<div className='space-y-4'>
-					{displayReviews.map((review) => (
-						<motion.div
-							key={review.id}
-							initial={{ opacity: 0, y: 10 }}
-							animate={{ opacity: 1, y: 0 }}
-							className='p-4 bg-slate-700/50 rounded-xl border border-slate-600'>
-							<div className='flex justify-between items-start mb-3'>
-								<div className='flex items-center gap-3'>
-									<div className='w-8 h-8 rounded-full overflow-hidden bg-slate-600'>
-										{review.userAvatar ? (
-											<Image
-												src={review.userAvatar}
-												alt={review.user}
-												width={32}
-												height={32}
-												className='object-cover'
-											/>
-										) : (
-											<User className='w-8 h-8 p-1 text-slate-400' />
-										)}
-									</div>
-									<div>
-										<div className='font-medium text-white'>{review.user}</div>
-										<div className='text-slate-400 text-sm'>
-											{new Date(review.date).toLocaleDateString()}
-										</div>
-									</div>
-								</div>
-								<div className='flex items-center'>
-									{[...Array(5)].map((_, i) => (
-										<Star
-											key={i}
-											className={`w-4 h-4 ${
-												i < Math.floor(review.rating)
-													? 'text-yellow-400 fill-current'
-													: i < review.rating
-														? 'text-yellow-400'
-														: 'text-slate-500'
-											}`}
-										/>
-									))}
-								</div>
-							</div>
-							<p className='text-slate-300'>{review.comment}</p>
-						</motion.div>
-					))}
-				</div>
-			) : (
-				<div className='text-center py-8 text-slate-400'>No reviews yet</div>
-			)}
-		</div>
-	);
-};
 
 const ProductDetailsPage = ({ params }: { params: { id: string } }) => {
 	const { id } = params;
 	const [product, setProduct] = useState<ProductDetails | null>(null);
+	const [user, setUser] = useState<UserData | null>(null);
 	const [loading, setLoading] = useState(true);
+	const [userLoading, setUserLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const [isLiked, setIsLiked] = useState(false);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [isPublished, setIsPublished] = useState(false);
 	const [isCurrentUserPublisher, setIsCurrentUserPublisher] = useState(false);
 	const [showReportModal, setShowReportModal] = useState(false);
-	const [activeTab, setActiveTab] = useState('Overview');
 	const router = useRouter();
-	const { user, isLoading } = useKindeBrowserClient();
+
+	// Fetch user data from your API
+	useEffect(() => {
+		const fetchUser = async () => {
+			try {
+				setUserLoading(true);
+				console.log('Fetching user data from API...');
+
+				const response = await fetch('/api/auth/user');
+
+				if (!response.ok) {
+					if (response.status === 404) {
+						console.log('User not found in session, redirecting to signin');
+						router.push('/auth/signin');
+						return;
+					}
+					throw new Error(`Failed to fetch user: ${response.status}`);
+				}
+
+				const userData: UserData = await response.json();
+				console.log('User data fetched successfully:', userData);
+
+				setUser(userData);
+			} catch (err) {
+				console.error('Error fetching user:', err);
+				setError(
+					err instanceof Error ? err.message : 'Failed to fetch user data'
+				);
+
+				// If there's an auth error, redirect to signin
+				if (err instanceof Error && err.message.includes('404')) {
+					router.push('/auth/signin');
+				}
+			} finally {
+				setUserLoading(false);
+			}
+		};
+
+		// Fetch user data immediately on component mount
+		fetchUser();
+	}, [router]);
 
 	useEffect(() => {
 		const handleError = (error: ErrorEvent) => {
@@ -614,23 +138,15 @@ const ProductDetailsPage = ({ params }: { params: { id: string } }) => {
 	}, []);
 
 	useEffect(() => {
-		if (!isLoading && !user) {
-			router.push('/auth/signin');
-		}
-	}, [isLoading, user, router]);
-
-	useEffect(() => {
 		const fetchProductDetails = async () => {
+			if (!user?.email) return;
+
 			try {
 				setLoading(true);
-				const userEmail = user?.email;
-
-				if (!userEmail) {
-					throw new Error('User email is required');
-				}
+				console.log('Fetching product details...');
 
 				const response = await fetch(
-					`/api/product?id=${id}&email=${encodeURIComponent(userEmail)}`
+					`/api/product?id=${id}&email=${encodeURIComponent(user.email)}`
 				);
 
 				if (!response.ok) {
@@ -641,61 +157,39 @@ const ProductDetailsPage = ({ params }: { params: { id: string } }) => {
 				}
 
 				const data = await response.json();
-				const mockPublisher = {
-					id: 'pub123',
-					name: 'Digital Marketing Agency',
-					email: 'contact@dma.com',
-					location: 'Los Angeles, CA',
-					logoUrl: '/api/placeholder/64/64',
-					totalAds: 42,
-					rating: 4.8,
+				console.log('Product details fetched successfully:', data);
+
+				// Create mock publisher using user data
+				const publisher = {
+					id: data.createdBy,
+					name: data.createdBy,
+					email: data.createdBy,
+					location: 'Unknown Location', // You can add location to your user API later
+					logoUrl: user.picture || '/api/placeholder/64/64',
+					totalAds: 0, // This should come from your database
+					rating: 0, // This should come from your database
 					bio: 'Leading digital advertising agency specializing in high-performance campaigns across all platforms.',
-					socialLinks: [
-						{
-							platform: 'Twitter',
-							url: 'https://twitter.com/dma',
-							icon: Twitter,
-						},
-						{
-							platform: 'LinkedIn',
-							url: 'https://linkedin.com/company/dma',
-							icon: Linkedin,
-						},
-						{
-							platform: 'Instagram',
-							url: 'https://instagram.com/dma',
-							icon: Instagram,
-						},
-						{
-							platform: 'YouTube',
-							url: 'https://youtube.com/dma',
-							icon: Youtube,
-						},
-						{
-							platform: 'Facebook',
-							url: 'https://facebook.com/dma',
-							icon: Facebook,
-						},
-					],
+					socialLinks: [],
 				};
 
 				const enhancedData: ProductDetails = {
 					...data,
-					publisher: mockPublisher,
+					publisher: publisher,
 					targetAudienceDescription:
+						data.targetAudienceDescription ||
 						'Tech-savvy professionals aged 25-45 with interests in digital innovation and early adoption of new technologies.',
 					tags: [...(data.tags || []), 'High ROI', 'Tech', 'Innovation'],
 					adCampaignDetails: {
 						...(data.adCampaignDetails || {}),
-						startDate: '2025-03-01',
-						endDate: '2025-05-01',
-						status: 'Active',
+						startDate: data.adCampaignDetails?.startDate || '2025-03-01',
+						endDate: data.adCampaignDetails?.endDate || '2025-05-01',
+						status: data.adCampaignDetails?.status || 'Active',
 					},
 				};
 
 				setProduct(enhancedData);
 				setIsPublished(enhancedData.isPublished || false);
-				setIsCurrentUserPublisher(userEmail === enhancedData.createdBy);
+				setIsCurrentUserPublisher(user.email === data.createdBy);
 			} catch (err) {
 				console.error('Error fetching product details:', err);
 				setError(
@@ -706,6 +200,7 @@ const ProductDetailsPage = ({ params }: { params: { id: string } }) => {
 			}
 		};
 
+		// Only fetch product details if we have user data
 		if (user) {
 			fetchProductDetails();
 		}
@@ -740,37 +235,29 @@ const ProductDetailsPage = ({ params }: { params: { id: string } }) => {
 	};
 
 	const handleSendMessage = async () => {
+		if (!user || !product) return;
+
 		try {
 			setIsSubmitting(true);
-			console.log('Starting handleSendMessage');
-
-			const userResponse = await fetch('/api/auth/user');
-			console.log('User API response status:', userResponse.status);
-
-			if (!userResponse.ok) {
-				throw new Error('Failed to retrieve user information');
-			}
-
-			const userData = await userResponse.json();
-			console.log('User data:', userData);
-			console.log('Product data:', product);
+			console.log('Starting handleSendMessage with user data:', user);
 
 			const notificationData = {
 				type: 'new_message',
-				message: `Someone is interested in your listing "${product?.title}"`,
-				adId: product?.id,
-				requesterId: userData._id,
+				message: `Someone is interested in your listing "${product.title}"`,
+				adId: product.id,
+				requesterId: user._id || user.convexId,
 				status: 'pending',
 				action: 'create',
 			};
+
 			console.log('Sending notification data:', notificationData);
-			console.log('Publisher ID (recipient):', product?.publisher?.id);
+			console.log('Publisher ID (recipient):', product.publisher?.id);
 
 			const notificationResponse = await fetch('/api/notifications', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
-					'x-user-email': product?.publisher?.id || '',
+					'x-user-email': product.publisher?.email || '',
 				},
 				body: JSON.stringify(notificationData),
 			});
@@ -799,17 +286,20 @@ const ProductDetailsPage = ({ params }: { params: { id: string } }) => {
 	const handleReportSubmit = async (reason: string, description: string) => {
 		try {
 			console.log('Report submitted:', { reason, description, productId: id });
+			// TODO: Implement actual report submission to your API
 		} catch (error) {
 			console.error('Failed to submit report:', error);
 			setError('Failed to submit report');
 		}
 	};
 
-	if (isLoading || loading) return <LoadingState />;
-	if (error || !product) return <ErrorState error={error} />;
-	if (!user) return null;
+	// Show loading state while user data is loading
+	if (userLoading || loading) return <LoadingState />;
 
-	const tabContents = [
+	// Show error state if there's an error or missing data
+	if (error || !product || !user) return <ErrorState error={error} />;
+
+	const tabContents: TabProps[] = [
 		{
 			label: 'Overview',
 			icon: Info,
@@ -937,6 +427,45 @@ const ProductDetailsPage = ({ params }: { params: { id: string } }) => {
 							</div>
 						</div>
 					)}
+
+					{/* User Account Info Section - Using data from your API */}
+					<div className='p-6 rounded-xl bg-slate-700/50 border border-slate-600 mt-6'>
+						<h3 className='text-xl font-semibold mb-4 flex items-center gap-2 text-white'>
+							<User className='text-purple-400' />
+							Account Information
+						</h3>
+						<div className='grid grid-cols-2 gap-4 text-slate-300'>
+							<div className='flex items-center justify-between'>
+								<span>Account Type</span>
+								<span
+									className={`px-2 py-1 rounded text-sm ${
+										user.accountType === 'free'
+											? 'bg-gray-500/20 text-gray-300'
+											: user.accountType === 'premium'
+												? 'bg-blue-500/20 text-blue-300'
+												: 'bg-purple-500/20 text-purple-300'
+									}`}>
+									{user.accountType.toUpperCase()}
+								</span>
+							</div>
+							<div className='flex items-center justify-between'>
+								<span>Credits</span>
+								<span>{user.credits}</span>
+							</div>
+							<div className='flex items-center justify-between'>
+								<span>Daily Ads</span>
+								<span>
+									{user.dailyAdCount}/{user.dailyAdLimit}
+								</span>
+							</div>
+							<div className='flex items-center justify-between'>
+								<span>Weekly Ads</span>
+								<span>
+									{user.weeklyAdCount}/{user.weeklyAdLimit}
+								</span>
+							</div>
+						</div>
+					</div>
 				</div>
 			),
 		},
@@ -969,7 +498,7 @@ const ProductDetailsPage = ({ params }: { params: { id: string } }) => {
 				)}
 			</AnimatePresence>
 
-			<div className='flex-1 flex flex-col overflow-hidden'>
+			<div className='flex-1 flex flex-col overflow-hidden mt-16'>
 				<div className='p-4 border-b border-slate-700/50 bg-slate-800/90'>
 					<div className='flex items-center justify-between'>
 						<div className='flex items-center space-x-4'>
@@ -984,6 +513,9 @@ const ProductDetailsPage = ({ params }: { params: { id: string } }) => {
 							</h1>
 						</div>
 						<div className='flex items-center space-x-2'>
+							<div className='text-sm text-slate-400'>
+								Welcome, {user.name || user.given_name}
+							</div>
 							<button className='p-2 text-slate-400 hover:text-white rounded-lg hover:bg-slate-700/50'>
 								<Settings className='h-5 w-5' />
 							</button>

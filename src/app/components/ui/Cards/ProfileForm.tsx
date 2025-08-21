@@ -180,7 +180,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
 				/>
 			</div>
 
-			<div>
+			{/* <div>
 				<label className='block text-gray-300 mb-4'>
 					Connect Social Media Platforms
 				</label>
@@ -204,15 +204,15 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
 						);
 					})}
 				</div>
-			</div>
+			</div> */}
 
-			<div className='flex justify-end'>
+			{/* <div className='flex justify-end'>
 				<button
 					type='submit'
 					className='px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors'>
 					Save Profile
 				</button>
-			</div>
+			</div> */}
 		</form>
 	);
 };

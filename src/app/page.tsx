@@ -41,17 +41,17 @@ const FloatingCTA = dynamic<FloatingCTAProps>(
 // Dynamically import components with loading states
 const Hero = dynamic(() => import('@/app/components/ui/Hero/Hero'), {
 	loading: () => (
-		<div className='h-screen flex items-center justify-center'>
-			<div className='animate-pulse flex flex-col items-center space-y-6'>
-				<div className='h-16 w-16 bg-blue-400/20 rounded-full'></div>
-				<div className='space-y-4 text-center'>
-					<div className='h-6 w-[300px] bg-blue-400/20 rounded'></div>
-					<div className='h-4 w-[250px] bg-blue-400/20 rounded'></div>
-					<div className='h-4 w-[200px] bg-blue-400/20 rounded'></div>
+		<div className='min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8'>
+			<div className='animate-pulse flex flex-col items-center space-y-4 sm:space-y-6 w-full max-w-md'>
+				<div className='h-12 w-12 sm:h-16 sm:w-16 bg-blue-400/20 rounded-full'></div>
+				<div className='space-y-3 sm:space-y-4 text-center w-full'>
+					<div className='h-4 sm:h-6 w-full max-w-[300px] bg-blue-400/20 rounded mx-auto'></div>
+					<div className='h-3 sm:h-4 w-full max-w-[250px] bg-blue-400/20 rounded mx-auto'></div>
+					<div className='h-3 sm:h-4 w-full max-w-[200px] bg-blue-400/20 rounded mx-auto'></div>
 				</div>
-				<div className='flex space-x-4 pt-4'>
-					<div className='h-10 w-28 bg-blue-400/20 rounded-lg'></div>
-					<div className='h-10 w-28 bg-blue-400/20 rounded-lg'></div>
+				<div className='flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 pt-4 w-full sm:w-auto'>
+					<div className='h-10 w-full sm:w-28 bg-blue-400/20 rounded-lg'></div>
+					<div className='h-10 w-full sm:w-28 bg-blue-400/20 rounded-lg'></div>
 				</div>
 			</div>
 		</div>
@@ -62,10 +62,10 @@ const TrustedBy = dynamic(
 	() => import('@/app/components/ui/TrustedBy/TrustedBy'),
 	{
 		loading: () => (
-			<div className='h-32 flex justify-center items-center'>
-				<div className='animate-pulse grid grid-cols-4 gap-8 w-full max-w-4xl'>
+			<div className='h-24 sm:h-32 flex justify-center items-center px-4 sm:px-6'>
+				<div className='animate-pulse grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-8 w-full max-w-4xl'>
 					{[...Array(4)].map((_, i) => (
-						<div key={i} className='h-8 bg-blue-400/10 rounded'></div>
+						<div key={i} className='h-6 sm:h-8 bg-blue-400/10 rounded'></div>
 					))}
 				</div>
 			</div>
@@ -95,6 +95,7 @@ export default function Home() {
 	const [showScrollTop, setShowScrollTop] = useState(false);
 	const [isParticlesEnabled, setIsParticlesEnabled] = useState(true);
 	const [loadingProgress, setLoadingProgress] = useState(0);
+	const [isMobile, setIsMobile] = useState(false);
 
 	// Scroll animations
 	const { scrollYProgress } = useScroll();
@@ -120,21 +121,53 @@ export default function Home() {
 		{ name: 'FAQ', id: 'faq' },
 	];
 
-	// Section transition variants
+	// Section transition variants with responsive considerations
 	const sectionVariants = {
-		hidden: { opacity: 0, y: 20 },
+		hidden: {
+			opacity: 0,
+			y: isMobile ? 15 : 20,
+		},
 		visible: {
 			opacity: 1,
 			y: 0,
-			transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] },
+			transition: {
+				duration: isMobile ? 0.6 : 0.8,
+				ease: [0.22, 1, 0.36, 1],
+			},
 		},
 	};
+
+	// Detect mobile devices and screen size
+	useEffect(() => {
+		const checkMobile = () => {
+			setIsMobile(window.innerWidth < 768);
+		};
+
+		checkMobile();
+		window.addEventListener('resize', checkMobile);
+		return () => window.removeEventListener('resize', checkMobile);
+	}, []);
 
 	// Scroll handling with debouncing
 	const handleScroll = useCallback(() => {
 		const scrollPosition = window.scrollY;
 		setIsScrolled(scrollPosition > 20);
 		setShowScrollTop(scrollPosition > 500);
+
+		// Update active section based on scroll position
+		const sections = navigationItems.map((item) => item.id);
+		const currentSection = sections.find((section) => {
+			const element = document.getElementById(section);
+			if (element) {
+				const rect = element.getBoundingClientRect();
+				return rect.top <= 100 && rect.bottom >= 100;
+			}
+			return false;
+		});
+
+		if (currentSection) {
+			setActiveSection(currentSection);
+		}
 	}, []);
 
 	useEffect(() => {
@@ -153,7 +186,7 @@ export default function Home() {
 					}
 				});
 			},
-			{ threshold: 0.2 }
+			{ threshold: isMobile ? 0.1 : 0.2 }
 		);
 
 		document.querySelectorAll('section[id]').forEach((section) => {
@@ -161,7 +194,7 @@ export default function Home() {
 		});
 
 		return () => observer.disconnect();
-	}, []);
+	}, [isMobile]);
 
 	// Loading animation
 	useEffect(() => {
@@ -184,24 +217,32 @@ export default function Home() {
 		setIsReducedMotion(mediaQuery.matches);
 
 		const checkPerformance = () => {
-			if ('deviceMemory' in navigator && (navigator as any).deviceMemory < 4) {
+			// Disable particles on smaller screens or low-memory devices
+			if (
+				window.innerWidth < 768 ||
+				('deviceMemory' in navigator && (navigator as any).deviceMemory < 4)
+			) {
 				setIsParticlesEnabled(false);
 			}
 		};
 
 		checkPerformance();
 		mediaQuery.addEventListener('change', (e) => setIsReducedMotion(e.matches));
-		return () =>
+		window.addEventListener('resize', checkPerformance);
+
+		return () => {
 			mediaQuery.removeEventListener('change', (e) =>
 				setIsReducedMotion(e.matches)
 			);
+			window.removeEventListener('resize', checkPerformance);
+		};
 	}, []);
 
-	// Smooth scroll function
+	// Smooth scroll function with offset adjustment for mobile
 	const scrollToSection = (sectionId: string) => {
 		const element = document.getElementById(sectionId);
 		if (element) {
-			const offset = 80;
+			const offset = isMobile ? 60 : 80;
 			const top = element.offsetTop - offset;
 			window.scrollTo({
 				top,
@@ -212,7 +253,7 @@ export default function Home() {
 
 	return (
 		<ThemeProvider attribute='class' defaultTheme='dark' enableSystem>
-			<main className='relative min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 overflow-hidden'>
+			<main className='relative min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 overflow-x-hidden'>
 				{/* Loading Screen */}
 				<AnimatePresence>
 					{loadingProgress < 100 && (
@@ -220,8 +261,8 @@ export default function Home() {
 							initial={{ opacity: 1 }}
 							exit={{ opacity: 0 }}
 							transition={{ duration: 0.5 }}
-							className='fixed inset-0 z-50 flex items-center justify-center bg-slate-950'>
-							<div className='w-64 h-2 bg-slate-800 rounded-full overflow-hidden'>
+							className='fixed inset-0 z-50 flex items-center justify-center bg-slate-950 px-4'>
+							<div className='w-48 sm:w-64 h-2 bg-slate-800 rounded-full overflow-hidden'>
 								<motion.div
 									initial={{ width: 0 }}
 									animate={{ width: `${loadingProgress}%` }}
@@ -236,7 +277,8 @@ export default function Home() {
 				<ScrollProgress className='z-50' />
 				<FloatingCTA className='z-40' />
 
-				{isParticlesEnabled && !isReducedMotion && (
+				{/* Particles - Disabled on mobile for performance */}
+				{isParticlesEnabled && !isReducedMotion && !isMobile && (
 					<motion.div
 						initial={{ opacity: 0 }}
 						animate={{ opacity: 0.6 }}
@@ -262,20 +304,20 @@ export default function Home() {
 							whileTap={{ scale: 0.95 }}
 							onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
 							className={cn(
-								'fixed bottom-8 right-8 z-50',
-								'p-3 rounded-full',
+								'fixed bottom-4 right-4 sm:bottom-8 sm:right-8 z-50',
+								'p-2 sm:p-3 rounded-full',
 								'bg-blue-600/90 backdrop-blur-sm',
 								'shadow-lg shadow-blue-500/10',
 								'hover:bg-blue-600 transition-all duration-300',
 								'focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2'
 							)}
 							aria-label='Scroll to top'>
-							<ChevronUp className='w-5 h-5 text-white/90' />
+							<ChevronUp className='w-4 h-4 sm:w-5 sm:h-5 text-white/90' />
 						</motion.button>
 					)}
 				</AnimatePresence>
 
-				{/* Mobile Navigation */}
+				{/* Mobile Navigation Button */}
 				<motion.div
 					className='lg:hidden fixed top-4 right-4 z-[60]'
 					initial={{ opacity: 0, y: -20 }}
@@ -284,10 +326,11 @@ export default function Home() {
 					<button
 						onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
 						className={cn(
-							'bg-slate-800/90 backdrop-blur-md p-2 rounded-md',
+							'bg-slate-800/90 backdrop-blur-md p-3 rounded-lg',
 							'shadow-lg border border-slate-700/50',
 							'hover:bg-slate-700/90 focus:ring-2 focus:ring-blue-400',
-							'focus:outline-none transition-all duration-200'
+							'focus:outline-none transition-all duration-200',
+							'active:scale-95'
 						)}
 						aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
 						aria-expanded={isMobileMenuOpen}>
@@ -316,13 +359,13 @@ export default function Home() {
 								exit={{ opacity: 0, x: '100%' }}
 								transition={{ type: 'spring', damping: 25, stiffness: 200 }}
 								className={cn(
-									'fixed top-0 right-0 w-80 h-full z-[70]',
-									'bg-slate-800/95 backdrop-blur-md',
+									'fixed top-0 right-0 w-full max-w-sm h-full z-[70]',
+									'bg-slate-900/98 backdrop-blur-md',
 									'border-l border-slate-700/50 shadow-2xl'
 								)}>
-								<div className='p-6 space-y-8'>
+								<div className='p-4 sm:p-6 space-y-6 sm:space-y-8 h-full flex flex-col'>
 									<div className='flex items-center justify-between'>
-										<h2 className='text-xl font-bold text-slate-100'>
+										<h2 className='text-lg sm:text-xl font-bold text-slate-100'>
 											Navigation
 										</h2>
 										<button
@@ -337,7 +380,7 @@ export default function Home() {
 										</button>
 									</div>
 
-									<nav className='flex flex-col gap-2'>
+									<nav className='flex flex-col gap-2 flex-1'>
 										{navigationItems.map((item) => (
 											<button
 												key={item.id}
@@ -346,13 +389,16 @@ export default function Home() {
 													setIsMobileMenuOpen(false);
 												}}
 												className={cn(
-													'text-left py-3 px-4 rounded-lg transition-all',
+													'text-left py-3 sm:py-4 px-4 rounded-lg transition-all',
 													'focus:ring-2 focus:ring-blue-400 focus:outline-none',
+													'active:scale-98',
 													activeSection === item.id
 														? 'bg-blue-600/20 text-blue-400 font-medium'
 														: 'hover:bg-slate-700/50 text-slate-200 hover:text-blue-400'
 												)}>
-												{item.name}
+												<span className='text-base sm:text-lg'>
+													{item.name}
+												</span>
 											</button>
 										))}
 									</nav>
@@ -361,10 +407,11 @@ export default function Home() {
 										<Link href='/login' className='block'>
 											<Button
 												variant='ghost'
+												size='lg'
 												className={cn(
-													'w-full text-slate-200',
+													'w-full text-slate-200 text-base',
 													'hover:text-blue-400 hover:bg-slate-700/50',
-													'focus:ring-2 focus:ring-blue-400'
+													'focus:ring-2 focus:ring-blue-400 py-3'
 												)}>
 												Log In
 											</Button>
@@ -372,9 +419,10 @@ export default function Home() {
 										<Link href='/signup' className='block'>
 											<Button
 												variant='default'
+												size='lg'
 												className={cn(
-													'w-full bg-blue-600 hover:bg-blue-700 text-white',
-													'shadow-lg shadow-blue-500/20',
+													'w-full bg-blue-600 hover:bg-blue-700 text-white text-base',
+													'shadow-lg shadow-blue-500/20 py-3',
 													'focus:ring-2 focus:ring-blue-400'
 												)}>
 												Sign Up
@@ -399,24 +447,24 @@ export default function Home() {
 					initial={{ y: -100 }}
 					animate={{ y: 0 }}
 					transition={{ type: 'spring', damping: 20 }}>
-					<div className='max-w-7xl mx-auto w-full flex justify-between items-center px-6'>
+					<div className='max-w-7xl mx-auto w-full flex justify-between items-center px-6 xl:px-8'>
 						<Link
 							href='/'
 							className={cn(
 								'text-2xl font-bold text-slate-100',
 								'hover:text-blue-400 transition-colors',
-								'focus:outline-none focus:ring-2 focus:ring-blue-400 rounded-md'
+								'focus:outline-none focus:ring-2 focus:ring-blue-400 rounded-md px-2 py-1'
 							)}>
 							AdZPay
 						</Link>
 
-						<div className='flex gap-8'>
+						<div className='flex gap-6 xl:gap-8'>
 							{navigationItems.map((item) => (
 								<button
 									key={item.id}
 									onClick={() => scrollToSection(item.id)}
 									className={cn(
-										'relative py-1 px-2 rounded-md transition-all group',
+										'relative py-2 px-3 rounded-md transition-all group',
 										'focus:outline-none focus:ring-2 focus:ring-blue-400',
 										activeSection === item.id
 											? 'text-blue-400 font-medium'
@@ -439,7 +487,7 @@ export default function Home() {
 							))}
 						</div>
 
-						<div className='flex items-center gap-4'>
+						<div className='flex items-center gap-3 xl:gap-4'>
 							<button
 								onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
 								className={cn(
@@ -484,15 +532,17 @@ export default function Home() {
 					</div>
 				</motion.nav>
 
-				{/* Full-Width Content Sections */}
-				<div className='relative'>
+				{/* Content Sections Container */}
+				<div className='relative w-full'>
 					{/* Hero Section */}
 					<motion.section
 						id='hero'
 						style={{ opacity, scale, y }}
-						className='relative min-h-screen flex items-center justify-center w-full'>
+						className='relative min-h-screen flex items-center justify-center w-full px-4 sm:px-6 lg:px-8'>
 						<div className='absolute inset-0 w-full h-full bg-gradient-to-b from-slate-950/50 via-transparent to-slate-950/80' />
-						<Hero />
+						<div className='w-full max-w-7xl mx-auto'>
+							<Hero />
+						</div>
 					</motion.section>
 
 					{/* Trusted By Section */}
@@ -500,8 +550,11 @@ export default function Home() {
 						id='trusted-by'
 						initial='hidden'
 						animate={visibleSections.has('trusted-by') ? 'visible' : 'hidden'}
-						variants={sectionVariants}>
-						<TrustedBy />
+						variants={sectionVariants}
+						className='relative w-full py-8 sm:py-12 lg:py-16'>
+						<div className='w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
+							<TrustedBy />
+						</div>
 					</motion.section>
 
 					{/* Visual Features Section */}
@@ -521,8 +574,11 @@ export default function Home() {
 						id='features'
 						initial='hidden'
 						animate={visibleSections.has('features') ? 'visible' : 'hidden'}
-						variants={sectionVariants}>
-						<Features />
+						variants={sectionVariants}
+						className='relative w-full py-12 sm:py-16 lg:py-24'>
+						<div className='w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
+							<Features />
+						</div>
 					</motion.section>
 
 					{/* Testimonials Section */}
@@ -531,10 +587,11 @@ export default function Home() {
 						initial='hidden'
 						animate={visibleSections.has('testimonials') ? 'visible' : 'hidden'}
 						variants={sectionVariants}
-						className='relative w-full py-24'>
+						className='relative w-full py-12 sm:py-16 lg:py-24'>
 						<div className='absolute inset-0 w-full h-full bg-gradient-to-l from-blue-600/5 to-transparent pointer-events-none' />
-						<div className='w-full max-w-screen-xl mx-auto px-6 lg:px-12'></div>
-						<Testimonial />
+						<div className='w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
+							<Testimonial />
+						</div>
 					</motion.section>
 
 					{/* Pricing Section */}
@@ -543,8 +600,10 @@ export default function Home() {
 						initial='hidden'
 						animate={visibleSections.has('pricing') ? 'visible' : 'hidden'}
 						variants={sectionVariants}
-						className='relative w-full py-24 bg-slate-900/30 backdrop-blur-[2px]'>
-						<Pricing />
+						className='relative w-full py-12 sm:py-16 lg:py-24 bg-slate-900/30 backdrop-blur-[2px]'>
+						<div className='w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
+							<Pricing />
+						</div>
 					</motion.section>
 
 					{/* FAQs Section */}
@@ -553,8 +612,10 @@ export default function Home() {
 						initial='hidden'
 						animate={visibleSections.has('faq') ? 'visible' : 'hidden'}
 						variants={sectionVariants}
-						className='relative w-full py-0'>
-						<FAQs />
+						className='relative w-full py-12 sm:py-16 lg:py-20'>
+						<div className='w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
+							<FAQs />
+						</div>
 					</motion.section>
 
 					{/* CTA Section */}
@@ -563,12 +624,12 @@ export default function Home() {
 						initial='hidden'
 						animate={visibleSections.has('cta') ? 'visible' : 'hidden'}
 						variants={sectionVariants}
-						className='relative w-full py-24 overflow-hidden'>
+						className='relative w-full py-12 sm:py-16 lg:py-24 overflow-hidden'>
 						<div className='absolute inset-0 w-full h-full'>
 							<div className='absolute inset-0 bg-gradient-to-r from-blue-600/10 via-purple-600/10 to-blue-600/10' />
 							<div className='absolute inset-0 backdrop-blur-[2px]' />
 						</div>
-						<div className='w-full max-w-screen-xl mx-auto px-6 lg:px-12 relative'>
+						<div className='w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative'>
 							<CTA />
 						</div>
 					</motion.section>
@@ -579,15 +640,14 @@ export default function Home() {
 						initial='hidden'
 						animate={visibleSections.has('chat') ? 'visible' : 'hidden'}
 						variants={sectionVariants}
-						className='relative w-full py-16 bg-slate-900/20'>
-						<div className='w-full max-w-screen-xl mx-auto px-6 lg:px-12'>
+						className='relative w-full py-8 sm:py-12 lg:py-16 bg-slate-900/20'>
+						<div className='w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
 							<LiveChat />
 						</div>
 					</motion.section>
 				</div>
 
 				{/* Ambient Overlay */}
-
 				<div className='fixed inset-0 pointer-events-none'>
 					<div className='absolute inset-0 w-full h-full bg-gradient-to-b from-transparent via-slate-900/5 to-slate-900/20' />
 					<div className='absolute inset-0 w-full h-full bg-[radial-gradient(circle_at_center,rgba(62,99,221,0.03)_0%,transparent_100%)]' />

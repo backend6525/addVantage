@@ -17,7 +17,7 @@ import {
 } from './validators';
 import { uploadFileToS3 } from './apiService';
 import { FormErrors, CreateAdPayload } from './types';
-import { Dialog } from '@radix-ui/react-dialog';
+
 import {
 	getDailyLimit,
 	getWeeklyLimit,
