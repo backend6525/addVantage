@@ -18,6 +18,14 @@ import { ThemeProvider } from 'next-themes';
 import { cn } from '@/lib/utils';
 import Footer from './components/ui/Footer/Footer';
 
+// Design tokens for consistency
+const DESIGN_TOKENS = {
+	animation: {
+		duration: 0.7,
+		ease: [0.22, 1, 0.36, 1],
+	},
+};
+
 // Define prop types for components
 interface ScrollProgressProps {
 	className?: string;
@@ -26,6 +34,461 @@ interface ScrollProgressProps {
 interface FloatingCTAProps {
 	className?: string;
 }
+
+interface SectionConnectorProps {
+	variant?:
+		| 'default'
+		| 'inverted'
+		| 'fade'
+		| 'wave'
+		| 'diagonal'
+		| 'glow'
+		| 'mesh'
+		| 'spiral'
+		| 'particles'
+		| 'aurora';
+	height?: 'sm' | 'md' | 'lg' | 'xl';
+	animated?: boolean;
+	className?: string;
+	theme?: 'dark' | 'light';
+}
+
+// Enhanced Section Connector Component
+const SectionConnector: React.FC<SectionConnectorProps> = ({
+	variant = 'default',
+	height = 'md',
+	animated = true,
+	className = '',
+	theme = 'dark',
+}) => {
+	// Height mappings
+	const heightClasses = {
+		sm: 'h-8',
+		md: 'h-12',
+		lg: 'h-16',
+		xl: 'h-24',
+	};
+
+	// Animation variants for the connector
+	const connectorVariants = {
+		hidden: {
+			opacity: 0,
+			scaleX: 0.8,
+			y: 20,
+		},
+		visible: {
+			opacity: 1,
+			scaleX: 1,
+			y: 0,
+			transition: {
+				duration: 0.8,
+				ease: [0.22, 1, 0.36, 1],
+			},
+		},
+	};
+
+	// Render different connector variants
+	const renderConnector = () => {
+		const baseClasses = cn(
+			'w-full relative overflow-hidden',
+			heightClasses[height],
+			className
+		);
+
+		switch (variant) {
+			case 'default':
+				return (
+					<div className={baseClasses}>
+						<div className='absolute inset-0 bg-gradient-to-b from-slate-950 to-slate-900' />
+						{animated && (
+							<motion.div
+								initial={{ x: '-100%' }}
+								whileInView={{ x: '100%' }}
+								transition={{ duration: 2, ease: 'easeInOut' }}
+								viewport={{ once: true }}
+								className='absolute inset-0 bg-gradient-to-r from-transparent via-blue-500/10 to-transparent'
+							/>
+						)}
+					</div>
+				);
+
+			case 'inverted':
+				return (
+					<div className={baseClasses}>
+						<div className='absolute inset-0 bg-gradient-to-t from-slate-950 to-slate-900' />
+						{animated && (
+							<motion.div
+								initial={{ scale: 0 }}
+								whileInView={{ scale: 1 }}
+								transition={{ duration: 1.5, ease: 'easeOut' }}
+								viewport={{ once: true }}
+								className='absolute inset-0 bg-gradient-radial from-blue-500/5 via-transparent to-transparent'
+							/>
+						)}
+					</div>
+				);
+
+			case 'fade':
+				return (
+					<div className={baseClasses}>
+						<div className='absolute inset-0 bg-gradient-to-b from-slate-950/0 via-slate-950/50 to-slate-950' />
+						{animated && (
+							<motion.div
+								initial={{ opacity: 0 }}
+								whileInView={{ opacity: 1 }}
+								transition={{ duration: 1.2 }}
+								viewport={{ once: true }}
+								className='absolute inset-0 bg-gradient-to-b from-blue-600/5 to-transparent'
+							/>
+						)}
+					</div>
+				);
+
+			case 'wave':
+				return (
+					<div className={baseClasses}>
+						<svg
+							className='absolute inset-0 w-full h-full'
+							viewBox='0 0 1200 120'
+							preserveAspectRatio='none'>
+							<defs>
+								<linearGradient
+									id='waveGradient'
+									x1='0%'
+									y1='0%'
+									x2='0%'
+									y2='100%'>
+									<stop offset='0%' stopColor='rgb(15 23 42)' />
+									<stop offset='50%' stopColor='rgb(30 41 59)' />
+									<stop offset='100%' stopColor='rgb(15 23 42)' />
+								</linearGradient>
+								{animated && (
+									<linearGradient
+										id='animatedWave'
+										x1='0%'
+										y1='0%'
+										x2='100%'
+										y2='0%'>
+										<stop offset='0%' stopColor='rgba(59, 130, 246, 0.1)'>
+											<animate
+												attributeName='stop-color'
+												values='rgba(59, 130, 246, 0.1);rgba(139, 92, 246, 0.1);rgba(59, 130, 246, 0.1)'
+												dur='3s'
+												repeatCount='indefinite'
+											/>
+										</stop>
+										<stop offset='100%' stopColor='rgba(139, 92, 246, 0.1)'>
+											<animate
+												attributeName='stop-color'
+												values='rgba(139, 92, 246, 0.1);rgba(59, 130, 246, 0.1);rgba(139, 92, 246, 0.1)'
+												dur='3s'
+												repeatCount='indefinite'
+											/>
+										</stop>
+									</linearGradient>
+								)}
+							</defs>
+							<path
+								d='M0,60 C300,120 900,0 1200,60 L1200,120 L0,120 Z'
+								fill='url(#waveGradient)'
+							/>
+							{animated && (
+								<motion.path
+									initial={{ pathLength: 0, opacity: 0 }}
+									whileInView={{ pathLength: 1, opacity: 0.3 }}
+									transition={{ duration: 2, ease: 'easeInOut' }}
+									viewport={{ once: true }}
+									d='M0,60 C300,120 900,0 1200,60'
+									fill='none'
+									stroke='url(#animatedWave)'
+									strokeWidth='2'
+								/>
+							)}
+						</svg>
+					</div>
+				);
+
+			case 'diagonal':
+				return (
+					<div className={baseClasses}>
+						<div
+							className='absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950'
+							style={{
+								clipPath: 'polygon(0 0, 100% 40%, 100% 100%, 0 60%)',
+							}}
+						/>
+						{animated && (
+							<motion.div
+								initial={{ x: '-100%', skewX: -12 }}
+								whileInView={{ x: '100%', skewX: 0 }}
+								transition={{ duration: 1.8, ease: 'easeInOut' }}
+								viewport={{ once: true }}
+								className='absolute inset-0 bg-gradient-to-r from-transparent via-blue-500/10 to-transparent'
+								style={{
+									clipPath: 'polygon(0 0, 100% 40%, 100% 100%, 0 60%)',
+								}}
+							/>
+						)}
+					</div>
+				);
+
+			case 'glow':
+				return (
+					<div className={baseClasses}>
+						<div className='absolute inset-0 bg-gradient-to-b from-slate-950 to-slate-900' />
+						{animated && (
+							<>
+								<motion.div
+									initial={{ opacity: 0, scale: 0.5 }}
+									whileInView={{ opacity: 1, scale: 1 }}
+									transition={{ duration: 1.5, ease: 'easeOut' }}
+									viewport={{ once: true }}
+									className='absolute inset-0 bg-gradient-radial from-blue-500/20 via-blue-500/5 to-transparent'
+								/>
+								<motion.div
+									animate={{
+										background: [
+											'radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.1) 0%, transparent 50%)',
+											'radial-gradient(circle at 80% 50%, rgba(139, 92, 246, 0.1) 0%, transparent 50%)',
+											'radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.1) 0%, transparent 50%)',
+										],
+									}}
+									transition={{
+										duration: 4,
+										repeat: Infinity,
+										ease: 'easeInOut',
+									}}
+									className='absolute inset-0'
+								/>
+							</>
+						)}
+					</div>
+				);
+
+			case 'mesh':
+				return (
+					<div className={baseClasses}>
+						<div className='absolute inset-0 bg-gradient-to-b from-slate-950 to-slate-900' />
+						<div
+							className='absolute inset-0 opacity-30'
+							style={{
+								backgroundImage: `
+									linear-gradient(rgba(59, 130, 246, 0.1) 1px, transparent 1px),
+									linear-gradient(90deg, rgba(59, 130, 246, 0.1) 1px, transparent 1px)
+								`,
+								backgroundSize: '20px 20px',
+							}}
+						/>
+						{animated && (
+							<motion.div
+								initial={{ opacity: 0, y: 10 }}
+								whileInView={{ opacity: 1, y: 0 }}
+								transition={{ duration: 1 }}
+								viewport={{ once: true }}
+								className='absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-blue-500/5'
+							/>
+						)}
+					</div>
+				);
+
+			case 'spiral':
+				return (
+					<div className={baseClasses}>
+						<div className='absolute inset-0 bg-gradient-to-b from-slate-950 to-slate-900' />
+						<svg
+							className='absolute inset-0 w-full h-full opacity-20'
+							viewBox='0 0 200 50'
+							preserveAspectRatio='none'>
+							<defs>
+								<linearGradient
+									id='spiralGradient'
+									x1='0%'
+									y1='0%'
+									x2='100%'
+									y2='0%'>
+									<stop offset='0%' stopColor='rgba(59, 130, 246, 0.3)' />
+									<stop offset='50%' stopColor='rgba(139, 92, 246, 0.3)' />
+									<stop offset='100%' stopColor='rgba(59, 130, 246, 0.3)' />
+								</linearGradient>
+							</defs>
+							{animated && (
+								<motion.path
+									initial={{ pathLength: 0 }}
+									whileInView={{ pathLength: 1 }}
+									transition={{ duration: 2.5, ease: 'easeInOut' }}
+									viewport={{ once: true }}
+									d='M0,25 Q50,10 100,25 T200,25'
+									fill='none'
+									stroke='url(#spiralGradient)'
+									strokeWidth='1'
+								/>
+							)}
+						</svg>
+						{animated && (
+							<motion.div
+								initial={{ scaleX: 0 }}
+								whileInView={{ scaleX: 1 }}
+								transition={{ duration: 1.5, ease: 'easeOut' }}
+								viewport={{ once: true }}
+								className='absolute inset-0 bg-gradient-to-r from-transparent via-blue-500/10 to-transparent'
+							/>
+						)}
+					</div>
+				);
+
+			case 'particles':
+				return (
+					<div className={baseClasses}>
+						<div className='absolute inset-0 bg-gradient-to-b from-slate-950 to-slate-900' />
+						{animated && (
+							<>
+								{[...Array(12)].map((_, i) => (
+									<motion.div
+										key={i}
+										initial={{
+											x: `${Math.random() * 100}%`,
+											y: '100%',
+											opacity: 0,
+											scale: 0,
+										}}
+										whileInView={{
+											x: `${Math.random() * 100}%`,
+											y: '-20%',
+											opacity: [0, 1, 0],
+											scale: [0, 1, 0],
+										}}
+										transition={{
+											duration: 3 + Math.random() * 2,
+											delay: Math.random() * 2,
+											ease: 'easeOut',
+										}}
+										viewport={{ once: true }}
+										className='absolute w-1 h-1 bg-blue-400 rounded-full'
+									/>
+								))}
+								<motion.div
+									initial={{ opacity: 0 }}
+									whileInView={{ opacity: 1 }}
+									transition={{ duration: 1.5 }}
+									viewport={{ once: true }}
+									className='absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/10 to-blue-500/5'
+								/>
+							</>
+						)}
+					</div>
+				);
+
+			case 'aurora':
+				return (
+					<div className={baseClasses}>
+						<div className='absolute inset-0 bg-gradient-to-b from-slate-950 to-slate-900' />
+						{animated && (
+							<>
+								<motion.div
+									animate={{
+										background: [
+											'linear-gradient(90deg, rgba(59, 130, 246, 0.1) 0%, rgba(139, 92, 246, 0.1) 50%, rgba(236, 72, 153, 0.1) 100%)',
+											'linear-gradient(90deg, rgba(139, 92, 246, 0.1) 0%, rgba(236, 72, 153, 0.1) 50%, rgba(59, 130, 246, 0.1) 100%)',
+											'linear-gradient(90deg, rgba(236, 72, 153, 0.1) 0%, rgba(59, 130, 246, 0.1) 50%, rgba(139, 92, 246, 0.1) 100%)',
+										],
+									}}
+									transition={{
+										duration: 8,
+										repeat: Infinity,
+										ease: 'linear',
+									}}
+									className='absolute inset-0'
+								/>
+								<motion.div
+									initial={{ opacity: 0, scaleY: 0 }}
+									whileInView={{ opacity: 0.7, scaleY: 1 }}
+									transition={{ duration: 2, ease: 'easeOut' }}
+									viewport={{ once: true }}
+									className='absolute inset-0 bg-gradient-to-b from-transparent via-blue-500/5 to-transparent'
+								/>
+							</>
+						)}
+					</div>
+				);
+
+			default:
+				return (
+					<div className={baseClasses}>
+						<div className='absolute inset-0 bg-gradient-to-b from-slate-950 to-slate-900' />
+					</div>
+				);
+		}
+	};
+
+	const ConnectorElement = animated ? motion.div : 'div';
+	const motionProps = animated
+		? {
+				variants: connectorVariants,
+				initial: 'hidden',
+				whileInView: 'visible',
+				viewport: { once: true, margin: '-50px' },
+			}
+		: {};
+
+	return (
+		<ConnectorElement {...motionProps} className='relative w-full'>
+			{renderConnector()}
+		</ConnectorElement>
+	);
+};
+
+// Smart Section Connector that alternates between different styles
+const SmartSectionConnector = ({
+	sectionIndex,
+	isReducedMotion = false,
+}: {
+	sectionIndex: number;
+	isReducedMotion?: boolean;
+}) => {
+	const variants: Array<SectionConnectorProps['variant']> = [
+		'aurora',
+		'wave',
+		'diagonal',
+		'glow',
+		'particles',
+		'mesh',
+		'spiral',
+		'fade',
+	];
+	const heights: Array<SectionConnectorProps['height']> = [
+		'lg',
+		'md',
+		'xl',
+		'md',
+		'lg',
+		'md',
+		'xl',
+		'md',
+	];
+
+	return (
+		<SectionConnector
+			variant={variants[sectionIndex % variants.length]}
+			height={heights[sectionIndex % heights.length]}
+			animated={!isReducedMotion}
+		/>
+	);
+};
+
+// Section Container Component for consistent spacing
+const SectionContainer = ({ children, id, className = '', variants }) => (
+	<motion.section
+		id={id}
+		variants={variants}
+		initial='hidden'
+		whileInView='visible'
+		viewport={{ once: true, margin: '-10% 0px -10% 0px' }}
+		className={`relative w-full py-16 lg:py-20 ${className}`}>
+		<div className='w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
+			{children}
+		</div>
+	</motion.section>
+);
 
 // Dynamically import components with types
 const ScrollProgress = dynamic<ScrollProgressProps>(
@@ -125,13 +588,13 @@ export default function Home() {
 	const sectionVariants = {
 		hidden: {
 			opacity: 0,
-			y: isMobile ? 15 : 20,
+			y: isMobile ? 20 : 30,
 		},
 		visible: {
 			opacity: 1,
 			y: 0,
 			transition: {
-				duration: isMobile ? 0.6 : 0.8,
+				duration: 0.8,
 				ease: [0.22, 1, 0.36, 1],
 			},
 		},
@@ -253,7 +716,11 @@ export default function Home() {
 
 	return (
 		<ThemeProvider attribute='class' defaultTheme='dark' enableSystem>
-			<main className='relative min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 overflow-x-hidden'>
+			<main className='relative min-h-screen bg-slate-950 overflow-x-hidden'>
+				{/* Unified background system */}
+				<div className='fixed inset-0 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 pointer-events-none' />
+				<div className='fixed inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-900/10 via-transparent to-transparent pointer-events-none' />
+
 				{/* Loading Screen */}
 				<AnimatePresence>
 					{loadingProgress < 100 && (
@@ -306,13 +773,13 @@ export default function Home() {
 							className={cn(
 								'fixed bottom-4 right-4 sm:bottom-8 sm:right-8 z-50',
 								'p-2 sm:p-3 rounded-full',
-								'bg-blue-600/90 backdrop-blur-sm',
+								'bg-blue-600 hover:bg-blue-700',
 								'shadow-lg shadow-blue-500/10',
-								'hover:bg-blue-600 transition-all duration-300',
+								'transition-all duration-300',
 								'focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2'
 							)}
 							aria-label='Scroll to top'>
-							<ChevronUp className='w-4 h-4 sm:w-5 sm:h-5 text-white/90' />
+							<ChevronUp className='w-4 h-4 sm:w-5 sm:h-5 text-white' />
 						</motion.button>
 					)}
 				</AnimatePresence>
@@ -545,112 +1012,159 @@ export default function Home() {
 						</div>
 					</motion.section>
 
+					{/* Enhanced Section Connectors */}
+					{/* <SmartSectionConnector
+						sectionIndex={0}
+						isReducedMotion={isReducedMotion}
+					/> */}
+
 					{/* Trusted By Section */}
-					<motion.section
+					{/* <SectionContainer
 						id='trusted-by'
-						initial='hidden'
-						animate={visibleSections.has('trusted-by') ? 'visible' : 'hidden'}
 						variants={sectionVariants}
-						className='relative w-full py-8 sm:py-12 lg:py-16'>
-						<div className='w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-							<TrustedBy />
-						</div>
+						// viewport={{ once: true, margin: '-10% 0px -10% 0px' }}
+						className='relative w-full py-0 overflow-hidden'>
+						<TrustedBy />
+					</SectionContainer> */}
+					<motion.section
+						id='features'
+						variants={sectionVariants}
+						initial='hidden'
+						whileInView='visible'
+						viewport={{ once: true, margin: '-10% 0px -10% 0px' }}
+						className='relative w-full py-0 overflow-hidden'>
+						<TrustedBy />
 					</motion.section>
+
+					{/* <SmartSectionConnector
+						sectionIndex={1}
+						isReducedMotion={isReducedMotion}
+					/> */}
 
 					{/* Visual Features Section */}
 					<motion.section
 						id='visual-features'
-						initial='hidden'
-						animate={
-							visibleSections.has('visual-features') ? 'visible' : 'hidden'
-						}
 						variants={sectionVariants}
+						initial='hidden'
+						whileInView='visible'
+						viewport={{ once: true, margin: '-10% 0px -10% 0px' }}
 						className='relative w-full py-0 overflow-hidden'>
 						<VisualFeatures />
 					</motion.section>
 
+					{/* <SmartSectionConnector
+						sectionIndex={2}
+						isReducedMotion={isReducedMotion}
+					/> */}
+
 					{/* Features Section */}
+					{/* <SectionContainer
+						id='features'
+						variants={sectionVariants}
+						// viewport={{ once: true, margin: '-10% 0px -10% 0px' }}
+						className='relative w-full py-0 overflow-hidden'>
+						<Features />
+					</SectionContainer> */}
+
 					<motion.section
 						id='features'
-						initial='hidden'
-						animate={visibleSections.has('features') ? 'visible' : 'hidden'}
 						variants={sectionVariants}
-						className='relative w-full py-12 sm:py-16 lg:py-24'>
-						<div className='w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-							<Features />
-						</div>
+						initial='hidden'
+						whileInView='visible'
+						viewport={{ once: true, margin: '-10% 0px -10% 0px' }}
+						className='relative w-full py-0 overflow-hidden'>
+						<Features />
 					</motion.section>
+
+					{/* <SmartSectionConnector
+						sectionIndex={3}
+						isReducedMotion={isReducedMotion}
+					/> */}
 
 					{/* Testimonials Section */}
+					{/* <SectionContainer id='testimonials' variants={sectionVariants}>
+						<Testimonial />
+					</SectionContainer> */}
 					<motion.section
-						id='testimonials'
-						initial='hidden'
-						animate={visibleSections.has('testimonials') ? 'visible' : 'hidden'}
+						id='features'
 						variants={sectionVariants}
-						className='relative w-full py-12 sm:py-16 lg:py-24'>
-						<div className='absolute inset-0 w-full h-full bg-gradient-to-l from-blue-600/5 to-transparent pointer-events-none' />
-						<div className='w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-							<Testimonial />
-						</div>
+						initial='hidden'
+						whileInView='visible'
+						viewport={{ once: true, margin: '-10% 0px -10% 0px' }}
+						className='relative w-full py-0 overflow-hidden'>
+						<Testimonial />
 					</motion.section>
+
+					{/* 
+					<SmartSectionConnector
+						sectionIndex={4}
+						isReducedMotion={isReducedMotion}
+					/> */}
 
 					{/* Pricing Section */}
+					{/* <SectionContainer id='pricing' variants={sectionVariants}>
+						<Pricing />
+					</SectionContainer> */}
+
 					<motion.section
-						id='pricing'
-						initial='hidden'
-						animate={visibleSections.has('pricing') ? 'visible' : 'hidden'}
+						id='features'
 						variants={sectionVariants}
-						className='relative w-full py-12 sm:py-16 lg:py-24 bg-slate-900/30 backdrop-blur-[2px]'>
-						<div className='w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-							<Pricing />
-						</div>
+						initial='hidden'
+						whileInView='visible'
+						viewport={{ once: true, margin: '-10% 0px -10% 0px' }}
+						className='relative w-full py-0 overflow-hidden'>
+						<Pricing />
 					</motion.section>
+
+					{/* <SmartSectionConnector
+						sectionIndex={5}
+						isReducedMotion={isReducedMotion}
+					/> */}
 
 					{/* FAQs Section */}
+					{/* <SectionContainer id='faq' variants={sectionVariants}>
+						<FAQs />
+					</SectionContainer> */}
+
 					<motion.section
-						id='faq'
-						initial='hidden'
-						animate={visibleSections.has('faq') ? 'visible' : 'hidden'}
+						id='features'
 						variants={sectionVariants}
-						className='relative w-full py-12 sm:py-16 lg:py-20'>
-						<div className='w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-							<FAQs />
-						</div>
+						initial='hidden'
+						whileInView='visible'
+						viewport={{ once: true, margin: '-10% 0px -10% 0px' }}
+						className='relative w-full py-0 overflow-hidden'>
+						<FAQs />
 					</motion.section>
+
+					{/* <SmartSectionConnector
+						sectionIndex={6}
+						isReducedMotion={isReducedMotion}
+					/> */}
 
 					{/* CTA Section */}
+					{/* <SectionContainer id='cta' variants={sectionVariants}>
+						<CTA />
+					</SectionContainer> */}
+
 					<motion.section
-						id='cta'
-						initial='hidden'
-						animate={visibleSections.has('cta') ? 'visible' : 'hidden'}
+						id='features'
 						variants={sectionVariants}
-						className='relative w-full py-12 sm:py-16 lg:py-24 overflow-hidden'>
-						<div className='absolute inset-0 w-full h-full'>
-							<div className='absolute inset-0 bg-gradient-to-r from-blue-600/10 via-purple-600/10 to-blue-600/10' />
-							<div className='absolute inset-0 backdrop-blur-[2px]' />
-						</div>
-						<div className='w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative'>
-							<CTA />
-						</div>
+						initial='hidden'
+						whileInView='visible'
+						viewport={{ once: true, margin: '-10% 0px -10% 0px' }}
+						className='relative w-full py-0 overflow-hidden'>
+						<CTA />
 					</motion.section>
+
+					{/* <SmartSectionConnector
+						sectionIndex={7}
+						isReducedMotion={isReducedMotion}
+					/> */}
 
 					{/* Live Chat Section */}
-					<motion.section
-						id='chat'
-						initial='hidden'
-						animate={visibleSections.has('chat') ? 'visible' : 'hidden'}
-						variants={sectionVariants}
-						className='relative w-full py-8 sm:py-12 lg:py-16 bg-slate-900/20'>
-						<div className='w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-							<LiveChat />
-						</div>
-					</motion.section>
-				</div>
-
-				{/* Ambient Overlay */}
-				<div className='fixed inset-0 pointer-events-none'>
-					<div className='absolute inset-0 w-full h-full bg-gradient-to-b from-transparent via-slate-900/5 to-slate-900/20' />
-					<div className='absolute inset-0 w-full h-full bg-[radial-gradient(circle_at_center,rgba(62,99,221,0.03)_0%,transparent_100%)]' />
+					{/* <SectionContainer id='chat' variants={sectionVariants}> */}
+					<LiveChat />
+					{/* </SectionContainer> */}
 				</div>
 
 				{/* Footer section */}

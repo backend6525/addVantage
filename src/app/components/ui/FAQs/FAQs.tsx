@@ -12,6 +12,44 @@ import {
 import { Button } from '@/components/ui/button';
 import LayoutEffect from '@/app/components/LayoutEffect';
 
+// Design tokens for consistency
+const DESIGN_TOKENS = {
+	animation: {
+		duration: 0.7,
+		ease: [0.22, 1, 0.36, 1],
+	},
+	colors: {
+		primary: '#3E63DD',
+		text: {
+			primary: '#f1f5f9', // slate-100
+			secondary: '#e2e8f0', // slate-200
+			tertiary: '#cbd5e1', // slate-300
+		},
+	},
+};
+
+// Consistent badge component (same as in other sections)
+const ConsistentBadge = ({
+	text,
+	icon,
+}: {
+	text: string;
+	icon: React.ReactNode;
+}) => (
+	<motion.div
+		initial={{ opacity: 0, y: 20 }}
+		whileInView={{ opacity: 1, y: 0 }}
+		transition={{
+			duration: DESIGN_TOKENS.animation.duration,
+			ease: DESIGN_TOKENS.animation.ease,
+		}}
+		viewport={{ once: true }}
+		className='inline-flex items-center gap-2 bg-slate-800/80 backdrop-blur-sm px-4 py-2 rounded-full border border-slate-700/50 text-sm font-medium text-blue-400 mb-6'>
+		{icon}
+		{text}
+	</motion.div>
+);
+
 interface FAQ {
 	q: string;
 	a: string;
@@ -64,7 +102,7 @@ const FAQs = () => {
 			: faqsList.filter((faq) => faq.category === activeCategory);
 
 	return (
-		<section className='relative py-16 overflow-hidden'>
+		<section className='relative py-16 lg:py-20 overflow-hidden'>
 			{/* Enhanced Background Elements */}
 			<div className='absolute inset-0 pointer-events-none'>
 				<motion.div
@@ -95,27 +133,41 @@ const FAQs = () => {
 						trueState: 'opacity-100 translate-y-0',
 						falseState: 'opacity-0 translate-y-12',
 					}}>
-					<div className='text-center mb-12'>
-						<motion.div
-							whileHover={{ scale: 1.02 }}
-							className='inline-flex items-center gap-2 bg-gradient-to-r from-slate-800/90 to-slate-800/70 backdrop-blur-sm px-4 py-2 rounded-full mb-6 border border-slate-700/50 shadow-lg'>
-							<Sparkles className='w-4 h-4 text-blue-400' />
-							<span className='text-sm font-medium bg-gradient-to-r from-slate-200 to-blue-400 bg-clip-text text-transparent'>
-								Common Questions
-							</span>
-						</motion.div>
-						<h2 className='text-4xl font-bold mb-6'>
-							<span className='bg-gradient-to-r from-slate-100 via-slate-300 to-purple-400 bg-clip-text text-transparent inline-block'>
-								Frequently Asked Questions
+					<motion.div
+						className='text-center mb-12'
+						initial={{ opacity: 0, y: 20 }}
+						whileInView={{ opacity: 1, y: 0 }}
+						transition={{
+							duration: DESIGN_TOKENS.animation.duration,
+							ease: DESIGN_TOKENS.animation.ease,
+						}}
+						viewport={{ once: true }}>
+						<ConsistentBadge
+							text='Common Questions'
+							icon={<Sparkles className='w-4 h-4 text-blue-400' />}
+						/>
+						<h2 className='text-3xl sm:text-4xl lg:text-5xl font-bold mb-6'>
+							<span className='text-slate-100'>Frequently Asked </span>
+							<span className='bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent'>
+								Questions
 							</span>
 						</h2>
 						<p className='text-lg text-slate-300 max-w-2xl mx-auto'>
 							Everything you need to know about AddVantage and how it works
 						</p>
-					</div>
+					</motion.div>
 
 					{/* Enhanced Category Filter */}
-					<div className='flex flex-wrap justify-center gap-4 mb-12'>
+					<motion.div
+						className='flex flex-wrap justify-center gap-4 mb-12'
+						initial={{ opacity: 0, y: 20 }}
+						whileInView={{ opacity: 1, y: 0 }}
+						transition={{
+							duration: DESIGN_TOKENS.animation.duration,
+							delay: 0.1,
+							ease: DESIGN_TOKENS.animation.ease,
+						}}
+						viewport={{ once: true }}>
 						{categories.map((category) => (
 							<motion.button
 								key={category}
@@ -124,13 +176,13 @@ const FAQs = () => {
 								onClick={() => setActiveCategory(category)}
 								className={`px-6 py-2 rounded-full transition-all duration-300 ${
 									activeCategory === category
-										? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg'
+										? 'bg-blue-600 text-white shadow-lg'
 										: 'bg-slate-800/50 text-slate-300 hover:text-slate-100 border border-slate-700/50'
 								}`}>
 								{category}
 							</motion.button>
 						))}
-					</div>
+					</motion.div>
 
 					{/* Enhanced FAQ List */}
 					<div
@@ -144,13 +196,20 @@ const FAQs = () => {
 							return (
 								<motion.div
 									key={idx}
-									initial={false}
+									initial={{ opacity: 0, y: 20 }}
+									whileInView={{ opacity: 1, y: 0 }}
+									transition={{
+										duration: DESIGN_TOKENS.animation.duration,
+										delay: idx * 0.1,
+										ease: DESIGN_TOKENS.animation.ease,
+									}}
+									viewport={{ once: true }}
 									animate={{
 										backgroundColor: isOpen
 											? 'rgba(30, 41, 59, 0.8)'
 											: 'rgba(30, 41, 59, 0.5)',
 									}}
-									className='relative overflow-hidden backdrop-blur-sm rounded-2xl border border-slate-700/50 transition-all duration-300'>
+									className='relative overflow-hidden bg-slate-800/30 backdrop-blur-md rounded-xl border border-slate-700/50 transition-all duration-300'>
 									{/* Gradient Background */}
 									<motion.div
 										className={`absolute inset-0 bg-gradient-to-br ${faq.gradient} opacity-0 transition-opacity duration-300`}
@@ -198,15 +257,24 @@ const FAQs = () => {
 					</div>
 
 					{/* Enhanced CTA Section */}
-					<div className='mt-12 text-center'>
+					<motion.div
+						className='mt-12 text-center'
+						initial={{ opacity: 0, y: 20 }}
+						whileInView={{ opacity: 1, y: 0 }}
+						transition={{
+							duration: DESIGN_TOKENS.animation.duration,
+							delay: 0.3,
+							ease: DESIGN_TOKENS.animation.ease,
+						}}
+						viewport={{ once: true }}>
 						<p className='text-lg text-slate-300 mb-8'>
 							Still have questions? We&apos;re here to help!
 						</p>
-						<Button className='group gap-2 text-lg px-8 py-6 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg hover:shadow-xl transition-all duration-300'>
+						<Button className='group gap-2 text-lg px-8 py-6 bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 rounded-xl'>
 							Contact Support
-							<ChevronRight className='w-5 h-5 group-hover:translate-x-1 transition-transform' />
+							<ChevronRight className='w-5 h-5 group-hover:translate-x-1 transition-transform duration-300' />
 						</Button>
-					</div>
+					</motion.div>
 				</LayoutEffect>
 			</div>
 		</section>

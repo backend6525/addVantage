@@ -102,14 +102,14 @@ const LiveChat = () => {
 			{/* Chat Toggle Button */}
 			<motion.button
 				onClick={() => setIsOpen(!isOpen)}
-				className='fixed bottom-6 right-6 z-50 glass p-4 rounded-full shadow-lg border border-primary/30 hover:scale-110 transition-transform'
+				className='fixed bottom-6 right-6 z-50 bg-blue-600 p-4 rounded-full shadow-lg hover:bg-blue-700 transition-colors duration-300'
 				whileHover={{ scale: 1.1 }}
 				whileTap={{ scale: 0.95 }}
 				aria-label={isOpen ? 'Close chat' : 'Open chat'}>
 				{isOpen ? (
-					<X className='w-6 h-6 text-primary' />
+					<X className='w-6 h-6 text-white' />
 				) : (
-					<MessageCircle className='w-6 h-6 text-primary' />
+					<MessageCircle className='w-6 h-6 text-white' />
 				)}
 			</motion.button>
 
@@ -125,30 +125,30 @@ const LiveChat = () => {
 							height: isMinimized ? 'auto' : '500px',
 						}}
 						exit={{ opacity: 0, y: 20, scale: 0.95 }}
-						transition={{ type: 'spring', damping: 20 }}
-						className='fixed bottom-24 right-6 z-50 w-80 md:w-96 glass rounded-xl shadow-xl border border-primary/20 overflow-hidden'>
+						transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+						className='fixed bottom-24 right-6 z-50 w-80 md:w-96 bg-slate-800 rounded-xl shadow-xl border border-slate-700 overflow-hidden'>
 						{/* Chat Header */}
-						<div className='p-4 border-b border-primary/10 flex justify-between items-center bg-primary/5'>
+						<div className='p-4 border-b border-slate-700 flex justify-between items-center bg-slate-800'>
 							<div className='flex items-center gap-2'>
-								<Bot className='w-5 h-5 text-primary' />
-								<h3 className='font-bold'>AddVantage Support</h3>
+								<Bot className='w-5 h-5 text-blue-400' />
+								<h3 className='font-bold text-slate-100'>AddVantage Support</h3>
 							</div>
 							<div className='flex items-center gap-2'>
 								<button
 									onClick={() => setIsMinimized(!isMinimized)}
-									className='p-1 rounded-full hover:bg-primary/10 transition-colors'
+									className='p-1 rounded-full hover:bg-slate-700 transition-colors duration-300'
 									aria-label={isMinimized ? 'Maximize chat' : 'Minimize chat'}>
 									{isMinimized ? (
-										<Maximize2 className='w-4 h-4 text-primary' />
+										<Maximize2 className='w-4 h-4 text-slate-300' />
 									) : (
-										<Minimize2 className='w-4 h-4 text-primary' />
+										<Minimize2 className='w-4 h-4 text-slate-300' />
 									)}
 								</button>
 								<button
 									onClick={() => setIsOpen(false)}
-									className='p-1 rounded-full hover:bg-primary/10 transition-colors'
+									className='p-1 rounded-full hover:bg-slate-700 transition-colors duration-300'
 									aria-label='Close chat'>
-									<X className='w-4 h-4 text-primary' />
+									<X className='w-4 h-4 text-slate-300' />
 								</button>
 							</div>
 						</div>
@@ -156,7 +156,7 @@ const LiveChat = () => {
 						{/* Chat Messages */}
 						{!isMinimized && (
 							<>
-								<div className='p-4 h-[350px] overflow-y-auto custom-scrollbar'>
+								<div className='p-4 h-[350px] overflow-y-auto bg-slate-800'>
 									{messages.map((msg) => (
 										<div
 											key={msg.id}
@@ -166,12 +166,12 @@ const LiveChat = () => {
 											<div
 												className={`max-w-[80%] p-3 rounded-xl ${
 													msg.sender === 'user'
-														? 'bg-primary text-white rounded-br-none'
-														: 'bg-muted rounded-bl-none'
+														? 'bg-blue-600 text-white rounded-br-none'
+														: 'bg-slate-700 text-slate-200 rounded-bl-none'
 												}`}>
 												<div className='flex items-start gap-2'>
 													{msg.sender === 'bot' && (
-														<Bot className='w-5 h-5 text-primary mt-1 flex-shrink-0' />
+														<Bot className='w-5 h-5 text-blue-400 mt-1 flex-shrink-0' />
 													)}
 													<div>
 														<p className='text-sm'>{msg.message}</p>
@@ -188,11 +188,11 @@ const LiveChat = () => {
 									))}
 									{isTyping && (
 										<div className='flex justify-start mb-4'>
-											<div className='bg-muted p-3 rounded-xl rounded-bl-none max-w-[80%]'>
+											<div className='bg-slate-700 p-3 rounded-xl rounded-bl-none max-w-[80%]'>
 												<div className='flex items-center gap-1'>
-													<div className='w-2 h-2 bg-primary/50 rounded-full animate-bounce'></div>
-													<div className='w-2 h-2 bg-primary/50 rounded-full animate-bounce delay-100'></div>
-													<div className='w-2 h-2 bg-primary/50 rounded-full animate-bounce delay-200'></div>
+													<div className='w-2 h-2 bg-blue-400 rounded-full animate-bounce'></div>
+													<div className='w-2 h-2 bg-blue-400 rounded-full animate-bounce delay-100'></div>
+													<div className='w-2 h-2 bg-blue-400 rounded-full animate-bounce delay-200'></div>
 												</div>
 											</div>
 										</div>
@@ -201,7 +201,7 @@ const LiveChat = () => {
 								</div>
 
 								{/* Chat Input */}
-								<div className='p-4 border-t border-primary/10'>
+								<div className='p-4 border-t border-slate-700 bg-slate-800'>
 									<div className='flex gap-2'>
 										<input
 											ref={inputRef}
@@ -210,13 +210,13 @@ const LiveChat = () => {
 											onChange={(e) => setInputValue(e.target.value)}
 											onKeyPress={handleKeyPress}
 											placeholder='Type your message...'
-											className='flex-1 bg-transparent border border-primary/20 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30'
+											className='flex-1 bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-200 placeholder:text-slate-400'
 										/>
 										<Button
 											onClick={handleSendMessage}
 											disabled={!inputValue.trim()}
 											size='icon'
-											className='rounded-lg'>
+											className='rounded-lg bg-blue-600 hover:bg-blue-700'>
 											<Send className='w-4 h-4' />
 										</Button>
 									</div>

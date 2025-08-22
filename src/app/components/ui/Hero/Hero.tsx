@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
 	ChevronRight,
 	Play,
@@ -15,6 +15,39 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
+
+// Design tokens for consistency
+const DESIGN_TOKENS = {
+	animation: {
+		duration: 0.7,
+		ease: [0.22, 1, 0.36, 1],
+	},
+	colors: {
+		primary: '#3E63DD',
+		text: {
+			primary: '#f1f5f9', // slate-100
+			secondary: '#e2e8f0', // slate-200
+			tertiary: '#cbd5e1', // slate-300
+		},
+	},
+};
+
+// Consistent badge component
+const ConsistentBadge = ({
+	text,
+	icon,
+}: {
+	text: string;
+	icon: React.ReactNode;
+}) => (
+	<motion.div
+		whileHover={{ scale: 1.02 }}
+		whileTap={{ scale: 0.98 }}
+		className='inline-flex items-center gap-2 bg-slate-800/90 backdrop-blur-sm px-4 py-2 rounded-full mb-8 border border-slate-700/50 shadow-lg hover:shadow-xl hover:border-slate-600/50 transition-all duration-300'>
+		{icon}
+		<span className='text-sm font-medium text-blue-400'>{text}</span>
+	</motion.div>
+);
 
 const Hero = () => {
 	const [isHovered, setIsHovered] = useState(false);
@@ -41,7 +74,7 @@ const Hero = () => {
 	];
 
 	// Auto-rotate features
-	React.useEffect(() => {
+	useEffect(() => {
 		const interval = setInterval(() => {
 			setActiveFeature((prev) => (prev + 1) % aiFeatures.length);
 		}, 3000);
@@ -57,38 +90,55 @@ const Hero = () => {
 				<div className='grid lg:grid-cols-2 gap-12 lg:gap-16 items-center max-w-7xl mx-auto'>
 					{/* Enhanced Text Content */}
 					<div className='text-center lg:text-left max-w-2xl mx-auto lg:mx-0'>
-						{/* AI Feature Badge */}
-						<motion.div
-							whileHover={{ scale: 1.02 }}
-							whileTap={{ scale: 0.98 }}
-							className='inline-flex items-center gap-2 bg-gradient-to-r from-slate-800/90 to-slate-800/70 backdrop-blur-sm px-4 py-2 rounded-full mb-8 border border-slate-700/50 shadow-lg hover:shadow-xl hover:border-slate-600/50'>
-							{aiFeatures[activeFeature].icon}
-							<span className='text-sm font-medium bg-gradient-to-r from-slate-200 to-blue-400 bg-clip-text text-transparent'>
-								{aiFeatures[activeFeature].description}
-							</span>
-						</motion.div>
+						{/* AI Feature Badge - now using ConsistentBadge */}
+						<ConsistentBadge
+							text={aiFeatures[activeFeature].description}
+							icon={aiFeatures[activeFeature].icon}
+						/>
 
 						{/* Enhanced Heading with AI emphasis */}
-						<h1 className='text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6'>
-							<span className='bg-gradient-to-r from-slate-100 to-slate-300 bg-clip-text text-transparent'>
+						<motion.h1
+							className='text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6'
+							initial={{ opacity: 0, y: 20 }}
+							animate={{ opacity: 1, y: 0 }}
+							transition={{
+								duration: DESIGN_TOKENS.animation.duration,
+								ease: DESIGN_TOKENS.animation.ease,
+							}}>
+							<span className='text-slate-100'>
 								Transform Your Influence with{' '}
 							</span>
 							<span className='bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent'>
 								AI-Powered Earnings
 							</span>
-						</h1>
+						</motion.h1>
 
 						{/* Enhanced Value Proposition */}
-						<p className='text-lg md:text-xl text-slate-300 leading-relaxed mb-8 max-w-xl mx-auto lg:mx-0'>
+						<motion.p
+							className='text-lg md:text-xl text-slate-300 leading-relaxed mb-8 max-w-xl mx-auto lg:mx-0'
+							initial={{ opacity: 0, y: 20 }}
+							animate={{ opacity: 1, y: 0 }}
+							transition={{
+								delay: 0.1,
+								duration: DESIGN_TOKENS.animation.duration,
+								ease: DESIGN_TOKENS.animation.ease,
+							}}>
 							Join the future of digital marketing. Our AI-driven platform helps
 							you share the right ads with the right audience, maximizing your
 							earnings through intelligent targeting and optimization.
-						</p>
+						</motion.p>
 
 						{/* Enhanced Earning Potential Card */}
 						<motion.div
+							initial={{ opacity: 0, y: 20 }}
+							animate={{ opacity: 1, y: 0 }}
+							transition={{
+								delay: 0.2,
+								duration: DESIGN_TOKENS.animation.duration,
+								ease: DESIGN_TOKENS.animation.ease,
+							}}
 							whileHover={{ scale: 1.02 }}
-							className='bg-gradient-to-br from-slate-800/80 to-slate-800/60 border border-slate-700/50 rounded-xl p-6 mb-8 backdrop-blur-sm shadow-lg hover:shadow-xl transition-all'>
+							className='bg-slate-800/80 border border-slate-700/50 rounded-xl p-6 mb-8 backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300'>
 							<div className='flex items-center gap-3 mb-3'>
 								<div className='p-2 bg-green-500/10 rounded-lg'>
 									<Brain className='w-5 h-5 text-green-400' />
@@ -105,13 +155,21 @@ const Hero = () => {
 						</motion.div>
 
 						{/* Enhanced CTA Buttons */}
-						<div className='flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-10'>
+						<motion.div
+							className='flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-10'
+							initial={{ opacity: 0, y: 20 }}
+							animate={{ opacity: 1, y: 0 }}
+							transition={{
+								delay: 0.3,
+								duration: DESIGN_TOKENS.animation.duration,
+								ease: DESIGN_TOKENS.animation.ease,
+							}}>
 							<Link href='/signup' passHref>
 								<Button
 									size='lg'
-									className='group gap-2 text-lg px-8 py-6 transition-all duration-300 shadow-lg hover:shadow-xl font-medium bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white border-none rounded-xl'>
+									className='group gap-2 text-lg px-8 py-6 transition-all duration-300 shadow-lg hover:shadow-xl font-medium bg-blue-600 hover:bg-blue-700 text-white border-none rounded-xl'>
 									Start with AI
-									<ChevronRight className='w-5 h-5 group-hover:translate-x-1 transition-transform' />
+									<ChevronRight className='w-5 h-5 group-hover:translate-x-1 transition-transform duration-300' />
 								</Button>
 							</Link>
 
@@ -122,10 +180,18 @@ const Hero = () => {
 								<Play className='w-5 h-5' />
 								See AI in Action
 							</Button>
-						</div>
+						</motion.div>
 
 						{/* Enhanced Trust Indicators */}
-						<div className='grid grid-cols-3 gap-4 text-sm'>
+						<motion.div
+							className='grid grid-cols-3 gap-4 text-sm'
+							initial={{ opacity: 0, y: 20 }}
+							animate={{ opacity: 1, y: 0 }}
+							transition={{
+								delay: 0.4,
+								duration: DESIGN_TOKENS.animation.duration,
+								ease: DESIGN_TOKENS.animation.ease,
+							}}>
 							{[
 								{
 									icon: <Brain className='w-4 h-4 text-blue-400' />,
@@ -146,7 +212,7 @@ const Hero = () => {
 								<motion.div
 									key={stat.label}
 									whileHover={{ scale: 1.05 }}
-									className='bg-slate-800/50 border border-slate-700/50 rounded-lg p-3 text-center hover:border-slate-600/50 transition-all'>
+									className='bg-slate-800/50 border border-slate-700/50 rounded-lg p-3 text-center hover:border-slate-600/50 transition-all duration-300'>
 									<div className='flex items-center justify-center gap-2 mb-1'>
 										{stat.icon}
 										<span className='font-semibold text-slate-200'>
@@ -156,14 +222,21 @@ const Hero = () => {
 									<span className='text-xs text-slate-400'>{stat.label}</span>
 								</motion.div>
 							))}
-						</div>
+						</motion.div>
 					</div>
 
 					{/* Enhanced Image Section with AI visualization */}
-					<div className='relative mx-auto max-w-md lg:max-w-none'>
+					<motion.div
+						className='relative mx-auto max-w-md lg:max-w-none'
+						initial={{ opacity: 0, scale: 0.95 }}
+						animate={{ opacity: 1, scale: 1 }}
+						transition={{
+							duration: DESIGN_TOKENS.animation.duration,
+							ease: DESIGN_TOKENS.animation.ease,
+						}}>
 						<motion.div
 							whileHover={{ scale: 1.02 }}
-							className='relative z-10 rounded-2xl overflow-hidden shadow-2xl border border-slate-700/50 backdrop-blur-sm'>
+							className='relative z-10 rounded-2xl overflow-hidden shadow-2xl border border-slate-700/50 backdrop-blur-sm transition-all duration-300'>
 							<Image
 								src='/images/hero.avif'
 								alt='AI-Powered AddVantage Platform'
@@ -196,7 +269,7 @@ const Hero = () => {
 								</div>
 							</div>
 						</motion.div>
-					</div>
+					</motion.div>
 				</div>
 			</div>
 
@@ -213,10 +286,14 @@ const Hero = () => {
 							initial={{ scale: 0.9, opacity: 0 }}
 							animate={{ scale: 1, opacity: 1 }}
 							exit={{ scale: 0.9, opacity: 0 }}
-							className='relative bg-slate-900 rounded-2xl overflow-hidden max-w-4xl w-full aspect-video'>
+							transition={{
+								duration: DESIGN_TOKENS.animation.duration,
+								ease: DESIGN_TOKENS.animation.ease,
+							}}
+							className='relative bg-slate-900 rounded-2xl overflow-hidden max-w-4xl w-full aspect-video border border-slate-700/50'>
 							<button
 								onClick={() => setShowVideo(false)}
-								className='absolute top-4 right-4 p-2 rounded-full bg-slate-800/80 text-slate-200 hover:bg-slate-700/80 transition-colors z-10'>
+								className='absolute top-4 right-4 p-2 rounded-full bg-slate-800/80 text-slate-200 hover:bg-slate-700/80 transition-colors duration-300 z-10'>
 								<X className='w-5 h-5' />
 							</button>
 							<div className='w-full h-full bg-slate-800 flex items-center justify-center'>

@@ -14,6 +14,44 @@ import {
 import LayoutEffect from '@/app/components/LayoutEffect';
 import { Button } from '@/components/ui/button';
 
+// Design tokens for consistency
+const DESIGN_TOKENS = {
+	animation: {
+		duration: 0.7,
+		ease: [0.22, 1, 0.36, 1],
+	},
+	colors: {
+		primary: '#3E63DD',
+		text: {
+			primary: '#f1f5f9', // slate-100
+			secondary: '#e2e8f0', // slate-200
+			tertiary: '#cbd5e1', // slate-300
+		},
+	},
+};
+
+// Consistent badge component (same as in Hero, TrustedBy, and VisualFeatures)
+const ConsistentBadge = ({
+	text,
+	icon,
+}: {
+	text: string;
+	icon: React.ReactNode;
+}) => (
+	<motion.div
+		initial={{ opacity: 0, y: 20 }}
+		whileInView={{ opacity: 1, y: 0 }}
+		transition={{
+			duration: DESIGN_TOKENS.animation.duration,
+			ease: DESIGN_TOKENS.animation.ease,
+		}}
+		viewport={{ once: true }}
+		className='inline-flex items-center gap-2 bg-slate-800/80 backdrop-blur-sm px-4 py-2 rounded-full border border-slate-700/50 text-sm font-medium text-blue-400 mb-8'>
+		{icon}
+		{text}
+	</motion.div>
+);
+
 const features = [
 	{
 		icon: <DollarSign className='w-6 h-6 text-green-400' />,
@@ -70,69 +108,74 @@ const Features = () => {
 	const [hoveredFeature, setHoveredFeature] = useState<string | null>(null);
 
 	return (
-		<section className='relative py-16 overflow-hidden'>
-			{/* Enhanced Background Elements */}
-			<div className='absolute inset-0 pointer-events-none'>
+		<section className='py-16 lg:py-20 bg-slate-900 relative overflow-hidden'>
+			{/* Premium Background Elements */}
+			<div className='absolute inset-0 overflow-hidden'>
 				<motion.div
 					animate={{
 						scale: isHovered ? 1.1 : 1,
 						opacity: isHovered ? 0.7 : 0.5,
 					}}
 					transition={{ duration: 0.7 }}
-					className='absolute top-[-40%] right-[-10%] w-[55rem] h-[55rem] bg-gradient-to-br from-blue-600/20 via-purple-600/10 to-transparent rounded-full blur-[128px]'
-				/>
+					className='absolute top-[-20%] right-[-10%] w-[35rem] h-[35rem] bg-gradient-to-r from-blue-600/20 to-purple-600/20 rounded-full blur-3xl'></motion.div>
 				<motion.div
 					animate={{
 						scale: isHovered ? 1.1 : 1,
 						opacity: isHovered ? 0.7 : 0.5,
 					}}
 					transition={{ duration: 0.7, delay: 0.2 }}
-					className='absolute bottom-[-40%] left-[-10%] w-[55rem] h-[55rem] bg-gradient-to-tr from-slate-700/20 via-blue-600/10 to-transparent rounded-full blur-[128px]'
-				/>
-				{/* Connecting gradients */}
-				<div className='absolute inset-0 bg-gradient-to-b from-slate-900/50 via-transparent to-slate-900/50' />
-				<div className='absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-slate-900/0 via-slate-900/50 to-slate-900/0' />
+					className='absolute bottom-[-20%] left-[-10%] w-[35rem] h-[35rem] bg-gradient-to-r from-purple-600/20 to-blue-600/20 rounded-full blur-3xl'></motion.div>
 			</div>
 
 			<div className='relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-				<LayoutEffect
-					className='duration-1000 delay-300'
-					isInviewState={{
-						trueState: 'opacity-100 translate-y-0',
-						falseState: 'opacity-0 translate-y-12',
-					}}>
-					<div className='text-center mb-12'>
-						<motion.div
-							whileHover={{ scale: 1.02 }}
-							className='inline-flex items-center gap-2 bg-gradient-to-r from-slate-800/90 to-slate-800/70 backdrop-blur-sm px-4 py-2 rounded-full mb-6 border border-slate-700/50 shadow-lg'>
-							<Zap className='w-4 h-4 text-blue-400' />
-							<span className='text-sm font-medium bg-gradient-to-r from-slate-200 to-blue-400 bg-clip-text text-transparent'>
-								Powerful Features
-							</span>
-						</motion.div>
-						<h2 className='text-4xl font-bold mb-6'>
-							<span className='bg-gradient-to-r from-slate-100 to-slate-300 bg-clip-text text-transparent'>
-								Earn More with{' '}
-							</span>
-							<span className='bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent'>
-								AddVantage
-							</span>
-						</h2>
-						<p className='text-lg text-slate-300 max-w-2xl mx-auto'>
-							Our platform is designed to maximize your earning potential while
-							providing the best experience for your audience.
-						</p>
-					</div>
+				<motion.div
+					className='max-w-3xl mx-auto text-center mb-16'
+					initial={{ opacity: 0, y: 20 }}
+					whileInView={{ opacity: 1, y: 0 }}
+					transition={{
+						duration: DESIGN_TOKENS.animation.duration,
+						ease: DESIGN_TOKENS.animation.ease,
+					}}
+					viewport={{ once: true }}>
+					<ConsistentBadge
+						text='Powerful Features'
+						icon={<Zap className='w-4 h-4 text-blue-400 animate-pulse' />}
+					/>
+					<h2 className='text-3xl sm:text-4xl lg:text-5xl font-bold mb-6 text-slate-100'>
+						Earn More with{' '}
+						<span className='bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent'>
+							AdZPay{' '}
+						</span>
+					</h2>
+					<p className='text-lg text-slate-300 max-w-2xl mx-auto'>
+						Our platform is designed to maximize your earning potential while
+						providing the best experience for your audience.
+					</p>
+				</motion.div>
 
-					<div
-						className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8'
-						onMouseEnter={() => setIsHovered(true)}
-						onMouseLeave={() => setIsHovered(false)}>
-						{features.map((feature, index) => (
+				<div
+					className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-16'
+					onMouseEnter={() => setIsHovered(true)}
+					onMouseLeave={() => setIsHovered(false)}>
+					{features.map((feature, index) => (
+						<LayoutEffect
+							key={index}
+							className='duration-1000 delay-300'
+							isInviewState={{
+								trueState: 'opacity-100 translate-y-0',
+								falseState: 'opacity-0 translate-y-12',
+							}}>
 							<motion.div
-								key={index}
+								initial={{ opacity: 0, y: 20 }}
+								whileInView={{ opacity: 1, y: 0 }}
+								transition={{
+									duration: DESIGN_TOKENS.animation.duration,
+									delay: index * 0.1,
+									ease: DESIGN_TOKENS.animation.ease,
+								}}
+								viewport={{ once: true }}
 								whileHover={{ scale: 1.02 }}
-								className='relative overflow-hidden bg-gradient-to-br from-slate-800/80 to-slate-800/60 backdrop-blur-sm rounded-2xl border border-slate-700/50 p-6 shadow-lg hover:shadow-xl transition-all duration-300'
+								className='relative overflow-hidden bg-slate-800/30 backdrop-blur-md rounded-xl border border-slate-700/50 p-6 group hover:border-blue-400/30 transition-all duration-300'
 								onMouseEnter={() => setHoveredFeature(feature.title)}
 								onMouseLeave={() => setHoveredFeature(null)}>
 								{/* Gradient Background */}
@@ -153,7 +196,7 @@ const Features = () => {
 											transition={{ duration: 0.3 }}>
 											{feature.icon}
 										</motion.div>
-										<h3 className='text-xl font-bold text-slate-100'>
+										<h3 className='text-xl font-bold text-slate-100 group-hover:text-blue-400 transition-colors duration-300'>
 											{feature.title}
 										</h3>
 									</div>
@@ -164,66 +207,73 @@ const Features = () => {
 									</div>
 								</div>
 							</motion.div>
-						))}
+						</LayoutEffect>
+					))}
+				</div>
+
+				{/* Enhanced Earning Calculator */}
+				<motion.div
+					className='mt-16 text-center'
+					initial={{ opacity: 0, y: 20 }}
+					whileInView={{ opacity: 1, y: 0 }}
+					transition={{
+						duration: DESIGN_TOKENS.animation.duration,
+						delay: 0.3,
+						ease: DESIGN_TOKENS.animation.ease,
+					}}
+					viewport={{ once: true }}>
+					<div className='text-center mb-8'>
+						<h3 className='text-3xl font-bold mb-4 text-slate-100'>
+							Calculate Your{' '}
+							<span className='bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent'>
+								Potential Earnings
+							</span>
+						</h3>
+						<p className='text-lg text-slate-300 max-w-2xl mx-auto'>
+							See how much you could earn with AdZPay competitive commission
+							structure
+						</p>
 					</div>
 
-					{/* Enhanced Earning Calculator */}
-					<div className='mt-16 text-center'>
-						<div className='text-center mb-8'>
-							<h3 className='text-3xl font-bold mb-4'>
-								<span className='bg-gradient-to-r from-slate-100 to-slate-300 bg-clip-text text-transparent'>
-									Calculate Your{' '}
-								</span>
-								<span className='bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent'>
-									Potential Earnings
-								</span>
-							</h3>
-							<p className='text-lg text-slate-300 max-w-2xl mx-auto'>
-								See how much you could earn with AddVantage&apos;s competitive
-								commission structure
+					<motion.div
+						whileHover={{ scale: 1.02 }}
+						className='grid grid-cols-1 md:grid-cols-3 gap-6 bg-slate-800/30 backdrop-blur-md rounded-xl border border-slate-700/50 p-8 shadow-lg hover:shadow-xl transition-all duration-300'>
+						<div className='text-center'>
+							<div className='p-4 bg-slate-700/50 rounded-xl inline-block mb-4'>
+								<DollarSign className='w-8 h-8 text-green-400' />
+							</div>
+							<p className='text-slate-400 mb-2'>Average Commission</p>
+							<p className='text-3xl font-bold bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent'>
+								70%
 							</p>
 						</div>
-
-						<motion.div
-							whileHover={{ scale: 1.02 }}
-							className='grid grid-cols-1 md:grid-cols-3 gap-6 bg-gradient-to-br from-slate-800/80 to-slate-800/60 backdrop-blur-sm rounded-2xl border border-slate-700/50 p-8 shadow-lg hover:shadow-xl transition-all'>
-							<div className='text-center'>
-								<div className='p-4 bg-slate-700/50 rounded-xl inline-block mb-4'>
-									<DollarSign className='w-8 h-8 text-green-400' />
-								</div>
-								<p className='text-slate-400 mb-2'>Average Commission</p>
-								<p className='text-3xl font-bold bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent'>
-									70%
-								</p>
+						<div className='text-center'>
+							<div className='p-4 bg-slate-700/50 rounded-xl inline-block mb-4'>
+								<TrendingUp className='w-8 h-8 text-blue-400' />
 							</div>
-							<div className='text-center'>
-								<div className='p-4 bg-slate-700/50 rounded-xl inline-block mb-4'>
-									<TrendingUp className='w-8 h-8 text-blue-400' />
-								</div>
-								<p className='text-slate-400 mb-2'>Average Ad Value</p>
-								<p className='text-3xl font-bold bg-gradient-to-r from-blue-400 to-blue-500 bg-clip-text text-transparent'>
-									$50
-								</p>
-							</div>
-							<div className='text-center'>
-								<div className='p-4 bg-slate-700/50 rounded-xl inline-block mb-4'>
-									<BarChart className='w-8 h-8 text-purple-400' />
-								</div>
-								<p className='text-slate-400 mb-2'>Monthly Potential</p>
-								<p className='text-3xl font-bold bg-gradient-to-r from-purple-400 to-purple-500 bg-clip-text text-transparent'>
-									$500+
-								</p>
-							</div>
-						</motion.div>
-
-						<div className='mt-8 text-center'>
-							<Button className='group gap-2 text-lg px-8 py-6 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg hover:shadow-xl transition-all duration-300'>
-								Start Earning Now
-								<ChevronRight className='w-5 h-5 group-hover:translate-x-1 transition-transform' />
-							</Button>
+							<p className='text-slate-400 mb-2'>Average Ad Value</p>
+							<p className='text-3xl font-bold bg-gradient-to-r from-blue-400 to-blue-500 bg-clip-text text-transparent'>
+								$50
+							</p>
 						</div>
+						<div className='text-center'>
+							<div className='p-4 bg-slate-700/50 rounded-xl inline-block mb-4'>
+								<BarChart className='w-8 h-8 text-purple-400' />
+							</div>
+							<p className='text-slate-400 mb-2'>Monthly Potential</p>
+							<p className='text-3xl font-bold bg-gradient-to-r from-purple-400 to-purple-500 bg-clip-text text-transparent'>
+								$500+
+							</p>
+						</div>
+					</motion.div>
+
+					<div className='mt-8 text-center'>
+						<Button className='group gap-2 text-lg px-8 py-6 bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 rounded-xl'>
+							Start Earning Now
+							<ChevronRight className='w-5 h-5 group-hover:translate-x-1 transition-transform duration-300' />
+						</Button>
 					</div>
-				</LayoutEffect>
+				</motion.div>
 			</div>
 		</section>
 	);
