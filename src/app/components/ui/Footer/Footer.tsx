@@ -37,7 +37,7 @@ const Footer = () => {
 		{
 			title: 'Connect',
 			links: [
-				{ name: 'Twitter', href: 'https://twitter.com' },
+				{ name: 'Twitter', href: 'https://x.com/adzpay_ug' },
 				{ name: 'LinkedIn', href: 'https://linkedin.com' },
 				{ name: 'Facebook', href: 'https://facebook.com' },
 				{ name: 'Instagram', href: 'https://instagram.com' },
@@ -47,7 +47,7 @@ const Footer = () => {
 
 	const socialLinks = [
 		{ icon: Facebook, href: 'https://facebook.com' },
-		{ icon: Twitter, href: 'https://twitter.com' },
+		{ icon: Twitter, href: 'https://x.com/adzpay_ug' },
 		{ icon: Instagram, href: 'https://instagram.com' },
 		{ icon: Linkedin, href: 'https://linkedin.com' },
 		{ icon: Github, href: 'https://github.com' },
