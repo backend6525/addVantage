@@ -4,7 +4,7 @@ import Image from 'next/image';
 const UpCard = () => {
 	const router = useRouter();
 	const handleUpgradeClick = () => {
-		router.push('/confirmplan');
+		router.push('/dashboard/confirmplan');
 	};
 	return (
 		<div className='bg-black text-white p-6 rounded-lg shadow-lg text-center'>
