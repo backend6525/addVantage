@@ -212,3 +212,10 @@
 .bg-gradient-secondary {
 	@apply bg-gradient-to-r from-slate-700/20 via-slate-600/20 to-slate-500/20;
 }
+.scrollbar-hide {
+	-ms-overflow-style: none;
+	scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+	display: none;
+}
