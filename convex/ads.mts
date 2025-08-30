@@ -688,3 +688,21 @@ export const updateExpiredAds = mutation({
 		};
 	},
 });
+// convex/ads.ts
+export const getAd = query({
+	args: { id: v.id('ads') },
+	handler: async (ctx, args) => {
+		return await ctx.db.get(args.id);
+	},
+});
+
+export const getPublishedAdsByUser = query({
+	args: { email: v.string() },
+	handler: async (ctx, args) => {
+		return await ctx.db
+			.query('ads')
+			.withIndex('by_createdBy', (q) => q.eq('createdBy', args.email))
+			.filter((q) => q.eq(q.field('isPublished'), true))
+			.collect();
+	},
+});
